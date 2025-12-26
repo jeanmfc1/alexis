@@ -1,0 +1,93 @@
+{
+  "totalCount": 1210,
+  "studies": [
+    {
+      "protocolSection": {
+        "identificationModule": {
+          "nctId": "NCT07271537",
+          "orgStudyIdInfo": {
+            "id": "pilonidal sinus"
+          },
+          "organization": {
+            "fullName": "Zagazig University",
+            "class": "OTHER_GOV"
+          },
+          "briefTitle": "Karydakis Versus Limberg Flap for the Management of Primary Sacrococcygeal Pilonidal Sinus",
+          "officialTitle": "Outcomes of Karydakis Versus Limberg Flap for the Management of Primary Sacrococcygeal Pilonidal Sinus"
+        },
+        "statusModule": {
+          "statusVerifiedDate": "2025-11",
+          "overallStatus": "COMPLETED",
+          "expandedAccessInfo": {
+            "hasExpandedAccess": false
+          },
+          "startDateStruct": {
+            "date": "2017-07-01",
+            "type": "ACTUAL"
+          },
+          "primaryCompletionDateStruct": {
+            "date": "2024-07-01",
+            "type": "ACTUAL"
+          },
+          "completionDateStruct": {
+            "date": "2024-07-01",
+            "type": "ACTUAL"
+          },
+          "studyFirstSubmitDate": "2025-11-13",
+          "studyFirstSubmitQcDate": "2025-11-26",
+          "studyFirstPostDateStruct": {
+            "date": "2025-12-09",
+            "type": "ESTIMATED"
+          },
+          "lastUpdateSubmitDate": "2025-11-26",
+          "lastUpdatePostDateStruct": {
+            "date": "2025-12-09",
+            "type": "ESTIMATED"
+          }
+        },
+        "sponsorCollaboratorsModule": {
+          "responsibleParty": {
+            "type": "PRINCIPAL_INVESTIGATOR",
+            "investigatorFullName": "Tamer.A.A.M.Habeeb",
+            "investigatorTitle": "professour",
+            "investigatorAffiliation": "Zagazig University"
+          },
+          "leadSponsor": {
+            "name": "Zagazig University",
+            "class": "OTHER_GOV"
+          }
+        },
+        "oversightModule": {
+          "oversightHasDmc": true,
+          "isFdaRegulatedDrug": false,
+          "isFdaRegulatedDevice": false
+        },
+        "descriptionModule": {
+          "briefSummary": "study comparing the Karydakis and Limberg flaps",
+          "detailedDescription": "study comparing the Karydakis and Limberg flaps in management of pilonidal sinus"
+        },
+        "conditionsModule": {
+          "conditions": [
+            "Pilonidal Cyst and Sinus Without Abscess"
+          ],
+          "keywords": [
+            "pilonidal sinus",
+            "karydakis",
+            "limberg flap"
+          ]
+        },
+        "designModule": {
+          "studyType": "OBSERVATIONAL",
+          "patientRegistry": false,
+          "designInfo": {
+            "observationalModel": "COHORT",
+            "timePerspective": "RETROSPECTIVE"
+          },
+          "enrollmentInfo": {
+            "count": 352,
+            "type": "ACTUAL"
+          }
+        },
+        "armsInterventionsModule": {
+          "armGroups": [
+       

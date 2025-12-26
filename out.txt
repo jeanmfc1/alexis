@@ -1,0 +1,4 @@
+Raw studies returned: 10
+Normalized trials: 10
+
+NCT00600002 | TA=Oncology | Modality=Small Molecule       | phase=PHASE1 | status=COMPLETED    | iv: GM-CSF
