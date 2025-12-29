@@ -58,6 +58,7 @@ PROCEDURE_TERMS: List[str] = [
     "arthroscopy",
     "angioplasty",
     "thrombectomy",
+    "biospecimen collection",
 ]
 
 DEVICE_DIGITAL_TERMS: List[str] = [
@@ -78,10 +79,19 @@ DEVICE_DIGITAL_TERMS: List[str] = [
     "computed tomography",
     "magnetic resonance imaging",
     "positron emission tomography",
+    "echocardiography", "echocardiography test",
+    "multigated acquisition scan",
+    "bone scan",
+    "x-ray imaging",
+    "chest radiography",
+    "radionuclide imaging",
+    "diffusion tensor imaging (dti)",
+    "audiometric test",
     # Abbreviations (safe because _has_any uses word-boundaries for short tokens)
     "ct",
     "mri",
     "pet",
+    "dti",
     # digital health
     "app",
     "application",
@@ -120,6 +130,7 @@ BEHAVIORAL_EXERCISE_TERMS: List[str] = [
     "survey",
     "interview",
     "assessment",
+    "electronic health record review",
 ]
 
 DRUG_LIKE_TERMS: List[str] = [

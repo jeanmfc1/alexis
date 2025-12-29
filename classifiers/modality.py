@@ -9,26 +9,10 @@ from policy.modality_policy import (
     DEVICE_DIGITAL_TERMS,
     BEHAVIORAL_EXERCISE_TERMS,
     DRUG_LIKE_TERMS,
+    has_drug_name_signal,
 )
 
 import re
-
-# High-specificity patterns that indicate a pharmacologic intervention
-_DRUG_CODE_RE = re.compile(r"\b[A-Z]{2,6}[- ]?\d{2,6}\b")   # e.g., ABBV-932, MK 3475
-_MAB_SUFFIX_RE = re.compile(r"(mab|zumab|ximab|umab|omab|inib|parib|ciclib|vir)\b", re.IGNORECASE)
-
-def _has_drug_name_signal(raw_text: str) -> bool:
-    """
-    Returns True when intervention text strongly looks like a drug identifier.
-    This is deliberately conservative (low false positives).
-    """
-    if not raw_text or not raw_text.strip():
-        return False
-    if _DRUG_CODE_RE.search(raw_text):
-        return True
-    if _MAB_SUFFIX_RE.search(raw_text):
-        return True
-    return False
 
 _SHORT_TOKEN_RE_CACHE: Dict[str, re.Pattern] = {}
 
@@ -97,7 +81,7 @@ def assign_modality(trial: ClinicalTrialSignal) -> str:
         return "Procedure/Radiation"
 
     # 2) Device / digital / hardware / software
-    if _has_any(text, PROCEDURE_TERMS):
+    if _has_any(text, DEVICE_DIGITAL_TERMS):
         return "Device/Digital"
 
     # 3) Behavioral / exercise / rehab / education
@@ -105,7 +89,7 @@ def assign_modality(trial: ClinicalTrialSignal) -> str:
         return "Behavioral/Exercise"
 
     # 4) Drug-like signals (still coarse) + drug identifier patterns
-    if _has_any(text, DRUG_LIKE_TERMS) or _has_drug_name_signal(raw_text):
+    if _has_any(text, DRUG_LIKE_TERMS) or has_drug_name_signal(raw_text):
         return "Small Molecule"
 
     # 5) Default: if interventional and not clearly non-drug
