@@ -78,6 +78,10 @@ DEVICE_DIGITAL_TERMS: List[str] = [
     "computed tomography",
     "magnetic resonance imaging",
     "positron emission tomography",
+    # Abbreviations (safe because _has_any uses word-boundaries for short tokens)
+    "ct",
+    "mri",
+    "pet",
     # digital health
     "app",
     "application",
