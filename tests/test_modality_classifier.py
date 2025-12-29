@@ -65,9 +65,14 @@ def test_small_molecule_drug_like_signals():
     assert assign_modality(t) == "Small Molecule"
 
 
-def test_default_interventional_with_nonempty_interventions_is_small_molecule():
+def test_named_drug_without_dose_is_still_drug_like():
+    # Uses suffix heuristic (-mab)
     t = trial(interventions=["Guselkumab"])
     assert assign_modality(t) == "Small Molecule"
+
+def test_ambiguous_interventional_defaults_to_unknown():
+    t = trial(interventions=["FLOT-CROSS"])
+    assert assign_modality(t) == "Other/Unknown"
 
 
 def test_precedence_procedure_beats_device_digital():
@@ -86,3 +91,12 @@ def test_precedence_behavioral_exercise_beats_drug_like():
     # Some behavioral studies mention "dose" or similar; Behavioral/Exercise should win
     t = trial(interventions=["Exercise training dose escalation schedule"])
     assert assign_modality(t) == "Behavioral/Exercise"
+
+def test_biopsy_is_procedure():
+    t = trial(interventions=["Prostate biopsy"])
+    assert assign_modality(t) == "Procedure/Radiation"
+
+def test_tms_is_device_digital():
+    t = trial(interventions=["TMS"])
+    assert assign_modality(t) == "Device/Digital"
+

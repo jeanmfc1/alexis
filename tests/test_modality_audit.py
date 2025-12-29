@@ -68,9 +68,14 @@ def test_small_molecule_default_generates_info_not_flag():
     )
     flags, infos, counts = audit_trials([t])
 
-    # Given current device/digital anchors, this can legitimately be flagged.
-    assert any(f["type"] == "NON_DRUG_ANCHOR_IN_SMALL_MOLECULE" for f in flags)
+        # Should NOT be a hard flag (no procedure/device/behavioral anchors present)
+    assert not any(f["type"] == "NON_DRUG_ANCHOR_IN_SMALL_MOLECULE" for f in flags)
 
+    # Should be an INFO (small molecule label without drug evidence anchors)
+    assert any(
+        i["type"] in ("SMALL_MOLECULE_DEFAULTED", "SMALL_MOLECULE_NO_DRUG_ANCHOR")
+        for i in infos
+    )
 
 def test_device_digital_without_anchor_is_info():
     t = trial(

@@ -33,7 +33,6 @@ def _as_trial_obj(trial_dict: Dict[str, Any]):
         interventions=trial_dict.get("interventions") or [],
     )
 
-
 def _count_modalities(trials: List[Dict[str, Any]]) -> Counter:
     c = Counter()
     for t in trials:
@@ -51,12 +50,17 @@ def _default_out_path(in_path: Path) -> Path:
     return in_path.with_suffix("")\
                   .with_name(in_path.stem + ".modality.reclassified.json")
 
+def _default_changes_path(in_path: Path) -> Path:
+    # Example: 2025-12-23T10-53-43.json -> 2025-12-23T10-53-43.modality.changes.json
+    return in_path.with_suffix("").with_name(in_path.stem + ".modality.changes.json")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Reclassify modality for a clinical trials snapshot (immutable).")
     parser.add_argument("--path", required=True, help="Path to snapshot JSON")
     parser.add_argument("--out", default=None, help="Optional explicit output path")
     parser.add_argument("--max_examples", type=int, default=20, help="Max changed examples to print")
+    parser.add_argument("--changes_out", default=None, help="Optional explicit output path for full change log JSON")
+
     args = parser.parse_args()
 
     in_path = Path(args.path)
@@ -107,11 +111,25 @@ def main() -> None:
 
     _write_json(out_path, out_snapshot)
 
+        # Write full change log (ALL changes, not just printed examples)
+    changes_path = Path(args.changes_out) if args.changes_out else _default_changes_path(in_path)
+    if changes_path.exists():
+        raise SystemExit(f"Refusing to overwrite existing file: {changes_path}")
+
+    changes_payload = {
+        "input": str(in_path),
+        "output_snapshot": str(out_path),
+        "changed_count": len(changed),
+        "changed": changed,
+    }
+    _write_json(changes_path, changes_payload)
+
     # --- Print summary ---
     print(f"\nInput:  {in_path}")
     print(f"Output: {out_path}")
     print(f"\nTrials: {len(trials)}")
     print(f"Changed: {len(changed)} ({(len(changed)/max(len(trials),1))*100:.2f}%)")
+    print(f"Changes: {changes_path}")
 
     print("\nModality count deltas (after - before):")
     if not diffs:

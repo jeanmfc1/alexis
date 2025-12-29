@@ -30,7 +30,7 @@ def _as_trial_obj(trial_dict: Dict[str, Any]):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Audit modality assignments for a clinical trials snapshot.")
     parser.add_argument("--path", required=True, help="Path to snapshot JSON (original or reclassified)")
-    parser.add_argument("--max_examples", type=int, default=20, help="Max examples to print per section")
+    parser.add_argument("--max_examples", type=int, default=2000, help="Max examples to print per section")
     args = parser.parse_args()
 
     path = Path(args.path)
