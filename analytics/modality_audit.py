@@ -15,6 +15,7 @@ from policy.modality_policy import (
     has_drug_name_signal
 )
 
+from classifiers.drug_non_drug import is_drug_trial
 
 def _text_blob(trial) -> str:
     interventions = getattr(trial, "interventions", None) or []
@@ -76,7 +77,7 @@ def audit_trials(
         has_proc = _has_any(text, PROCEDURE_TERMS)
         has_dev = _has_any(text, DEVICE_DIGITAL_TERMS)
         has_beh = _has_any(text, BEHAVIORAL_EXERCISE_TERMS)
-        has_drug = _has_any(text, DRUG_LIKE_TERMS) or has_drug_name_signal(raw_text)
+        has_drug = is_drug_trial(tr)
 
         counts["trials_total"] += 1
         counts[f"modality::{modality}"] += 1
@@ -209,8 +210,28 @@ def audit_trials(
             primary = "Behavioral/Exercise"
 
         secondary = [x for x in non_drug_hits if x != primary]
+            
+        if has_drug and modality in ("Procedure/Radiation", "Device/Digital", "Behavioral/Exercise"):
+            infos.append({
+                "nct_id": nct_id,
+                "type": "POSSIBLE_DRUG_FALSE_NEGATIVE",
+                "message": "Drug evidence detected but modality is non-drug; likely drug trial with assessment interventions.",
+                "modality": modality,
+                "anchors": {"procedure": has_proc, "device_digital": has_dev, "behavioral_exercise": has_beh},
+            })
+            counts["info_possible_drug_false_negative"] += 1
 
-                # If this is a drug trial (has_drug True), non-drug signals are usually assessments/endpoints.
+        if (not has_drug) and modality == "Small Molecule":
+            infos.append({
+                "nct_id": nct_id,
+                "type": "POSSIBLE_DRUG_FALSE_POSITIVE",
+                "message": "No drug evidence detected but modality is Small Molecule; likely misclassified as drug.",
+                "modality": modality,
+            })
+            counts["info_possible_drug_false_positive"] += 1
+
+
+        # If this is a drug trial (has_drug True), non-drug signals are usually assessments/endpoints.
         # Do NOT call this "mixed non-drug signals". Track separately.
         if modality == "Small Molecule" and has_drug and len(non_drug_hits) >= 1:
             infos.append(
