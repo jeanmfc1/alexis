@@ -22,3 +22,4 @@ env/
 # Generated snapshots (large, derived)
 # ---------------------------
 storage/snapshots/
+storage/audits/

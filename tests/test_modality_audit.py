@@ -101,7 +101,7 @@ def test_behavioral_without_anchor_is_info():
 def test_mixed_non_drug_signals_is_info():
     t = trial(
         nct_id="NCT8",
-        interventions=["Surgery with post-op rehabilitation program"],
+        interventions=["Surgery", "Post-op rehabilitation program", "mri SCAN"],
         modality="Procedure/Radiation",
     )
     flags, infos, counts = audit_trials([t])
