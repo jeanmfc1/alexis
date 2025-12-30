@@ -13,6 +13,7 @@ from analytics.summary import ta_modality_counts
 from storage.snapshots_io import SnapshotMetadata, save_trial_snapshot
 
 from config.settings import CLINICALTRIALS_PAGE_SIZE
+from classifiers.drug_non_drug import is_drug_trial
 
 
 def main():
@@ -48,6 +49,7 @@ def main():
     for t in tqdm(trials, desc="Classifying trials", unit="trial"):
         t.therapeutic_area = assign_therapeutic_area(t)
         t.modality = assign_modality(t)
+        t.is_drug_trial = is_drug_trial(t)
 
     # 5) Build snapshot metadata
     metadata = SnapshotMetadata(
