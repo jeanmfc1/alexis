@@ -155,3 +155,28 @@ ANCHORS: Dict[str, List[str]] = {
     "Behavioral/Exercise": BEHAVIORAL_EXERCISE_TERMS,
     "Small Molecule": DRUG_LIKE_TERMS,
 }
+
+# --- Drug identity policy (semantic, not lexical) ---
+
+# Strong drug identity signals: these alone are sufficient
+# Examples: code names, INN suffixes, biologic suffixes
+DRUG_IDENTITY_REGEXES = [
+    r"\b[a-z]{2,}-\d{2,}\b",          # code names like abx-101
+    r"\b[a-z]+(mab|nib|statin|parib|ciclib|vir)\b",
+]
+
+# Dose units alone are NOT sufficient; they must be paired with route/form
+DOSE_UNITS = ["mg", "mcg", "µg", "g", "iu", "units"]
+
+DRUG_ROUTE_TERMS = [
+    "tablet", "capsule", "oral",
+    "iv", "intravenous",
+    "subcutaneous", "sc",
+    "injection", "inject",
+    "infusion",
+]
+
+# Explicit exclusions (important!)
+NON_DRUG_EXCLUSION_TERMS = [
+    "placebo",
+]
