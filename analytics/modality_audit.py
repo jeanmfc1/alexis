@@ -119,7 +119,7 @@ def audit_trials(
             )
             counts["flags_empty_interventions_mismatch"] += 1
 
-        if modality == "Small Molecule" and (has_proc or has_dev or has_beh):
+        if modality == "Small Molecule" and not has_drug and (has_proc or has_dev or has_beh):
             flags.append(
                 {
                     "nct_id": nct_id,
@@ -190,14 +190,50 @@ def audit_trials(
             )
             counts["info_small_molecule_defaulted"] += 1
 
-        non_drug_families = sum(
-            [
-                1 if has_proc else 0,
-                1 if has_dev else 0,
-                1 if has_beh else 0,
-            ]
-        )
-        if non_drug_families >= 2:
+                # --- INFO (primary/secondary non-drug signals) ---
+        non_drug_hits = []
+        if has_proc:
+            non_drug_hits.append("Procedure/Radiation")
+        if has_dev:
+            non_drug_hits.append("Device/Digital")
+        if has_beh:
+            non_drug_hits.append("Behavioral/Exercise")
+
+        # Primary intent uses the same precedence as the classifier.
+        primary = None
+        if has_proc:
+            primary = "Procedure/Radiation"
+        elif has_dev:
+            primary = "Device/Digital"
+        elif has_beh:
+            primary = "Behavioral/Exercise"
+
+        secondary = [x for x in non_drug_hits if x != primary]
+
+                # If this is a drug trial (has_drug True), non-drug signals are usually assessments/endpoints.
+        # Do NOT call this "mixed non-drug signals". Track separately.
+        if modality == "Small Molecule" and has_drug and len(non_drug_hits) >= 1:
+            infos.append(
+                {
+                    "nct_id": nct_id,
+                    "type": "DRUG_WITH_NON_DRUG_ASSESSMENTS",
+                    "message": (
+                        "Drug trial includes non-drug assessment components "
+                        "(procedure/device/behavioral)."
+                    ),
+                    "primary_non_drug": primary,
+                    "secondary_non_drug": secondary,
+                    "anchors": {
+                        "procedure": has_proc,
+                        "device_digital": has_dev,
+                        "behavioral_exercise": has_beh,
+                    },
+                }
+            )
+            counts["info_drug_with_non_drug_assessments"] += 1
+
+        # Only call it MIXED_NON_DRUG_SIGNALS when the trial is NOT primarily drug-like.
+        elif len(non_drug_hits) >= 3:
             infos.append(
                 {
                     "nct_id": nct_id,
@@ -206,6 +242,8 @@ def audit_trials(
                         "Multiple non-drug anchor families detected "
                         "(procedure/device/behavioral)."
                     ),
+                    "primary_non_drug": primary,
+                    "secondary_non_drug": secondary,
                     "anchors": {
                         "procedure": has_proc,
                         "device_digital": has_dev,
@@ -214,6 +252,8 @@ def audit_trials(
                 }
             )
             counts["info_mixed_non_drug_signals"] += 1
+
+
 
     # --- Persist INFO artifact (side-effect, isolated) ---
     write_modality_info_artifact(
