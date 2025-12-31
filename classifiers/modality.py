@@ -64,9 +64,5 @@ def assign_modality(trial: ClinicalTrialSignal) -> str:
     if _has_any(text, BEHAVIORAL_EXERCISE_TERMS):
         return "Behavioral/Exercise"
 
-    # 4) Drug-like signals (still coarse) + drug identifier patterns
-    if _has_any(text, DRUG_LIKE_TERMS) or has_drug_name_signal(raw_text):
-        return "Drug"
-
     # 5) Default: if interventional and not clearly non-drug
     return "Other/Unknown"

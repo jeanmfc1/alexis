@@ -192,20 +192,37 @@ ANCHORS: Dict[str, List[str]] = {
     "Procedure/Radiation": PROCEDURE_TERMS,
     "Device/Digital": DEVICE_DIGITAL_TERMS,
     "Behavioral/Exercise": BEHAVIORAL_EXERCISE_TERMS,
-    "Small Molecule": DRUG_LIKE_TERMS,
+    "Drug": DRUG_LIKE_TERMS,
 }
 
 # --- Drug identity policy (semantic, not lexical) ---
 
-# Strong drug identity signals: these alone are sufficient
-# Examples: code names, INN suffixes, biologic suffixes
+# Strong drug identity signals: these alone are sufficient.
+# Keep conservative: prioritize precision over recall.
 DRUG_IDENTITY_REGEXES = [
-    r"\b[a-z]{2,}-\d{2,}\b",          # code names like abx-101
-    r"\b[a-z]+(mab|nib|statin|parib|ciclib|vir)\b",
+    # code names like abx-101, abc 1234
+    r"\b[a-z]{2,}-\d{2,}\b",
+
+    # INN suffixes: small molecules + biologics (include -umab family)
+    r"\b[a-z]+(mab|zumab|ximab|umab|omab|inib|parib|ciclib|vir|statin)\b",
+
+    # vaccine signals (treat as pharmacologic agents per your definition)
+    r"\b(vaccine|vaccination|immunization|immunisation)\b",
+    r"\b(mrna|sarna|self-amplifying rna)\b",
+
+    # radiopharmaceutical identity signals (conservative)
+    r"\b(lutetium[- ]?177|177[- ]?lu|i[- ]?131|131[- ]?i|f[- ]?18|18[- ]?f)\b",
+    r"\b(radiopharmaceutical|radiotracer|pet tracer)\b",
 ]
 
-# Dose units alone are NOT sufficient; they must be paired with route/form
-DOSE_UNITS = ["mg", "mcg", "µg", "g", "iu", "units"]
+# Dose units alone are NOT sufficient; they must be paired with route/form.
+DOSE_UNITS = [
+    "mg", "mcg", "µg", "ug", "g",
+    "iu", "units",
+    # radiopharm activity units
+    "bq", "kbq", "mbq", "gbq",
+    "uci", "µci", "mci",
+]
 
 DRUG_ROUTE_TERMS = [
     "tablet", "capsule", "oral",
@@ -213,9 +230,16 @@ DRUG_ROUTE_TERMS = [
     "subcutaneous", "sc",
     "injection", "inject",
     "infusion",
+    # common vaccine administration routes
+    "intramuscular", "im",
+    "intradermal",
+    "intranasal",
 ]
 
-# Explicit exclusions (important!)
+# Explicit exclusions (used only when no strong drug evidence exists)
 NON_DRUG_EXCLUSION_TERMS = [
     "placebo",
+    "sham",
+    "vehicle",
 ]
+
