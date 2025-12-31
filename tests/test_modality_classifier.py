@@ -62,13 +62,13 @@ def test_behavioral_exercise_questionnaire_is_behavioral_exercise():
 
 def test_small_molecule_drug_like_signals():
     t = trial(interventions=["Clarithromycin 500mg Tablets"])
-    assert assign_modality(t) == "Small Molecule"
+    assert assign_modality(t) == "Drug"
 
 
 def test_named_drug_without_dose_is_still_drug_like():
     # Uses suffix heuristic (-mab)
     t = trial(interventions=["Guselkumab"])
-    assert assign_modality(t) == "Small Molecule"
+    assert assign_modality(t) == "Drug"
 
 def test_ambiguous_interventional_defaults_to_unknown():
     t = trial(interventions=["FLOT-CROSS"])

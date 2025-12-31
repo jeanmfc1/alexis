@@ -48,8 +48,8 @@ def main():
     # 4) Classify (write results onto the model objects) with progress bar
     for t in tqdm(trials, desc="Classifying trials", unit="trial"):
         t.therapeutic_area = assign_therapeutic_area(t)
-        t.modality = assign_modality(t)
         t.is_drug_trial = is_drug_trial(t)
+        t.modality = assign_modality(t)
 
     # 5) Build snapshot metadata
     metadata = SnapshotMetadata(

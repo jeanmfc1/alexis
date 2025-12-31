@@ -12,7 +12,8 @@ from policy.modality_policy import (
     DEVICE_DIGITAL_TERMS,
     BEHAVIORAL_EXERCISE_TERMS,
     DRUG_LIKE_TERMS,
-    has_drug_name_signal
+    has_drug_name_signal,
+    _has_any
 )
 
 from classifiers.drug_non_drug import is_drug_trial
@@ -24,37 +25,6 @@ def _text_blob(trial) -> str:
 def _raw_blob(trial) -> str:
     interventions = getattr(trial, "interventions", None) or []
     return " ".join(interventions).strip()
-
-_SHORT_TOKEN_RE_CACHE: Dict[str, re.Pattern] = {}
-
-def _has_any(text: str, terms: List[str]) -> bool:
-    """
-    Returns True if any term matches text.
-
-    - Long terms: simple substring match (fast, safe)
-    - Short alphabetic tokens (<=3 letters like ct/mri/pet): regex word-boundary match
-      to avoid false positives like 'restriCTion' matching 'ct'.
-    """
-    for t in terms:
-        if not t:
-            continue
-
-        t = t.lower()
-
-        # Short alpha tokens are ambiguous as substrings. Require whole-token match.
-        if len(t) <= 3 and t.isalpha():
-            pat = _SHORT_TOKEN_RE_CACHE.get(t)
-            if pat is None:
-                # \b ensures t is a standalone token (ct, mri, pet), not inside another word
-                pat = re.compile(rf"\b{re.escape(t)}\b")
-                _SHORT_TOKEN_RE_CACHE[t] = pat
-            if pat.search(text):
-                return True
-        else:
-            if t in text:
-                return True
-
-    return False
 
 def audit_trials(
     trials: List[Any],

@@ -9,9 +9,47 @@ not classifier behavior / precedence.
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Iterable
 
 import re
+
+_SHORT_TOKEN_RE_CACHE = {}
+
+def _is_short_token(term: str) -> bool:
+    # short, all-alnum tokens like "mri", "ct", "pet", "iv"
+    return 2 <= len(term) <= 4 and term.isalnum()
+
+def _compile_short_token(term: str) -> re.Pattern:
+    key = term.lower()
+    rx = _SHORT_TOKEN_RE_CACHE.get(key)
+    if rx is None:
+        rx = re.compile(rf"\b{re.escape(key)}\b", re.IGNORECASE)
+        _SHORT_TOKEN_RE_CACHE[key] = rx
+    return rx
+
+def _has_any(text: str, terms: Iterable[str]) -> bool:
+    """
+    Boundary-safe matching for short tokens; substring match for longer tokens.
+    Intended for intervention-text matching across classifier and audit.
+    """
+    if not text:
+        return False
+
+    t = text.lower()
+    for term in terms:
+        if not term:
+            continue
+        s = term.lower()
+
+        # Boundary-safe for short tokens (mri/ct/pet/iv)
+        if _is_short_token(s):
+            if _compile_short_token(s).search(t):
+                return True
+        else:
+            if s in t:
+                return True
+    return False
+
 
 # Drug identifier patterns (public-trial intervention strings often use codes or INN suffixes)
 _DRUG_CODE_RE = re.compile(r"\b[A-Z]{2,6}[- ]?\d{2,6}\b")
@@ -29,6 +67,7 @@ def has_drug_name_signal(raw_text: str) -> bool:
 
 # --- Canonical labels (v1.x) ---
 MODALITY_LABELS: List[str] = [
+    "Drug",
     "Small Molecule",
     "Procedure/Radiation",
     "Device/Digital",

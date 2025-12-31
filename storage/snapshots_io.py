@@ -32,6 +32,7 @@ def _trial_to_dict(t: ClinicalTrialSignal) -> Dict[str, Any]:
     return {
         "nct_id": t.nct_id,
         "title": t.title,
+        "is_drug_trial": getattr(t, "is_drug_trial", None),
         "phase": t.phase,
         "conditions": t.conditions,
         "interventions": t.interventions,
