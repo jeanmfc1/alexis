@@ -100,7 +100,7 @@ def _all_interventions_are_exclusions(interventions: List[str], exclusions: List
     return True
 
 def drug_evidence(trial: Any) -> DrugEvidence:
-    """
+    r"""
     Conservative drug vs non-drug evidence extractor.
 
     Decision rule:
@@ -120,8 +120,16 @@ def drug_evidence(trial: Any) -> DrugEvidence:
 
     identity_hits = _find_identity_matches(raw_l) or _find_identity_matches(title_l)
 
+        # Strong identity evidence alone is sufficient (per decision rule).
     if not raw_l and not title_l:
         return DrugEvidence(is_drug=False, reasons=["no_text"], matches={})
+
+    if identity_hits:
+        return DrugEvidence(
+            is_drug=True,
+            reasons=["identity"],
+            matches={"identity": identity_hits},
+        )
 
     text = raw_l  # keep rest of logic on normalized interventions text
 

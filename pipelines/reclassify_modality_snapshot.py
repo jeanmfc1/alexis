@@ -10,6 +10,8 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Tuple
 
 from classifiers.modality import assign_modality
+from classifiers.drug_non_drug import drug_evidence
+
 
 
 def _load_json(path: Path) -> Dict[str, Any]:

@@ -76,6 +76,12 @@ def fetch_studies_raw(
 
             page_token = data.get("nextPageToken")
             if not page_token:
+                # --- SAVE RAW CTG FETCH BEFORE NORMALIZATION ---
+                import json, pathlib
+                raw_path = pathlib.Path("raw_ctgov_full_dump.json")
+                raw_path.write_text(json.dumps(studies, indent=2))
+                print(f"Raw CTG data saved to: {raw_path.resolve()}")
+                # ------------------------------------------------
                 return studies
     finally:
         pbar.close()
