@@ -9,29 +9,29 @@ Each prefix is drawn from the actual MeSH hierarchy:
 
 # Precise prefix mapping based on the MeSH hierarchy:
 MESH_PREFIX_TO_SUBMODALITY = [
-    # ---- Highly specific biologic subtypes ----
-    ("D12.776.828.300", "fusion_protein"),           # Recombinant Fusion Proteins subtype (therapeutic fusion constructs) :contentReference[oaicite:1]{index=1}
-    ("D12.776.124.486.485.114.224", "monoclonal_antibody"),  # Combined/bispecific & related antibody therapeutics :contentReference[oaicite:2]{index=2}
-    ("D12.776.124.486.485.114", "antibody_protein"),         # General antibody proteins subcategory :contentReference[oaicite:3]{index=3}
+    # Biologic subtypes
+    ("D12.776.124.486.485.114.224", "monoclonal_antibody"),
+    ("D12.776.124.486.485.114", "antibody_protein"),
+    ("D12.776.828.300", "fusion_protein"),
 
-    # ---- Broad recombinant biologics ----
-    ("D12.776.828.868", "vaccine"),                # Synthetic vaccine branch under recombinant proteins :contentReference[oaicite:4]{index=4}
-    ("D20.215.894", "vaccine"),                    # Biological Products -> Vaccines (complex mixtures) :contentReference[oaicite:5]{index=5}
-    ("D12.776.828", "recombinant_protein"),        # General recombinant proteins (e.g., engineered cytokines) :contentReference[oaicite:6]{index=6}
+    # Vaccines
+    ("D12.776.828.868", "vaccine"),
+    ("D20.215.894", "vaccine"),
+    ("D12.776.828", "recombinant_protein"),
 
-    # ---- Oligonucleotide / nucleic acid based ----
-    ("D13", "oligonucleotide"),                    # Nucleic Acids category (oligo/siRNA/etc.) — use with base_modality context
+    # Oligonucleotide based drugs
+    ("D13", "oligonucleotide"),
 
-    # ---- Small molecule substructure classes ----
-    ("D02", "small_molecule"),                     # Organic Chemicals (core small molecule classification)
-    ("D03", "small_molecule"),                     # Heterocyclic compounds (common small molecule scaffolds)
-    ("D04", "small_molecule"),                     # Polycyclic compounds (e.g., steroid frameworks)
-    ("D26", "small_molecule"),                     # Pharmaceutical Preparations common in small molecule drugs
-    ("D27", "small_molecule"),                     # Chemical Actions & Uses pharmacologic branch
+    # Small molecules
+    ("D02", "small_molecule"),
+    ("D03", "small_molecule"),
+    ("D04", "small_molecule"),
+    ("D26", "small_molecule"),
+    ("D27", "small_molecule"),
 
-    # ---- Fallback broad biologic if nothing more specific ----
-    ("D12", "biologic"),                           # Proteins / peptides not caught above
-    ("D23", "biologic"),                           # Biological factors (immune proteins, etc.)
+    # Fallback biologic
+    ("D12", "biologic"),
+    ("D23", "biologic"),
 ]
 
 def mesh_tree_to_submodality(mesh_id: str | None, term: str | None, base_modality: str) -> str | None:
@@ -93,10 +93,11 @@ def _fetch_tree_nums_descriptor(descr_id: str) -> list[str]:
         resp = requests.get(url, timeout=5)
         resp.raise_for_status()
         data = resp.json()
-        raw = data.get("treeNumber") or []
+        raw = data.get("treeNumber", [])
         if isinstance(raw, list):
             return raw
         if isinstance(raw, str):
+            print(f"Mesh ID {descr_id} returned treeNumber {raw}")
             return [raw]
     except Exception:
         pass
