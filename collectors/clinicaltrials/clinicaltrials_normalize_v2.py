@@ -95,13 +95,24 @@ def assign_intervention_role(iv: InterventionV2, arm_map: Dict[str, str]) -> str
       - other
     based on arm group types.
     """
+
+    # Build a set of arm types this intervention appears in
     roles = {arm_map.get(lbl, "") for lbl in iv.arm_group_labels}
+
+    # If any of its arms is labeled "Experimental", treat this as the experimental drug
     if "Experimental" in roles:
         return "experimental_drug"
+
+    # Otherwise, if any of its arms is labeled "Active Comparator",
+    # treat it as a positive control drug
     if "Active Comparator" in roles:
         return "active_control_drug"
+
+    # If any arm is "Placebo Comparator", treat it as placebo control
     if "Placebo Comparator" in roles:
         return "placebo_control"
+
+    # Otherwise, it’s not one of those known roles
     return "other"
 
 # --------------------------------
@@ -228,6 +239,43 @@ def extract_mesh_terms(study: Dict[str, Any]):
 
     return parse(meshes), parse(ancestors)
 
+def extract_condition_mesh_terms(study: Dict[str, Any]) -> tuple[list[MeshTermV2], list[MeshTermV2]]:
+    """
+    Extract condition MeSH and ancestor terms from:
+      derivedSection.conditionBrowseModule
+    """
+    meshes = _get(
+        study,
+        ["derivedSection", "conditionBrowseModule", "meshes"],
+        default=[],
+    ) or []
+
+    ancestors = _get(
+        study,
+        ["derivedSection", "conditionBrowseModule", "ancestors"],
+        default=[],
+    ) or []
+
+    def parse(items) -> list[MeshTermV2]:
+        out = []
+        if not isinstance(items, list):
+            return out
+        for it in items:
+            if not isinstance(it, dict):
+                continue
+            term = it.get("term")
+            mid = it.get("id")
+            if isinstance(term, str) and term.strip():
+                out.append(
+                    MeshTermV2(
+                        id=mid if isinstance(mid, str) else None,
+                        term=term.strip(),
+                    )
+                )
+        return out
+
+    return parse(meshes), parse(ancestors)
+
 # --------------------------------
 # Main normalization
 # --------------------------------
@@ -251,6 +299,7 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSig
     # Conditions
     conditions = _get(study, ["protocolSection", "conditionsModule", "conditions"], default=[]) or []
     conditions = [c for c in conditions if isinstance(c, str)]
+    condition_mesh_terms, condition_mesh_ancestors = extract_condition_mesh_terms(study)
 
     # Metadata
     study_type = _get(study, ["protocolSection", "designModule", "studyType"])
@@ -297,4 +346,6 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSig
         arm_group_map=arm_group_map,
         intervention_meshes=mesh_terms,
         intervention_mesh_ancestors=mesh_ancestors,
+        condition_meshes=condition_mesh_terms,
+        condition_mesh_ancestors=condition_mesh_ancestors,
     )
