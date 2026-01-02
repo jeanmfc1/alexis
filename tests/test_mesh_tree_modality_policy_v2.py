@@ -6,11 +6,11 @@ from policy.mesh_tree_modality_policy_v2 import mesh_tree_to_submodality
 @pytest.mark.parametrize("mesh_id,term,base,expected", [
     # Small molecules — should match D02 / D03 / D04
     ("D000068696", "Rilpivirine", "drug", "small_molecule"),  # tree includes D02 and D03
-    ("D000082549", "Atorvastatin", "drug", "small_molecule"), # organic statin example
+    ("D000069059", "Atorvastatin", "drug", "small_molecule"), # organic statin example
 
     # Antibodies (monoclonal) — deeply nested prefix
     # Example: Trastuzumab (ID may vary by MeSH version)
-    ("D000081657", "Trastuzumab", "biologic", "monoclonal_antibody"),
+    ("D000069579", "Ranibizumab", "biologic", "monoclonal_antibody"),
 
     # Fusion protein example — use a known fusion protein MeSH ID
     ("D011993", "Recombinant Fusion Protein", "biologic", "fusion_protein"),
@@ -19,7 +19,7 @@ from policy.mesh_tree_modality_policy_v2 import mesh_tree_to_submodality
     ("D000087503", "Influenza Vaccine, Live", "drug", "vaccine"),
 
     # Oligonucleotide example (nucleic acid)
-    ("D000073190", "Antisense Oligonucleotide", "drug", "oligonucleotide"),
+    ("D016376", "Antisense Oligonucleotide", "drug", "oligonucleotide"),
 
     # If no MeSH match and fallback applies, base modality should persist
     (None, "Unknown text", "small_molecule", None),

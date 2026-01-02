@@ -29,7 +29,7 @@ def classify_trial_modality(iv_type, mesh_ids, mesh_terms, text):
     ("BIOLOGICAL", ["D000087503"], ["Influenza Vaccine"], "flu vaccine", "vaccine"),
 
     # oligo via MeSH
-    ("GENETIC", ["D000073190"], ["Antisense Oligonucleotide"], "", "oligonucleotide"),
+    ("GENETIC", ["D016376"], ["Antisense Oligonucleotide"], "", "oligonucleotide"),
 
     # fusion protein via MeSH
     ("BIOLOGICAL", ["D011993"], ["Fusion Protein"], "", "fusion_protein"),
