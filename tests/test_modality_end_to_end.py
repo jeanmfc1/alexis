@@ -11,7 +11,8 @@ def classify_trial_modality(iv_type, mesh_ids, mesh_terms, text):
     base = type_to_base_modality(iv_type)
     # try MeSH first
     for mid, term in zip(mesh_ids, mesh_terms):
-        sub = mesh_tree_to_submodality(mid, term, base)
+        mesh_result = mesh_tree_to_submodality(mid)
+        sub = mesh_result.modality
         if sub:
             return sub
     # fallback to text

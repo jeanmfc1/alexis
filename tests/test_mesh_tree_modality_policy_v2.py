@@ -25,5 +25,6 @@ from policy.mesh_tree_modality_policy_v2 import mesh_tree_to_submodality
     (None, "Unknown text", "small_molecule", None),
 ])
 def test_mesh_tree_to_submodality(mesh_id, term, base, expected):
-    result = mesh_tree_to_submodality(mesh_id, term, base)
-    assert result == expected
+    result = mesh_tree_to_submodality(mesh_id)
+    assert result.modality == expected
+
