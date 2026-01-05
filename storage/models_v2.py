@@ -88,3 +88,7 @@ class ClinicalTrialSignalV2:
     # (optional semantic enrichment — not required for new drug detection)
     intervention_meshes: List[MeshTermV2] = field(default_factory=list)
     intervention_mesh_ancestors: List[MeshTermV2] = field(default_factory=list)
+
+    # INFO flags
+    trial.info_flags: list[str]
+

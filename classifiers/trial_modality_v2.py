@@ -25,6 +25,9 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
     Returns:
         modality: str from your taxonomy (e.g., small_molecule, monoclonal_antibody, vaccine, etc.)
     """
+    # Reset INFO flags for this run
+    trial.info_flags.clear()
+    mesh_available = bool(getattr(trial, "intervention_meshes", []))
 
     # --- 1) Base modality from structured intervention.type ---
 
@@ -41,16 +44,20 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
 
     # collect all candidate MeSH submodalities
     mesh_submods: list[str] = []
+    mesh_used = False
 
     for m in getattr(trial, "intervention_meshes", []) or []:
-        # mesh_tree_to_submodality handles tree number lookup internally
-        sub = mesh_tree_to_submodality(m.id, m.term, base_modality)
-        if sub:
-            mesh_submods.append(sub)
+        mesh_result = mesh_tree_to_submodality(m.id)
+        if mesh_result.modality:
+            mesh_used = True
+            mesh_submods.append(mesh_result.modality)
 
     if mesh_submods:
         # resolve priority (policy logic), e.g., pick the most specific
         return _resolve_modality_priority(mesh_submods, base_modality)
+    
+    if mesh_available and not mesh_used:
+    trial.info_flags.append("mesh_available_but_not_used")
 
     # --- 3) Fallback: use legacy text matcher from ALEXIS V1 ---
 
