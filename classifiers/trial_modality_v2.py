@@ -57,7 +57,7 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
         return _resolve_modality_priority(mesh_submods, base_modality)
     
     if mesh_available and not mesh_used:
-    trial.info_flags.append("mesh_available_but_not_used")
+        trial.info_flags.append("mesh_available_but_not_used")
 
     # --- 3) Fallback: use legacy text matcher from ALEXIS V1 ---
 
