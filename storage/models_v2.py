@@ -90,5 +90,5 @@ class ClinicalTrialSignalV2:
     intervention_mesh_ancestors: List[MeshTermV2] = field(default_factory=list)
 
     # INFO flags
-    trial.info_flags: list[str]
+    info_flags: List[str] = field(default_factory=list)
 
