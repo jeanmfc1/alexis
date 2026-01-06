@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-# IMPORT your V1 text matching modality util
-from classifiers.drug_modality_v1 import match_modality_from_text
+from policy.text_modality_policy_v2 import text_modality_from_text
 
 from policy.type_modality_policy_v2 import type_to_base_modality
 from policy.mesh_tree_modality_policy_v2 import mesh_tree_to_submodality
@@ -62,9 +61,10 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
     # --- 3) Fallback: use legacy text matcher from ALEXIS V1 ---
 
     text_blob = " ".join((trial.interventions_text or []) + [trial.title or ""])
-    text_submod = match_modality_from_text(text_blob, base_modality)
+    text_submod = text_modality_from_text(text_blob, base_modality)
     if text_submod:
         return text_submod
+
 
     # --- 4) Default to base modality if no refinement ---
 

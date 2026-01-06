@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from storage.models_v2 import ClinicalTrialSignalV2, InterventionV2, MeshTermV2
 
+from datetime import date
 
 @dataclass(frozen=True)
 class SnapshotMetadataV2:
@@ -20,18 +21,27 @@ class SnapshotMetadataV2:
     condition_query: Optional[str] = None
     page_size: Optional[int] = None
     max_studies: Optional[int] = None
+    reclassified_from: Optional[str] = None
 
+def _ensure_date(d):
+    if isinstance(d, date):
+        return d
+    if isinstance(d, str):
+        return date.fromisoformat(d)
+    return None 
 
-def _date_to_str(d: date) -> str:
+def _date_to_str(d) -> str:
+    if d is None:
+        return None
+    if isinstance(d, str):
+        return d
     return d.isoformat()
-
 
 def _mesh_term_to_dict(m: MeshTermV2) -> Dict[str, Any]:
     return {
         "id": m.id,
         "term": m.term,
     }
-
 
 def _intervention_to_dict(iv: InterventionV2) -> Dict[str, Any]:
     return {
@@ -78,7 +88,6 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         "info_flags": list(getattr(t, "info_flags", []) or []),
     }
 
-
 def save_trial_snapshot_v2(
     base_dir: str,
     basis_folder: str,
@@ -98,14 +107,18 @@ def save_trial_snapshot_v2(
     run_ts = datetime.now().strftime("%H-%M-%S")
     path = out_dir / f"{_date_to_str(metadata.as_of)}T{run_ts}.json"
 
+    start = _ensure_date(metadata.window_start)
+    end = _ensure_date(metadata.window_end)
+
     payload: Dict[str, Any] = {
         "metadata": {
             "source": metadata.source,
             "window_basis": metadata.window_basis,
             "as_of": _date_to_str(metadata.as_of),
             "window_start": _date_to_str(metadata.window_start),
+            "window_start": _date_to_str(metadata.window_start),
             "window_end": _date_to_str(metadata.window_end),
-            "window_days": (metadata.window_end - metadata.window_start).days,
+            "window_days": (end - start).days if start and end else None,
             "condition_query": metadata.condition_query,
             "page_size": metadata.page_size,
             "max_studies": metadata.max_studies,

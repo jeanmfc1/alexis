@@ -1,4 +1,6 @@
 from datetime import date, timedelta
+import json
+from pathlib import Path
 
 from tqdm import tqdm
 
@@ -9,11 +11,30 @@ from classifiers.therapeutic_area import assign_therapeutic_area  # v01 TA class
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
 
-from analytics.summary import ta_modality_counts
+from analytics.summary_v2 import (
+    ta_modality_counts_true_drugs,
+    drug_trial_counts,
+    info_flag_counts_true_drugs,
+    drug_info_overview,
+)
+
 from analytics.modality_info_audit import audit_modality_info_flags
 
 from storage.snapshots_io_v2 import SnapshotMetadataV2, save_trial_snapshot_v2
 from config.settings import CLINICALTRIALS_PAGE_SIZE
+
+RAW_STORAGE_DIR = Path("/home/jeanmfc/projects/ALEXIS/storage/raw/ctgov/weekly")
+
+
+def save_raw_ctgov(raw_payload):
+    RAW_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+    out_path = RAW_STORAGE_DIR / f"ctgov_raw_{date.today().isoformat()}.json"
+
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(raw_payload, f, indent=2, ensure_ascii=False)
+
+    return out_path
 
 
 def main():
@@ -31,7 +52,12 @@ def main():
         page_size=CLINICALTRIALS_PAGE_SIZE,
         max_studies=max_studies,
     )
+
+    raw_path = save_raw_ctgov(raw)
+    print(f"[RAW CTGOV SAVED] {raw_path}")
+
     print(f"Raw studies returned: {len(raw)}")
+
 
     # 3) Normalize (v2)
     trials = []
@@ -74,18 +100,26 @@ def main():
 
     # 6) Compute summaries and save snapshot (v2)
     summary = {
-        "ta_modality_counts": ta_modality_counts(trials),
-        "info_flag_counts": audit_modality_info_flags(trials),
+        "ta_modality_counts_true_drugs": ta_modality_counts_true_drugs(trials),
+        "drug_trial_counts": drug_trial_counts(trials),
+        "info_flag_counts_true_drugs": info_flag_counts_true_drugs(trials),
+        "drug_info_overview": drug_info_overview(trials),
     }
 
-    print("\nTA × Modality counts (v2):")
-    for ta, mods in summary["ta_modality_counts"].items():
+
+    print("\nTA × Modality counts (TRUE DRUGS ONLY):")
+    for ta, mods in summary["ta_modality_counts_true_drugs"].items():
         for modality, count in mods.items():
             print(f"  {ta:20} | {modality:22} | {count}")
 
-    print("\nModality INFO summary (v2):")
-    for flag, count in summary["info_flag_counts"].items():
+
+    print("\nModality INFO summary (TRUE DRUGS ONLY):")
+    for flag, count in summary["info_flag_counts_true_drugs"].items():
         print(f"  {flag}: {count}")
+
+    print("\nDrug trial overview:")
+    for k, v in summary["drug_info_overview"].items():
+        print(f"  {k}: {v}")
 
     snapshot_path = save_trial_snapshot_v2(
         base_dir="storage/snapshots/clinical_trials_v2",

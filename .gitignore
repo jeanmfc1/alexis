@@ -23,3 +23,5 @@ env/
 # ---------------------------
 storage/snapshots/
 storage/audits/
+storage/raw
+raw_ctgov_full_dump.json

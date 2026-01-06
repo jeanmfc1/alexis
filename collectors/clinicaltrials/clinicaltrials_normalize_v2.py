@@ -59,10 +59,18 @@ def _parse_date(value: Optional[str]) -> ParsedDate:
     ):
         return f"{v} missing day"
     return None
-
 # --------------------------------
 # Arm groups extraction
 # --------------------------------
+def _normalize_arm_type(value: str) -> str:
+    """
+    Normalize CT.gov arm group types to canonical enum form.
+    Examples:
+      "EXPERIMENTAL" -> "EXPERIMENTAL"
+      "Experimental" -> "EXPERIMENTAL"
+      "Active Comparator" -> "ACTIVE_COMPARATOR"
+    """
+    return value.strip().upper().replace(" ", "_")
 
 def extract_arm_groups(study: Dict[str, Any]) -> Dict[str, str]:
     """
@@ -79,7 +87,10 @@ def extract_arm_groups(study: Dict[str, Any]) -> Dict[str, str]:
         label = ag.get("label")
         arm_type = ag.get("type")
         if isinstance(label, str) and label.strip():
-            arm_map[label.strip()] = arm_type if isinstance(arm_type, str) else ""
+            if isinstance(arm_type, str):
+                arm_map[label.strip()] = _normalize_arm_type(arm_type)
+            else:
+                arm_map[label.strip()] = ""
     return arm_map
 
 # --------------------------------
@@ -100,16 +111,16 @@ def assign_intervention_role(iv: InterventionV2, arm_map: Dict[str, str]) -> str
     roles = {arm_map.get(lbl, "") for lbl in iv.arm_group_labels}
 
     # If any of its arms is labeled "Experimental", treat this as the experimental drug
-    if "Experimental" in roles:
+    if "EXPERIMENTAL" in roles:
         return "experimental_drug"
 
     # Otherwise, if any of its arms is labeled "Active Comparator",
     # treat it as a positive control drug
-    if "Active Comparator" in roles:
+    if "ACTIVE_COMPARATOR" in roles:
         return "active_control_drug"
 
     # If any arm is "Placebo Comparator", treat it as placebo control
-    if "Placebo Comparator" in roles:
+    if "PLACEBO_COMPARATOR" in roles:
         return "placebo_control"
 
     # Otherwise, it’s not one of those known roles
@@ -349,3 +360,4 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSig
         condition_meshes=condition_mesh_terms,
         condition_mesh_ancestors=condition_mesh_ancestors,
     )
+

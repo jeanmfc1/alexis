@@ -92,3 +92,11 @@ class ClinicalTrialSignalV2:
     # INFO flags
     info_flags: List[str] = field(default_factory=list)
 
+    # classification outputs (persisted)
+    therapeutic_area: Optional[str] = None
+    is_drug_trial: Optional[bool] = None
+    modality: Optional[str] = None
+
+    # optional, future-proof
+    modality_source: Optional[str] = None
+
