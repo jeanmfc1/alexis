@@ -101,3 +101,45 @@ def drug_info_overview(
             if t.modality is None and t.info_flags
         ),
     }
+
+    def study_type_summary_all_trials(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count trials by CT.gov StudyType (INTERVENTIONAL, OBSERVATIONAL, etc.).
+    Includes ALL trials.
+    """
+    counts: dict = {}
+
+    for t in trials:
+        st = t.study_type or "UNKNOWN"
+        counts[st] = counts.get(st, 0) + 1
+
+    return counts
+
+def intervention_type_summary_all_trials(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count trials by intervention type labels present.
+    Labels are preserved exactly (DRUG, BIOLOGICAL, PROCEDURE, etc.).
+    Includes ALL trials.
+    """
+    counts: dict = {}
+
+    for t in trials:
+        # requires interventions_all to exist on the model
+        types = {
+            iv.type.upper()
+            for iv in (t.interventions_all or [])
+            if isinstance(iv.type, str)
+        }
+
+        if not types:
+            counts["NONE"] = counts.get("NONE", 0) + 1
+        else:
+            for tp in types:
+                counts[tp] = counts.get(tp, 0) + 1
+
+    return counts
+

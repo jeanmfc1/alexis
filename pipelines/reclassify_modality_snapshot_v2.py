@@ -13,6 +13,8 @@ from analytics.summary_v2 import (
     drug_trial_counts,
     info_flag_counts_true_drugs,
     drug_info_overview,
+    intervention_type_summary_all_trials,
+    study_type_summary_all_trials,
 )
 from storage.snapshots_io_v2 import save_trial_snapshot_v2, SnapshotMetadataV2
 
@@ -109,6 +111,8 @@ def reclassify_snapshot(
         "drug_trial_counts": drug_trial_counts(trials),
         "info_flag_counts_true_drugs": info_flag_counts_true_drugs(trials),
         "drug_info_overview": drug_info_overview(trials),
+        "intervention_type_summary": intervention_type_summary_all_trials(trials),
+        "study_type_summary": study_type_summary_all_trials(trials),
     }
 
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")
@@ -124,6 +128,15 @@ def reclassify_snapshot(
     print("\nDrug trial overview:")
     for k, v in summary["drug_info_overview"].items():
         print(f"  {k}: {v}")
+    
+    print("\nStudyType summary (ALL trials):")
+    for st, count in summary.get("study_type_summary", {}).items():
+        print(f"  {st}: {count}")
+
+    
+    print("\nIntervention type summary (ALL trials):")
+    for tp, count in summary.get("intervention_type_summary", {}).items():
+        print(f"  {tp}: {count}")
 
     # --- Metadata ---
     metadata = SnapshotMetadataV2(

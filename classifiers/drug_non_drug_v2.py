@@ -11,15 +11,31 @@ if TYPE_CHECKING:
 
 def is_drug_trial_v2(trial: "ClinicalTrialSignalV2") -> bool:
     """
-    Return True if the normalized trial has at least one experimental drug intervention.
-    This strict classifier has no fallback. It does NOT use text heuristics or MeSH.
-    
-    Args:
-        trial: a ClinicalTrialSignalV2 object from normalize_v2
-    
-    Returns:
-        bool: True if any experimental drug present, False otherwise
+    Broad drug vs non-drug classifier.
+
+    Rules:
+    1) Only INTERVENTIONAL studies can be drug trials
+    2) Role-agnostic: experimental, placebo, control all count
+    3) Intervention types are preserved
     """
-    # trial.interventions now contains only experimental drug interventions
-    # because normalize_v2 filtered out controls and non-drugs.
-    return bool(trial.interventions)
+
+    # ---- StudyType gate (hard filter) ----
+    if trial.study_type != "INTERVENTIONAL":
+        return False
+
+    # ---- Broad intervention-type gate ----
+    drug_like_types = {
+        "DRUG",
+        "BIOLOGICAL",
+        "COMBINATION_PRODUCT",
+        "GENETIC",
+    }
+
+    types_present = {
+        iv.type.upper()
+        for iv in (trial.interventions_all or [])
+        if isinstance(iv.type, str)
+    }
+
+    return bool(types_present & drug_like_types)
+
