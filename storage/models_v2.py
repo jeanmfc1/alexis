@@ -70,6 +70,7 @@ class ClinicalTrialSignalV2:
     last_update_posted_date: Union[date, str, None] = None
 
     # Interventions
+    interventions_all: List[InterventionV2] = field(default_factory=list)
     # Only new experimental drugs (filtered in normalization)
     interventions: List[InterventionV2] = field(default_factory=list)
 

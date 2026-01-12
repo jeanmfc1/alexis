@@ -102,7 +102,7 @@ def drug_info_overview(
         ),
     }
 
-    def study_type_summary_all_trials(
+def study_type_summary_all_trials(
     trials: list[ClinicalTrialSignalV2],
 ) -> dict:
     """

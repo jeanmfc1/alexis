@@ -129,6 +129,48 @@ def assign_intervention_role(iv: InterventionV2, arm_map: Dict[str, str]) -> str
 # --------------------------------
 # Structured interventions
 # --------------------------------
+def extract_all_structured_interventions(
+    study: Dict[str, Any],
+    arm_group_map: Dict[str, str],
+) -> List[InterventionV2]:
+    """
+    Extract ALL interventions with role tagging.
+    No filtering by role or type.
+    """
+    raw = _get(
+        study,
+        ["protocolSection", "armsInterventionsModule", "interventions"],
+        default=[],
+    ) or []
+
+    out: List[InterventionV2] = []
+
+    for iv in raw:
+        if not isinstance(iv, dict):
+            continue
+
+        name = iv.get("name")
+        if not isinstance(name, str) or not name.strip():
+            continue
+
+        iv_type = iv.get("type")
+
+        arm_labels = iv.get("armGroupLabels") or []
+        other_names = iv.get("otherNames") or []
+
+        candidate = InterventionV2(
+            name=name.strip(),
+            type=iv_type if isinstance(iv_type, str) else None,
+            description=iv.get("description"),
+            arm_group_labels=[lbl for lbl in arm_labels if isinstance(lbl, str)],
+            other_names=[nm for nm in other_names if isinstance(nm, str)],
+            role=None,
+        )
+
+        candidate.role = assign_intervention_role(candidate, arm_group_map)
+        out.append(candidate)
+
+    return out
 
 def extract_structured_interventions(
     study: Dict[str, Any],
@@ -334,8 +376,10 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSig
     # Arms
     arm_group_map = extract_arm_groups(study)
 
-    # Interventions — **only new experimental drugs**
+    # Interventions — preserve ALL, then filter experimental
+    all_interventions = extract_all_structured_interventions(study, arm_group_map)
     structured_interventions = extract_structured_interventions(study, arm_group_map)
+
 
     # Legacy text
     interventions_text = extract_interventions_text(study)
@@ -352,6 +396,7 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSig
         sponsor_class=sponsor_class,
         first_posted_date=first_posted_date,
         last_update_posted_date=last_update_date,
+        interventions_all=all_interventions,
         interventions=structured_interventions,        # only new drugs
         interventions_text=interventions_text,
         arm_group_map=arm_group_map,

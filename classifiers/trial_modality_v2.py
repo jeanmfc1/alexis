@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
 from policy.text_modality_policy_v2 import text_modality_from_text
-
 from policy.type_modality_policy_v2 import type_to_base_modality
 from policy.mesh_tree_modality_policy_v2 import mesh_tree_to_submodality
 
