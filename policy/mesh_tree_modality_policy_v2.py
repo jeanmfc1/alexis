@@ -141,13 +141,13 @@ def _fetch_mapped_descriptors(supp_id: str) -> list[str]:
         data = resp.json()
 
         mapped: list[str] = []
-        for field in ("pharmacologicAction", "headingMappedTo"):
+        for field in ("preferredMappedTo", "pharmacologicalAction", "indexerConsiderAlso"):
             entries = data.get(field) or []
-            if not isinstance(entries, list):
-                continue
-
+            if isinstance(entries, str):
+                entries = [entries]
             for ent in entries:
                 did = ""
+                
                 if isinstance(ent, str):
                     did = _normalize_mesh_id(ent)
                 elif isinstance(ent, dict):
