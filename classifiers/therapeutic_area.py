@@ -126,3 +126,52 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
         return TA_RARE
 
     return TA_OTHER
+
+    def detect_therapeutic_areas(trial: ClinicalTrialSignal) -> list[str]:
+    """
+    Return a list of therapeutic areas detected using condition MeSH ancestry.
+    Multi-label by design.
+    """
+    areas = set()
+
+    ancestors = trial.condition_mesh_ancestors or []
+    ancestor_ids = {
+        a.get("id")
+        for a in ancestors
+        if isinstance(a, dict) and isinstance(a.get("id"), str)
+    }
+
+    TA_MESH_ROOTS = {
+        TA_ONCOLOGY: [
+            {"id": "D009369", "term": "Neoplasms"},
+        ],
+        TA_RARE: [
+            {"id": "D030342", "term": "Genetic Diseases, Inborn"},
+            {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
+        ],
+        TA_NEURO: [
+            {"id": "D009422", "term": "Nervous System Diseases"},
+            {"id": "D002493", "term": "Central Nervous System Diseases"},
+        ],
+        TA_METABOLIC: [
+            {"id": "D008659", "term": "Metabolic Diseases"},
+            {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},
+        ],
+        TA_CARDIO: [
+            {"id": "D002318", "term": "Cardiovascular Diseases"},
+        ],
+        TA_MSK: [
+            {"id": "D009140", "term": "Musculoskeletal Diseases"},
+        ],
+        TA_INFECTIOUS: [
+            {"id": "D007239", "term": "Infections"},
+        ],
+    }
+
+    for ta, roots in TA_MESH_ROOTS.items():
+        for root in roots:
+            if root["id"] in ancestor_ids:
+                areas.add(ta)
+                break
+
+    return sorted(areas)
