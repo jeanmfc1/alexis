@@ -1,19 +1,25 @@
 # ALEXIS/classifiers/therapeutic_area.py
 
 from __future__ import annotations
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Dict
 from storage.models import ClinicalTrialSignal
 import re
 
 from policy.ta_policy import (
-    TA_ONCOLOGY, TA_INFECTIOUS, TA_IMMUNO, TA_NEURO, TA_CARDIO, TA_METABOLIC, TA_RARE, TA_MSK, TA_OTHER,
+    TA_ONCOLOGY, TA_INFECTIOUS, TA_IMMUNO, TA_NEURO, TA_CARDIO,
+    TA_METABOLIC, TA_RARE, TA_MSK, TA_OTHER,
     BENIGN_GUARD_KWS, STROKE_PATS,
-    ONCOLOGY_KW, INFECTIOUS_KW, IMMUNO_KW, NEURO_KW, CARDIO_KW, METABOLIC_KW, RARE_KW, MSK_KW,
+    ONCOLOGY_KW, INFECTIOUS_KW, IMMUNO_KW, NEURO_KW, CARDIO_KW,
+    METABOLIC_KW, RARE_KW, MSK_KW,
     PAIN_SYNDROME_PATS, PDPN_PATS,
     NON_CARDIO_CATHETER_EXCLUSIONS, CARDIO_CATHETER_CONTEXT,
-    NON_CARDIAC_VALVE_EXCLUSIONS, CARDIAC_VALVE_CONTEXT, CARDIO_STENT_CONTEXT,
-    STROKE_NEURO_FOCUS_TERMS,
+    NON_CARDIAC_VALVE_EXCLUSIONS, CARDIAC_VALVE_CONTEXT,
+    CARDIO_STENT_CONTEXT, STROKE_NEURO_FOCUS_TERMS,
 )
+
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
 
 def _norm_text(title: Optional[str], conditions: Optional[Iterable[str]]) -> str:
     parts: List[str] = []
@@ -27,6 +33,10 @@ def _norm_text(title: Optional[str], conditions: Optional[Iterable[str]]) -> str
 
 def _has_any(text: str, keywords: Iterable[str]) -> bool:
     return any(kw in text for kw in keywords)
+
+# ---------------------------------------------------------------------
+# EXISTING single-label TA assignment (UNCHANGED)
+# ---------------------------------------------------------------------
 
 def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
     text = _norm_text(trial.title, trial.conditions)
@@ -51,7 +61,7 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
     ):
         return TA_NEURO
 
-    # Devices/valves/catheters: require cardio context and exclude non-cardio uses
+    # Devices / cardio context
     if ("stent" in text or "stenting" in text) and any(ctx in text for ctx in CARDIO_STENT_CONTEXT):
         return TA_CARDIO
     if "catheter" in text and not any(x in text for x in NON_CARDIO_CATHETER_EXCLUSIONS):
@@ -60,35 +70,28 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
     if "valve" in text and not any(x in text for x in NON_CARDIAC_VALVE_EXCLUSIONS):
         if any(k in text for k in CARDIAC_VALVE_CONTEXT) or ("tavr" in text) or ("tavi" in text):
             return TA_CARDIO
-            
-    # Neuromodulation / neurostimulation -> Neurology / CNS
-    # This must NOT depend on pain_syndrome_hit, because many trials just say "Pain"
-    # while the intervention/approach is clearly CNS-directed.
+
+    # Neuromodulation / neurostimulation
     if any(k in text for k in [
-        "neuromodulation",
-        "neurostimulation",
-        "spinal cord stimulation",
-        "spinal cord stimulator",
-        "scs",
-        "dorsal root ganglion",
-        "drg stimulation",
-        "peripheral nerve stimulation",
-        "pns",
+        "neuromodulation", "neurostimulation",
+        "spinal cord stimulation", "spinal cord stimulator",
+        "scs", "dorsal root ganglion", "drg stimulation",
+        "peripheral nerve stimulation", "pns",
     ]):
         return TA_NEURO
 
-    # Oncology first (broad domain), respect benign guard
+    # Oncology (guarded)
     if not benign_guard and _has_any(text, ONCOLOGY_KW):
         return TA_ONCOLOGY
 
-    # Stroke -> Cardio by default; Neuro if CNS focus
+    # Stroke routing
     stroke_hit = any(p.search(text) for p in STROKE_PATS)
     if stroke_hit and ("cancer" not in text):
         if any(k in text for k in STROKE_NEURO_FOCUS_TERMS):
             return TA_NEURO
         return TA_CARDIO
 
-    # Pain syndromes routing
+    # Pain syndromes
     pdpn_hit = any(p.search(text) for p in PDPN_PATS)
     pain_syndrome_hit = any(p.search(text) for p in PAIN_SYNDROME_PATS)
     if pain_syndrome_hit:
@@ -100,18 +103,23 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
         if pdpn_hit and _has_any(text, METABOLIC_KW):
             return TA_METABOLIC
         if not has_strong_anchor:
-            if any(k in text for k in ["neuromodulation", "neurostimulation", "spinal cord stimulation", "scs", "stimulator", "fibromyalgia", "crps", "complex regional pain syndrome"]):
+            if any(k in text for k in [
+                "neuromodulation", "neurostimulation",
+                "spinal cord stimulation", "scs",
+                "stimulator", "fibromyalgia", "crps",
+                "complex regional pain syndrome",
+            ]):
                 return TA_NEURO
             if "back pain" in text or "low back pain" in text or "myofascial pain" in text:
                 return TA_MSK
             if "chronic pain" in text:
                 return TA_OTHER
 
-    # Musculoskeletal direct anchors (OA, arthroplasty, mechanical pain) before Immunology
+    # MSK before Immunology
     if _has_any(text, MSK_KW):
         return TA_MSK
 
-    # Preferred order to avoid leakage
+    # Preferred order
     if _has_any(text, CARDIO_KW):
         return TA_CARDIO
     if _has_any(text, INFECTIOUS_KW):
@@ -127,9 +135,40 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
 
     return TA_OTHER
 
-    def detect_therapeutic_areas(trial: ClinicalTrialSignal) -> list[str]:
+# ---------------------------------------------------------------------
+# NEW: Multi-label TA detection using condition MeSH ancestry
+# ---------------------------------------------------------------------
+
+TA_MESH_ROOTS: Dict[str, List[Dict[str, str]]] = {
+    TA_ONCOLOGY: [
+        {"id": "D009369", "term": "Neoplasms"},
+    ],
+    TA_RARE: [
+        {"id": "D030342", "term": "Genetic Diseases, Inborn"},
+        {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
+    ],
+    TA_NEURO: [
+        {"id": "D009422", "term": "Nervous System Diseases"},
+        {"id": "D002493", "term": "Central Nervous System Diseases"},
+    ],
+    TA_METABOLIC: [
+        {"id": "D008659", "term": "Metabolic Diseases"},
+        {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},
+    ],
+    TA_CARDIO: [
+        {"id": "D002318", "term": "Cardiovascular Diseases"},
+    ],
+    TA_MSK: [
+        {"id": "D009140", "term": "Musculoskeletal Diseases"},
+    ],
+    TA_INFECTIOUS: [
+        {"id": "D007239", "term": "Infections"},
+    ],
+}
+
+def detect_therapeutic_areas(trial: ClinicalTrialSignal) -> List[str]:
     """
-    Return a list of therapeutic areas detected using condition MeSH ancestry.
+    Detect therapeutic areas using condition MeSH ancestry.
     Multi-label by design.
     """
     areas = set()
@@ -141,37 +180,31 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
         if isinstance(a, dict) and isinstance(a.get("id"), str)
     }
 
-    TA_MESH_ROOTS = {
-        TA_ONCOLOGY: [
-            {"id": "D009369", "term": "Neoplasms"},
-        ],
-        TA_RARE: [
-            {"id": "D030342", "term": "Genetic Diseases, Inborn"},
-            {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
-        ],
-        TA_NEURO: [
-            {"id": "D009422", "term": "Nervous System Diseases"},
-            {"id": "D002493", "term": "Central Nervous System Diseases"},
-        ],
-        TA_METABOLIC: [
-            {"id": "D008659", "term": "Metabolic Diseases"},
-            {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},
-        ],
-        TA_CARDIO: [
-            {"id": "D002318", "term": "Cardiovascular Diseases"},
-        ],
-        TA_MSK: [
-            {"id": "D009140", "term": "Musculoskeletal Diseases"},
-        ],
-        TA_INFECTIOUS: [
-            {"id": "D007239", "term": "Infections"},
-        ],
-    }
-
     for ta, roots in TA_MESH_ROOTS.items():
         for root in roots:
             if root["id"] in ancestor_ids:
                 areas.add(ta)
-                break
+                break  # stop checking more roots for this TA only
 
     return sorted(areas)
+
+def detect_therapeutic_area_evidence(trial: ClinicalTrialSignal) -> Dict[str, List[Dict[str, str]]]:
+    """
+    Return mapping: TA -> list of matched MeSH roots (id + term).
+    Used for audit and explainability.
+    """
+    evidence: Dict[str, List[Dict[str, str]]] = {}
+
+    ancestors = trial.condition_mesh_ancestors or []
+    ancestor_ids = {
+        a.get("id")
+        for a in ancestors
+        if isinstance(a, dict) and isinstance(a.get("id"), str)
+    }
+
+    for ta, roots in TA_MESH_ROOTS.items():
+        matches = [r for r in roots if r["id"] in ancestor_ids]
+        if matches:
+            evidence[ta] = matches
+
+    return evidence

@@ -4,7 +4,11 @@ import json
 from pathlib import Path
 from datetime import date
 
-from classifiers.therapeutic_area import assign_therapeutic_area  # v01 TA classifier reused for now
+from classifiers.therapeutic_area import (
+    assign_therapeutic_area,
+    detect_therapeutic_areas,
+    detect_therapeutic_area_evidence,
+)
 from storage.models_v2 import ClinicalTrialSignalV2, InterventionV2, MeshTermV2
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
@@ -34,18 +38,21 @@ from storage.models_v2 import ClinicalTrialSignalV2, InterventionV2, MeshTermV2
 def reconstruct_trials(raw_trials: list[dict]) -> list[ClinicalTrialSignalV2]:
     trials = []
 
-    for t in raw_trials:
-        interventions = [
-            InterventionV2(
-                name=iv.get("name"),
-                type=iv.get("type"),
-                role=iv.get("role"),
-                arm_group_labels=iv.get("arm_group_labels") or [],
-                other_names=iv.get("other_names") or [],
-                description=iv.get("description"),
-            )
-            for iv in (t.get("interventions") or [])
-        ]
+    for t in tqdm(trials, desc="Reclassifying trials (v2)", unit="trial"):
+        # existing behavior
+        t.therapeutic_area = assign_therapeutic_area(t)
+
+        # NEW: multi-TA detection
+        evidence = detect_therapeutic_area_evidence(t)
+        t.therapeutic_areas_detected = list(evidence.keys())
+        t.therapeutic_area_evidence = evidence
+
+        # existing behavior
+        t.is_drug_trial = is_drug_trial_v2(t)
+        if t.is_drug_trial:
+            t.modality = assign_trial_modality_v2(t)
+        else:
+            t.modality = None
 
         def mesh_list(key: str):
             return [
