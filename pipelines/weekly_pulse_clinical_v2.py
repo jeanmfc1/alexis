@@ -14,7 +14,7 @@ from classifiers.therapeutic_area import (
 )
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
-
+from policy.ta_policy import TA_NON_DISEASE
 from analytics.summary_v2 import (
     ta_modality_counts_true_drugs,
     drug_trial_counts,

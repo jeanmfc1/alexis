@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from datetime import date
 from typing import List
+from policy.ta_policy import TA_NON_DISEASE
 
 from classifiers.therapeutic_area import (
     assign_therapeutic_area,
