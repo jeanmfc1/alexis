@@ -12,6 +12,12 @@ TA_CARDIO = "Cardiovascular"
 TA_METABOLIC = "Metabolic / Endocrine"
 TA_RARE = "Rare / Genetic"
 TA_MSK = "Musculoskeletal"
+TA_PSYCHIATRY = "Psychiatry"
+TA_GI = "Gastrointestinal / Hepatic"
+TA_RESPIRATORY = "Respiratory"
+TA_OPHTHALMOLOGY = "Ophthalmology"
+TA_UROLOGY = "Urology"
+TA_NON_DISEASE = "Non-disease drug study"
 TA_OTHER = "Other"
 
 # Benign guard for oncology phrases in non-disease contexts

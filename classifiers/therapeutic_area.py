@@ -139,54 +139,117 @@ def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
 # NEW: Multi-label TA detection using condition MeSH ancestry
 # ---------------------------------------------------------------------
 
-TA_MESH_ROOTS: Dict[str, List[Dict[str, str]]] = {
+TA_MESH_ROOTS = {
+
+    # -----------------------------
+    # Oncology
+    # -----------------------------
     TA_ONCOLOGY: [
         {"id": "D009369", "term": "Neoplasms"},
     ],
-    TA_RARE: [
-        {"id": "D030342", "term": "Genetic Diseases, Inborn"},
-        {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
+
+    # -----------------------------
+    # Immunology / Inflammation
+    # -----------------------------
+    TA_IMMUNO: [
+        {"id": "D007154", "term": "Immune System Diseases"},
+        {"id": "D001327", "term": "Autoimmune Diseases"},
+        {"id": "D006967", "term": "Hypersensitivity"},
+        {"id": "D010437", "term": "Inflammation"},
+        {"id": "D012871", "term": "Skin Diseases"},              # immune-mediated subset
+        {"id": "D003875", "term": "Dermatitis"},                # inflammatory skin disease
+        {"id": "D006425", "term": "Hemic and Lymphatic Diseases"},  # immune hematology
     ],
+
+    # -----------------------------
+    # Neurology / CNS
+    # -----------------------------
     TA_NEURO: [
         {"id": "D009422", "term": "Nervous System Diseases"},
         {"id": "D002493", "term": "Central Nervous System Diseases"},
     ],
-    TA_METABOLIC: [
-        {"id": "D008659", "term": "Metabolic Diseases"},
-        {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},
+
+    # -----------------------------
+    # Psychiatry
+    # -----------------------------
+    TA_PSYCHIATRY: [
+        {"id": "D001523", "term": "Mental Disorders"},
+        {"id": "D009422", "term": "Mood Disorders"},
+        {"id": "D003863", "term": "Depressive Disorder"},
+        {"id": "D013493", "term": "Substance-Related Disorders"},
     ],
+
+    # -----------------------------
+    # Cardiovascular
+    # -----------------------------
     TA_CARDIO: [
         {"id": "D002318", "term": "Cardiovascular Diseases"},
     ],
+
+    # -----------------------------
+    # Metabolic / Endocrine
+    # -----------------------------
+    TA_METABOLIC: [
+        {"id": "D008659", "term": "Metabolic Diseases"},
+        {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},
+        {"id": "D004700", "term": "Endocrine System Diseases"},   # IMPORTANT ADD
+    ],
+
+    # -----------------------------
+    # Gastrointestinal / Hepatic
+    # -----------------------------
+    TA_GI: [
+        {"id": "D004064", "term": "Digestive System Diseases"},
+        {"id": "D008099", "term": "Liver Diseases"},
+    ],
+
+    # -----------------------------
+    # Respiratory
+    # -----------------------------
+    TA_RESPIRATORY: [
+        {"id": "D012140", "term": "Respiratory Tract Diseases"},
+        {"id": "D008171", "term": "Lung Diseases"},
+    ],
+
+    # -----------------------------
+    # Ophthalmology
+    # -----------------------------
+    TA_OPHTHALMOLOGY: [
+        {"id": "D005128", "term": "Eye Diseases"},
+        {"id": "D012121", "term": "Retinal Diseases"},
+    ],
+
+    # -----------------------------
+    # Urology
+    # -----------------------------
+    TA_UROLOGY: [
+        {"id": "D014596", "term": "Urogenital Diseases"},
+        {"id": "D014607", "term": "Urologic Diseases"},
+    ],
+
+    # -----------------------------
+    # Musculoskeletal
+    # -----------------------------
     TA_MSK: [
         {"id": "D009140", "term": "Musculoskeletal Diseases"},
     ],
+
+    # -----------------------------
+    # Infectious Disease
+    # -----------------------------
     TA_INFECTIOUS: [
         {"id": "D007239", "term": "Infections"},
     ],
+
+    # -----------------------------
+    # Rare / Genetic
+    # -----------------------------
+    TA_RARE: [
+        {"id": "D030342", "term": "Genetic Diseases, Inborn"},
+        {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
+    ],
 }
 
-def detect_therapeutic_areas(trial: ClinicalTrialSignal) -> List[str]:
-    """
-    Detect therapeutic areas using condition MeSH ancestry.
-    Multi-label by design.
-    """
-    areas = set()
-
-    ancestors = trial.condition_mesh_ancestors or []
-    ancestor_ids = {
-        a.get("id")
-        for a in ancestors
-        if isinstance(a, dict) and isinstance(a.get("id"), str)
-    }
-
-    for ta, roots in TA_MESH_ROOTS.items():
-        for root in roots:
-            if root["id"] in ancestor_ids:
-                areas.add(ta)
-                break  # stop checking more roots for this TA only
-
-    return sorted(areas)
 
 def detect_therapeutic_area_evidence(trial: ClinicalTrialSignal) -> Dict[str, List[Dict[str, str]]]:
     """
@@ -197,9 +260,9 @@ def detect_therapeutic_area_evidence(trial: ClinicalTrialSignal) -> Dict[str, Li
 
     ancestors = trial.condition_mesh_ancestors or []
     ancestor_ids = {
-        a.get("id")
+        a.id
         for a in ancestors
-        if isinstance(a, dict) and isinstance(a.get("id"), str)
+        if hasattr(a, "id") and isinstance(a.id, str)
     }
 
     for ta, roots in TA_MESH_ROOTS.items():

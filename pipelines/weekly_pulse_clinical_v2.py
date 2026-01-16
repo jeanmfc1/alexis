@@ -7,7 +7,11 @@ from tqdm import tqdm
 from collectors.clinicaltrials.clinicaltrials_fetch import fetch_studies_raw
 from collectors.clinicaltrials.clinicaltrials_normalize_v2 import normalize_clinicaltrials_study_v2
 
-from classifiers.therapeutic_area import assign_therapeutic_area  # v01 TA classifier reused for now
+from classifiers.therapeutic_area import (
+    assign_therapeutic_area,
+    detect_therapeutic_areas,
+    detect_therapeutic_area_evidence,
+)
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
 
@@ -81,13 +85,30 @@ def main():
 
     # 4) Classify (write results onto model objects) with progress bar
     for t in tqdm(trials, desc="Classifying trials (v2)", unit="trial"):
-        t.therapeutic_area = assign_therapeutic_area(t)
+        # --- Therapeutic Area (NEW LOGIC) ---
+
+        # 1) Detect multi-TA using MeSH ancestry
+        ta_evidence = detect_therapeutic_area_evidence(t)
+        t.therapeutic_areas_detected = sorted(ta_evidence.keys())
+        t.therapeutic_area_evidence = ta_evidence
+
+        # 2) Decide primary TA
+        if t.therapeutic_areas_detected:
+            t.therapeutic_area = t.therapeutic_areas_detected[0]
+        else:
+        # Explicit non-disease drug study
+            if t.is_drug_trial and not t.condition_meshes:
+                t.therapeutic_area = TA_NON_DISEASE
+            else:
+                t.therapeutic_area = assign_therapeutic_area(t)
+
+        # --- Drug / Modality (UNCHANGED) ---
         t.is_drug_trial = is_drug_trial_v2(t)
-        # Only assign modality for drug trials (optional guard)
         if t.is_drug_trial:
             t.modality = assign_trial_modality_v2(t)
         else:
             t.modality = None
+
 
     # 5) Build snapshot metadata (v2)
     metadata = SnapshotMetadataV2(

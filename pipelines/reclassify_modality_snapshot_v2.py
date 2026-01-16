@@ -1,17 +1,23 @@
+# ALEXIS/pipelines/reclassify_modality_snapshot_v2.py
+
 from __future__ import annotations
+
 from tqdm import tqdm
 import json
 from pathlib import Path
 from datetime import date
+from typing import List
 
 from classifiers.therapeutic_area import (
     assign_therapeutic_area,
-    detect_therapeutic_areas,
     detect_therapeutic_area_evidence,
 )
-from storage.models_v2 import ClinicalTrialSignalV2, InterventionV2, MeshTermV2
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
+
+from storage.models_v2 import ClinicalTrialSignalV2, MeshTermV2, InterventionV2
+from storage.snapshots_io_v2 import save_trial_snapshot_v2, SnapshotMetadataV2
+
 from analytics.summary_v2 import (
     ta_modality_counts_true_drugs,
     drug_trial_counts,
@@ -20,45 +26,37 @@ from analytics.summary_v2 import (
     intervention_type_summary_all_trials,
     study_type_summary_all_trials,
 )
-from storage.snapshots_io_v2 import save_trial_snapshot_v2, SnapshotMetadataV2
-
 
 # -------------------------------------------------
-# Snapshot loading (NO external dependency)
+# Snapshot loading
 # -------------------------------------------------
 
 def load_snapshot(path: Path) -> dict:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
+# -------------------------------------------------
+# Trial reconstruction (FIXED)
+# -------------------------------------------------
 
-from storage.models_v2 import ClinicalTrialSignalV2, InterventionV2, MeshTermV2
+def reconstruct_trials(raw_trials: List[dict]) -> List[ClinicalTrialSignalV2]:
+    trials: List[ClinicalTrialSignalV2] = []
 
-
-def reconstruct_trials(raw_trials: list[dict]) -> list[ClinicalTrialSignalV2]:
-    trials = []
-
-    for t in tqdm(trials, desc="Reclassifying trials (v2)", unit="trial"):
-        # existing behavior
-        t.therapeutic_area = assign_therapeutic_area(t)
-
-        # NEW: multi-TA detection
-        evidence = detect_therapeutic_area_evidence(t)
-        t.therapeutic_areas_detected = list(evidence.keys())
-        t.therapeutic_area_evidence = evidence
-
-        # existing behavior
-        t.is_drug_trial = is_drug_trial_v2(t)
-        if t.is_drug_trial:
-            t.modality = assign_trial_modality_v2(t)
-        else:
-            t.modality = None
+    for t in raw_trials:
 
         def mesh_list(key: str):
             return [
                 MeshTermV2(id=m.get("id"), term=m.get("term"))
                 for m in (t.get(key) or [])
             ]
+        
+        intervention_objs = [
+            InterventionV2(
+                name=iv.get("name"),
+                type=iv.get("type"),
+            )
+            for iv in (t.get("interventions") or [])
+        ]
 
         trial = ClinicalTrialSignalV2(
             nct_id=t.get("nct_id"),
@@ -69,7 +67,8 @@ def reconstruct_trials(raw_trials: list[dict]) -> list[ClinicalTrialSignalV2]:
             conditions=t.get("conditions") or [],
             first_posted_date=t.get("first_posted_date"),
             last_update_posted_date=t.get("last_update_posted_date"),
-            interventions=interventions,
+            interventions=intervention_objs,
+            interventions_all=intervention_objs,   
             interventions_text=t.get("interventions_text") or [],
             arm_group_map=t.get("arm_group_map") or {},
             intervention_meshes=mesh_list("intervention_meshes"),
@@ -86,7 +85,6 @@ def reconstruct_trials(raw_trials: list[dict]) -> list[ClinicalTrialSignalV2]:
 
     return trials
 
-
 # -------------------------------------------------
 # Reclassification
 # -------------------------------------------------
@@ -97,22 +95,46 @@ def reclassify_snapshot(
 ) -> Path:
 
     snapshot = load_snapshot(snapshot_path)
+    raw_trials = snapshot.get("trials", [])
+    old_metadata = snapshot.get("metadata", {})
 
-    trials = reconstruct_trials(snapshot["trials"])
-    old_metadata = snapshot["metadata"]
+    trials = reconstruct_trials(raw_trials)
 
+    print(f"Loaded trials: {len(trials)}")
 
-# 4) Classify (write results onto model objects) with progress bar
-    for t in tqdm(trials, desc="Reclassifying trials (v2)", unit="trial"):
-        t.therapeutic_area = assign_therapeutic_area(t)
+    # -------------------------------------------------
+    # Re-run classifiers
+    # -------------------------------------------------
+
+    for t in tqdm(trials, desc="Classifying trials (v2)", unit="trial"):
+        # --- Therapeutic Area (NEW LOGIC) ---
+
+        # 1) Detect multi-TA using MeSH ancestry
+        ta_evidence = detect_therapeutic_area_evidence(t)
+        t.therapeutic_areas_detected = sorted(ta_evidence.keys())
+        t.therapeutic_area_evidence = ta_evidence
+
+        # 2) Decide primary TA
+        if t.therapeutic_areas_detected:
+            t.therapeutic_area = t.therapeutic_areas_detected[0]
+        else:
+        # Explicit non-disease drug study
+            if t.is_drug_trial and not t.condition_meshes:
+                t.therapeutic_area = TA_NON_DISEASE
+            else:
+                t.therapeutic_area = assign_therapeutic_area(t)
+
+        # --- Drug / Modality (UNCHANGED) ---
         t.is_drug_trial = is_drug_trial_v2(t)
-        # Only assign modality for drug trials (optional guard)
         if t.is_drug_trial:
             t.modality = assign_trial_modality_v2(t)
         else:
             t.modality = None
 
-    # --- Summary (V2, true drugs only) ---
+    # -------------------------------------------------
+    # Summaries
+    # -------------------------------------------------
+
     summary = {
         "ta_modality_counts_true_drugs": ta_modality_counts_true_drugs(trials),
         "drug_trial_counts": drug_trial_counts(trials),
@@ -127,7 +149,6 @@ def reclassify_snapshot(
         for modality, count in mods.items():
             print(f"  {ta:20} | {modality:22} | {count}")
 
-
     print("\nModality INFO summary (TRUE DRUGS ONLY):")
     for flag, count in summary["info_flag_counts_true_drugs"].items():
         print(f"  {flag}: {count}")
@@ -135,29 +156,30 @@ def reclassify_snapshot(
     print("\nDrug trial overview:")
     for k, v in summary["drug_info_overview"].items():
         print(f"  {k}: {v}")
-    
+
     print("\nStudyType summary (ALL trials):")
-    for st, count in summary.get("study_type_summary", {}).items():
+    for st, count in summary["study_type_summary"].items():
         print(f"  {st}: {count}")
 
-    
     print("\nIntervention type summary (ALL trials):")
-    for tp, count in summary.get("intervention_type_summary", {}).items():
+    for tp, count in summary["intervention_type_summary"].items():
         print(f"  {tp}: {count}")
 
-    # --- Metadata ---
+    # -------------------------------------------------
+    # Metadata + Save
+    # -------------------------------------------------
+
     metadata = SnapshotMetadataV2(
-        source=old_metadata["source"],
-        window_basis=old_metadata["window_basis"],
+        source=old_metadata.get("source"),
+        window_basis=old_metadata.get("window_basis"),
         as_of=date.today(),
-        window_start=old_metadata["window_start"],
-        window_end=old_metadata["window_end"],
-        page_size=old_metadata["page_size"],
-        max_studies=old_metadata["max_studies"],
+        window_start=old_metadata.get("window_start"),
+        window_end=old_metadata.get("window_end"),
+        page_size=old_metadata.get("page_size"),
+        max_studies=old_metadata.get("max_studies"),
         reclassified_from=str(snapshot_path),
     )
 
-    # --- Save ---
     out_path = save_trial_snapshot_v2(
         base_dir=str(output_base_dir),
         basis_folder="reclassified",
@@ -168,7 +190,6 @@ def reclassify_snapshot(
 
     return out_path
 
-
 # -------------------------------------------------
 # CLI
 # -------------------------------------------------
@@ -177,7 +198,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Reclassify modality for an existing V2 snapshot (no refetch)"
+        description="Reclassify TA/modality for an existing V2 snapshot (no refetch)"
     )
     parser.add_argument(
         "--snapshot",
@@ -197,4 +218,4 @@ if __name__ == "__main__":
         output_base_dir=Path(args.out),
     )
 
-    print(f"Reclassified snapshot saved to: {out}")
+    print(f"\nReclassified snapshot saved to: {out}")
