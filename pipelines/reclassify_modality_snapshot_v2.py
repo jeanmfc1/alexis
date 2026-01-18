@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from datetime import date
 from typing import List
-from policy.ta_policy import TA_NON_DISEASE
+from policy.ta_policy import TA_NON_DISEASE, select_primary_ta
 
 from classifiers.therapeutic_area import (
     assign_therapeutic_area,
@@ -113,17 +113,15 @@ def reclassify_snapshot(
         # 1) Detect multi-TA using MeSH ancestry
         ta_evidence = detect_therapeutic_area_evidence(t)
         t.therapeutic_areas_detected = sorted(ta_evidence.keys())
-        t.therapeutic_area_evidence = ta_evidence
 
-        # 2) Decide primary TA
-        if t.therapeutic_areas_detected:
-            t.therapeutic_area = t.therapeutic_areas_detected[0]
+        primary_ta = select_primary_ta(t.therapeutic_areas_detected)
+
+        if primary_ta:
+            t.therapeutic_area = primary_ta
+        elif t.is_drug_trial and not t.condition_meshes:
+            t.therapeutic_area = "Non-disease drug study"
         else:
-        # Explicit non-disease drug study
-            if t.is_drug_trial and not t.condition_meshes:
-                t.therapeutic_area = TA_NON_DISEASE
-            else:
-                t.therapeutic_area = assign_therapeutic_area(t)
+            t.therapeutic_area = assign_therapeutic_area(t)
 
         # --- Drug / Modality (UNCHANGED) ---
         t.is_drug_trial = is_drug_trial_v2(t)

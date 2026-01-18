@@ -202,3 +202,60 @@ AUDIT_INFECTIOUS_ANCHORS = [
     "covid",
     "tuberculosis",
 ]
+
+# policy/ta_policy.py
+
+"""
+Therapeutic Area policy
+
+This module defines policy decisions applied AFTER therapeutic area
+evidence has been detected.
+
+These policies do not affect:
+- ontology scope
+- MeSH evidence detection
+- fallback TA assignment
+
+They control how TA information is presented and summarized.
+"""
+
+TA_PRIORITY_ORDER = [
+    # Disease-centric programs dominate operational framing
+    "Oncology",
+    "Infectious Disease",
+    "Rare / Genetic",
+
+    # Mechanism-driven category (secondary to disease-centric framing)
+    "Immunology / Inflammation",
+
+    # CNS categories with distinct regulatory pathways
+    "Neurology / CNS",
+    "Psychiatry",
+
+    # Organ-system categories
+    "Cardiovascular",
+    "Metabolic / Endocrine",
+    "Gastrointestinal / Hepatic",
+    "Respiratory",
+    "Ophthalmology",
+    "Urology",
+    "Musculoskeletal",
+]
+
+
+def select_primary_ta(detected_tas: list[str]) -> str | None:
+    """
+    Select a single primary therapeutic area when multiple TAs are detected.
+
+    Rules:
+    - First TA in TA_PRIORITY_ORDER wins
+    - If no priority match exists, fall back to alphabetical order
+      to preserve deterministic behavior
+
+    This is a presentation / analytics policy, not a biological claim.
+    """
+    for ta in TA_PRIORITY_ORDER:
+        if ta in detected_tas:
+            return ta
+
+    return sorted(detected_tas)[0] if detected_tas else None
