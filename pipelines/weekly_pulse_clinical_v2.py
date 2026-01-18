@@ -9,7 +9,6 @@ from collectors.clinicaltrials.clinicaltrials_normalize_v2 import normalize_clin
 
 from classifiers.therapeutic_area import (
     assign_therapeutic_area,
-    detect_therapeutic_areas,
     detect_therapeutic_area_evidence,
 )
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
@@ -31,18 +30,6 @@ from config.settings import CLINICALTRIALS_PAGE_SIZE
 
 RAW_STORAGE_DIR = Path("/home/jeanmfc/projects/ALEXIS/storage/raw/ctgov/weekly")
 
-
-def save_raw_ctgov(raw_payload):
-    RAW_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-
-    out_path = RAW_STORAGE_DIR / f"ctgov_raw_{date.today().isoformat()}.json"
-
-    with out_path.open("w", encoding="utf-8") as f:
-        json.dump(raw_payload, f, indent=2, ensure_ascii=False)
-
-    return out_path
-
-
 def main():
     # 1) Define the window FIRST (same as v01)
     as_of = date.today()
@@ -58,9 +45,6 @@ def main():
         page_size=CLINICALTRIALS_PAGE_SIZE,
         max_studies=max_studies,
     )
-
-    raw_path = save_raw_ctgov(raw)
-    print(f"[RAW CTGOV SAVED] {raw_path}")
 
     print(f"Raw studies returned: {len(raw)}")
 
@@ -129,7 +113,6 @@ def main():
         "study_type_summary": study_type_summary_all_trials(trials),
     }
 
-
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")
     for ta, mods in summary["ta_modality_counts_true_drugs"].items():
         for modality, count in mods.items():
@@ -149,10 +132,19 @@ def main():
         print(f"  {st}: {count}")
 
     
-    print("\nIntervention type summary (ALL trials):")
-    for tp, count in summary.get("intervention_type_summary", {}).items():
-        print(f"  {tp}: {count}")
+    ctgov = summary.get("intervention_type_summary")
 
+    print("\nCT.gov Intervention Category Summary (SOURCE LAYER):")
+    print(f"  Layer: {ctgov.get('_layer')}")
+    print(f"  Requires: {ctgov.get('_requires')}")
+    print(f"  Valid on snapshots: {ctgov.get('_valid_on_snapshots')}")
+    print("\n  Category                 | Occurrences | Unique NCTs")
+    print("  -----------------------------------------------------")
+
+    for tp in ctgov["category_counts"]:
+        occ = ctgov["category_counts"][tp]
+        uniq = ctgov["unique_nct_counts"][tp]
+        print(f"  {tp:25} | {occ:11} | {uniq}")
 
     snapshot_path = save_trial_snapshot_v2(
         base_dir="storage/snapshots/clinical_trials_v2",
@@ -162,7 +154,6 @@ def main():
         summary=summary,
     )
     print(f"\nSaved snapshot (v2): {snapshot_path}")
-
 
 if __name__ == "__main__":
     main()

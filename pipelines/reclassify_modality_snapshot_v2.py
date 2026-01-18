@@ -160,9 +160,10 @@ def reclassify_snapshot(
     for st, count in summary["study_type_summary"].items():
         print(f"  {st}: {count}")
 
-    print("\nIntervention type summary (ALL trials):")
+    print("\nCT.gov Intervention Category Summary (ALL trials):")
     for tp, count in summary["intervention_type_summary"].items():
-        print(f"  {tp}: {count}")
+        print(f"  {tp:25} | {count}")
+
 
     # -------------------------------------------------
     # Metadata + Save

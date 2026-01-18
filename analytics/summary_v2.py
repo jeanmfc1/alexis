@@ -1,5 +1,19 @@
 from storage.models_v2 import ClinicalTrialSignalV2
 
+CTGOV_INTERVENTION_CATEGORIES = [
+    "BEHAVIORAL",
+    "BIOLOGICAL",
+    "COMBINATION_PRODUCT",
+    "DEVICE",
+    "DIAGNOSTIC_TEST",
+    "DIETARY_SUPPLEMENT",
+    "DRUG",
+    "GENETIC",
+    "PROCEDURE",
+    "RADIATION",
+    "OTHER",
+]
+
 
 # -------------------------------------------------
 # TA × Modality counts (TRUE DRUG TRIALS ONLY)
@@ -121,25 +135,59 @@ def intervention_type_summary_all_trials(
     trials: list[ClinicalTrialSignalV2],
 ) -> dict:
     """
-    Count trials by intervention type labels present.
-    Labels are preserved exactly (DRUG, BIOLOGICAL, PROCEDURE, etc.).
-    Includes ALL trials.
+    CT.gov SOURCE-LAYER summary.
+
+    Provides:
+    1) Category participation counts (non-mutually exclusive)
+    2) Unique NCT counts per category
+
+    Valid ONLY immediately after normalization.
+    NOT valid on snapshots or reclassified trials.
     """
-    counts: dict = {}
+    category_counts = {k: 0 for k in CTGOV_INTERVENTION_CATEGORIES}
+    category_counts["NO_STRUCTURED_INTERVENTIONS"] = 0
+    category_counts["UNEXPECTED"] = 0
+
+    unique_nct_sets = {k: set() for k in CTGOV_INTERVENTION_CATEGORIES}
+    unique_nct_sets["NO_STRUCTURED_INTERVENTIONS"] = set()
+    unique_nct_sets["UNEXPECTED"] = set()
+
+    has_interventions_all = hasattr(trials[0], "interventions_all")
 
     for t in trials:
-        # requires interventions_all to exist on the model
+        ivs = t.interventions_all if has_interventions_all else []
+        nct = t.nct_id
+
         types = {
             iv.type.upper()
-            for iv in (t.interventions_all or [])
+            for iv in ivs
             if isinstance(iv.type, str)
         }
 
         if not types:
-            counts["NONE"] = counts.get("NONE", 0) + 1
-        else:
-            for tp in types:
-                counts[tp] = counts.get(tp, 0) + 1
+            category_counts["NO_STRUCTURED_INTERVENTIONS"] += 1
+            unique_nct_sets["NO_STRUCTURED_INTERVENTIONS"].add(nct)
+            continue
 
-    return counts
+        for tp in types:
+            if tp in category_counts:
+                category_counts[tp] += 1
+                unique_nct_sets[tp].add(nct)
+            else:
+                category_counts["UNEXPECTED"] += 1
+                unique_nct_sets["UNEXPECTED"].add(nct)
+
+    unique_nct_counts = {
+        k: len(v) for k, v in unique_nct_sets.items()
+    }
+
+    return {
+        "_layer": "ctgov_source",
+        "_requires": "interventions_all",
+        "_valid_on_snapshots": False,
+        "category_counts": category_counts,
+        "unique_nct_counts": unique_nct_counts,
+    }
+
+
 
