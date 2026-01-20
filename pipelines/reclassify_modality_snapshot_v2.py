@@ -24,6 +24,8 @@ from analytics.summary_v2 import (
     drug_trial_counts,
     info_flag_counts_true_drugs,
     drug_info_overview,
+    drug_modality_summary,
+    drug_therapeutic_area_summary,
     intervention_type_summary_all_trials,
     study_type_summary_all_trials,
     drug_modality_provenance_summary,

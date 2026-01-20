@@ -18,6 +18,8 @@ from analytics.summary_v2 import (
     ta_modality_counts_true_drugs,
     drug_trial_counts,
     info_flag_counts_true_drugs,
+    drug_modality_summary,
+    drug_therapeutic_area_summary,
     drug_info_overview,
     intervention_type_summary_all_trials,
     study_type_summary_all_trials,
@@ -164,9 +166,6 @@ def main():
     print("\nTherapeutic area provenance (drug trials):")
     for k, v in summary["drug_ta_provenance"].items():
         print(f"  {k:20} | {v}")
-
-
-
 
     snapshot_path = save_trial_snapshot_v2(
         base_dir="storage/snapshots/clinical_trials_v2",

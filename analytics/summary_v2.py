@@ -1,4 +1,5 @@
 from storage.models_v2 import ClinicalTrialSignalV2
+from policy.text_modality_policy_v2 import text_modality_from_text
 
 CTGOV_INTERVENTION_CATEGORIES = [
     "BEHAVIORAL",
