@@ -137,26 +137,23 @@ def intervention_type_summary_all_trials(
     """
     CT.gov SOURCE-LAYER summary.
 
-    Provides:
-    1) Category participation counts (non-mutually exclusive)
-    2) Unique NCT counts per category
+    Counts number of trials that include at least one intervention
+    of each CT.gov intervention category.
 
-    Valid ONLY immediately after normalization.
-    NOT valid on snapshots or reclassified trials.
+    Notes:
+    - Categories are NOT mutually exclusive.
+    - Each trial contributes at most once per category.
+    - Valid ONLY immediately after normalization.
+    - NOT valid on snapshots or reclassified trials.
     """
     category_counts = {k: 0 for k in CTGOV_INTERVENTION_CATEGORIES}
     category_counts["NO_STRUCTURED_INTERVENTIONS"] = 0
     category_counts["UNEXPECTED"] = 0
 
-    unique_nct_sets = {k: set() for k in CTGOV_INTERVENTION_CATEGORIES}
-    unique_nct_sets["NO_STRUCTURED_INTERVENTIONS"] = set()
-    unique_nct_sets["UNEXPECTED"] = set()
-
     has_interventions_all = hasattr(trials[0], "interventions_all")
 
     for t in trials:
         ivs = t.interventions_all if has_interventions_all else []
-        nct = t.nct_id
 
         types = {
             iv.type.upper()
@@ -166,28 +163,123 @@ def intervention_type_summary_all_trials(
 
         if not types:
             category_counts["NO_STRUCTURED_INTERVENTIONS"] += 1
-            unique_nct_sets["NO_STRUCTURED_INTERVENTIONS"].add(nct)
             continue
 
         for tp in types:
             if tp in category_counts:
                 category_counts[tp] += 1
-                unique_nct_sets[tp].add(nct)
             else:
                 category_counts["UNEXPECTED"] += 1
-                unique_nct_sets["UNEXPECTED"].add(nct)
-
-    unique_nct_counts = {
-        k: len(v) for k, v in unique_nct_sets.items()
-    }
 
     return {
         "_layer": "ctgov_source",
         "_requires": "interventions_all",
         "_valid_on_snapshots": False,
-        "category_counts": category_counts,
-        "unique_nct_counts": unique_nct_counts,
+        "trials_with_category": category_counts,
     }
 
+def drug_modality_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count drug trials by modality.
+
+    Each drug trial (NCT) is counted exactly once.
+    """
+    counts: dict[str, int] = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        modality = t.modality or "UNASSIGNED"
+        counts[modality] = counts.get(modality, 0) + 1
+
+    return counts
+
+def drug_therapeutic_area_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count drug trials by primary therapeutic area.
+
+    Each drug trial (NCT) is counted exactly once.
+    """
+    counts: dict[str, int] = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        ta = t.therapeutic_area or "UNASSIGNED"
+        counts[ta] = counts.get(ta, 0) + 1
+
+    return counts
+
+def drug_modality_provenance_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count how drug modality was derived:
+    - mesh
+    - text_fallback
+    - base_only
+    """
+    counts = {
+        "mesh": 0,
+        "text_fallback": 0,
+        "base_only": 0,
+    }
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        mesh_available = bool(t.intervention_meshes)
+        has_info_flag = bool(t.info_flags)
+
+        if mesh_available and not has_info_flag:
+            # mesh used successfully
+            counts["mesh"] += 1
+        elif has_info_flag:
+            # mesh present but failed → text or base
+            # disambiguate text vs base
+            text_blob = " ".join((t.interventions_text or []) + [t.title or ""])
+            text_hit = text_modality_from_text(text_blob, t.modality)
+
+            if text_hit:
+                counts["text_fallback"] += 1
+            else:
+                counts["base_only"] += 1
+        else:
+            # no mesh at all → base or text
+            counts["base_only"] += 1
+
+    return counts
+
+def drug_ta_provenance_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count how therapeutic area was derived for drug trials.
+    """
+    counts = {
+        "mesh": 0,
+        "text_fallback": 0,
+        "multi_ta_mesh": 0,
+    }
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        if t.therapeutic_areas_detected:
+            counts["mesh"] += 1
+            if len(t.therapeutic_areas_detected) > 1:
+                counts["multi_ta_mesh"] += 1
+        else:
+            counts["text_fallback"] += 1
+
+    return counts
 
 

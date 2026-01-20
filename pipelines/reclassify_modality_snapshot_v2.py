@@ -26,6 +26,8 @@ from analytics.summary_v2 import (
     drug_info_overview,
     intervention_type_summary_all_trials,
     study_type_summary_all_trials,
+    drug_modality_provenance_summary,
+    drug_ta_provenance_summary,
 )
 
 # -------------------------------------------------
@@ -139,6 +141,12 @@ def reclassify_snapshot(
         "drug_trial_counts": drug_trial_counts(trials),
         "info_flag_counts_true_drugs": info_flag_counts_true_drugs(trials),
         "drug_info_overview": drug_info_overview(trials),
+
+        # NEW: provenance summaries
+        "drug_modality_provenance": drug_modality_provenance_summary(trials),
+        "drug_ta_provenance": drug_ta_provenance_summary(trials),
+
+        # CT.gov source layer (weekly only; snapshot prints may omit)
         "intervention_type_summary": intervention_type_summary_all_trials(trials),
         "study_type_summary": study_type_summary_all_trials(trials),
     }
@@ -163,6 +171,11 @@ def reclassify_snapshot(
     print("\nCT.gov Intervention Category Summary (ALL trials):")
     for tp, count in summary["intervention_type_summary"].items():
         print(f"  {tp:25} | {count}")
+    
+    print("\nTherapeutic area provenance (drug trials):")
+    for k, v in summary["drug_ta_provenance"].items():
+        print(f"  {k:20} | {v}")
+
 
 
     # -------------------------------------------------

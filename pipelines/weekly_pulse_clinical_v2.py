@@ -21,6 +21,8 @@ from analytics.summary_v2 import (
     drug_info_overview,
     intervention_type_summary_all_trials,
     study_type_summary_all_trials,
+    drug_modality_provenance_summary,
+    drug_ta_provenance_summary,
 )
 
 from analytics.modality_info_audit import audit_modality_info_flags
@@ -111,6 +113,8 @@ def main():
         "drug_info_overview": drug_info_overview(trials),
         "intervention_type_summary": intervention_type_summary_all_trials(trials),
         "study_type_summary": study_type_summary_all_trials(trials),
+        "drug_modality_provenance": drug_modality_provenance_summary(trials),
+        "drug_ta_provenance": drug_ta_provenance_summary(trials),
     }
 
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")
@@ -127,6 +131,14 @@ def main():
     for k, v in summary["drug_info_overview"].items():
         print(f"  {k}: {v}")
     
+    print("\nDrug trials by modality:")
+    for k, v in sorted(drug_modality_summary(trials).items()):
+        print(f"  {k:25} | {v}")
+
+    print("\nDrug trials by therapeutic area:")
+    for k, v in sorted(drug_therapeutic_area_summary(trials).items()):
+        print(f"  {k:25} | {v}")
+    
     print("\nStudyType summary (ALL trials):")
     for st, count in summary.get("study_type_summary", {}).items():
         print(f"  {st}: {count}")
@@ -138,13 +150,23 @@ def main():
     print(f"  Layer: {ctgov.get('_layer')}")
     print(f"  Requires: {ctgov.get('_requires')}")
     print(f"  Valid on snapshots: {ctgov.get('_valid_on_snapshots')}")
-    print("\n  Category                 | Occurrences | Unique NCTs")
-    print("  -----------------------------------------------------")
 
-    for tp in ctgov["category_counts"]:
-        occ = ctgov["category_counts"][tp]
-        uniq = ctgov["unique_nct_counts"][tp]
-        print(f"  {tp:25} | {occ:11} | {uniq}")
+    print("\n  Category                 | Trials with Category")
+    print("  -----------------------------------------------")
+
+    for tp, count in ctgov["trials_with_category"].items():
+        print(f"  {tp:25} | {count}")
+    
+    print("\nDrug modality provenance (drug trials):")
+    for k, v in summary["drug_modality_provenance"].items():
+        print(f"  {k:20} | {v}")
+    
+    print("\nTherapeutic area provenance (drug trials):")
+    for k, v in summary["drug_ta_provenance"].items():
+        print(f"  {k:20} | {v}")
+
+
+
 
     snapshot_path = save_trial_snapshot_v2(
         base_dir="storage/snapshots/clinical_trials_v2",
