@@ -30,6 +30,12 @@ from analytics.summary_v2 import (
     study_type_summary_all_trials,
     drug_modality_provenance_summary,
     drug_ta_provenance_summary,
+    drug_study_intent_summary,
+    non_disease_drug_subtype_summary,
+    ta_by_phase,
+    modality_by_phase,
+    ta_by_sponsor_class,
+    multi_ta_rate_by_phase,
 )
 
 # -------------------------------------------------
@@ -143,14 +149,16 @@ def reclassify_snapshot(
         "drug_trial_counts": drug_trial_counts(trials),
         "info_flag_counts_true_drugs": info_flag_counts_true_drugs(trials),
         "drug_info_overview": drug_info_overview(trials),
-
-        # NEW: provenance summaries
-        "drug_modality_provenance": drug_modality_provenance_summary(trials),
-        "drug_ta_provenance": drug_ta_provenance_summary(trials),
-
-        # CT.gov source layer (weekly only; snapshot prints may omit)
         "intervention_type_summary": intervention_type_summary_all_trials(trials),
         "study_type_summary": study_type_summary_all_trials(trials),
+        "drug_modality_provenance": drug_modality_provenance_summary(trials),
+        "drug_ta_provenance": drug_ta_provenance_summary(trials),
+        "drug_study_intent": drug_study_intent_summary(trials),
+        "non_disease_drug_subtypes": non_disease_drug_subtype_summary(trials),
+        "ta_by_phase": ta_by_phase(trials),
+        "modality_by_phase": modality_by_phase(trials),
+        "ta_by_sponsor_class": ta_by_sponsor_class(trials),
+        "multi_ta_rate_by_phase": multi_ta_rate_by_phase(trials),
     }
 
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")
@@ -177,8 +185,33 @@ def reclassify_snapshot(
     print("\nTherapeutic area provenance (drug trials):")
     for k, v in summary["drug_ta_provenance"].items():
         print(f"  {k:20} | {v}")
+    
+        print("\nDrug study intent:")
+    for k, v in summary["drug_study_intent"].items():
+        print(f"  {k:15} | {v}")
 
+    print("\nNon-disease drug study subtypes:")
+    for k, v in sorted(summary["non_disease_drug_subtypes"].items()):
+        print(f"  {k:25} | {v}")
+    
+    print("\nTA × Phase:")
+    for ta, phases in summary["ta_by_phase"].items():
+        for phase, count in phases.items():
+            print(f"  {ta:20} | {phase:10} | {count}")
 
+    print("\nModality × Phase:")
+    for mod, phases in summary["modality_by_phase"].items():
+        for phase, count in phases.items():
+            print(f"  {mod:20} | {phase:10} | {count}")
+
+    print("\nTA × Sponsor class:")
+    for ta, sponsors in summary["ta_by_sponsor_class"].items():
+        for sponsor, count in sponsors.items():
+            print(f"  {ta:20} | {sponsor:15} | {count}")
+
+    print("\nMulti-TA rate by phase:")
+    for phase, rate in summary["multi_ta_rate_by_phase"].items():
+        print(f"  {phase:10} | {rate:.2%}")
 
     # -------------------------------------------------
     # Metadata + Save

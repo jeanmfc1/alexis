@@ -1,5 +1,6 @@
 from storage.models_v2 import ClinicalTrialSignalV2
 from policy.text_modality_policy_v2 import text_modality_from_text
+import re
 
 CTGOV_INTERVENTION_CATEGORIES = [
     "BEHAVIORAL",
@@ -14,7 +15,6 @@ CTGOV_INTERVENTION_CATEGORIES = [
     "RADIATION",
     "OTHER",
 ]
-
 
 # -------------------------------------------------
 # TA × Modality counts (TRUE DRUG TRIALS ONLY)
@@ -282,5 +282,166 @@ def drug_ta_provenance_summary(
             counts["text_fallback"] += 1
 
     return counts
+
+def drug_study_intent_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Split drug trials into disease vs non-disease intent.
+    """
+    counts = {
+        "disease": 0,
+        "non_disease": 0,
+    }
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        if t.condition_meshes:
+            counts["disease"] += 1
+        else:
+            counts["non_disease"] += 1
+
+    return counts
+
+PK_REGEX = re.compile(
+    r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
+    re.IGNORECASE,
+)
+PKPD_REGEX = re.compile(
+    r"\bpk\/pd\b|\bpharmacokinetic(s)? and pharmacodynamic(s)?\b",
+    re.IGNORECASE,
+)
+BA_BE_REGEX = re.compile(
+    r"\bbioavailability\b|\bbioequivalence\b",
+    re.IGNORECASE,
+)
+DDI_REGEX = re.compile(
+    r"\bdrug[- ]drug interaction(s)?\b|\bddi study\b",
+    re.IGNORECASE,
+)
+ORGAN_IMPAIRMENT_REGEX = re.compile(
+    r"\brenal impairment\b|\bhepatic impairment\b",
+    re.IGNORECASE,
+)
+HV_REGEX = re.compile(
+    r"\bhealthy volunteer(s)?\b|\bhealthy subject(s)?\b",
+    re.IGNORECASE,
+)
+
+def non_disease_drug_subtype_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Subclassify non-disease drug studies by intent.
+    """
+    counts: dict[str, int] = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+        if t.condition_meshes:
+            continue  # disease-driven
+
+        text = " ".join(
+            (t.interventions_text or []) +
+            [t.title or ""]
+        ).lower()
+
+        if DDI_REGEX.search(text):
+            subtype = "DDI"
+        elif BA_BE_REGEX.search(text):
+            subtype = "BA/BE"
+        elif PK_REGEX.search(text) or PKPD_REGEX.search(text):
+            subtype = "PK"
+        elif ORGAN_IMPAIRMENT_REGEX.search(text):
+            subtype = "Organ impairment"
+        elif HV_REGEX.search(text):
+            subtype = "Healthy volunteers"
+        elif "formulation" in text or "delivery" in text:
+            subtype = "Formulation"
+        else:
+            subtype = "Other non-disease"
+
+        counts[subtype] = counts.get(subtype, 0) + 1
+
+    return counts
+
+def ta_by_phase(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    counts = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        ta = t.therapeutic_area
+        phase = t.phase or "UNKNOWN"
+
+        counts.setdefault(ta, {})
+        counts[ta][phase] = counts[ta].get(phase, 0) + 1
+
+    return counts
+
+def modality_by_phase(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    counts = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        modality = t.modality
+        phase = t.phase or "UNKNOWN"
+
+        counts.setdefault(modality, {})
+        counts[modality][phase] = counts[modality].get(phase, 0) + 1
+
+    return counts
+
+def ta_by_sponsor_class(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    counts = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        ta = t.therapeutic_area
+        sponsor = t.sponsor_class or "UNKNOWN"
+
+        counts.setdefault(ta, {})
+        counts[ta][sponsor] = counts[ta].get(sponsor, 0) + 1
+
+    return counts
+
+def multi_ta_rate_by_phase(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    totals = {}
+    multi = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        phase = t.phase or "UNKNOWN"
+        totals[phase] = totals.get(phase, 0) + 1
+
+        if (
+            hasattr(t, "therapeutic_areas_detected")
+            and t.therapeutic_areas_detected
+            and len(t.therapeutic_areas_detected) > 1
+        ):
+            multi[phase] = multi.get(phase, 0) + 1
+
+    return {
+        phase: multi.get(phase, 0) / totals[phase]
+        for phase in totals
+    }
 
 
