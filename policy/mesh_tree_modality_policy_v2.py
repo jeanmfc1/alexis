@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Any
+from classifiers.modality_result import ModalityResult
+
 import requests
 
 """

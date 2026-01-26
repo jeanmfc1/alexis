@@ -7,6 +7,8 @@ from tqdm import tqdm
 from collectors.clinicaltrials.clinicaltrials_fetch import fetch_studies_raw
 from collectors.clinicaltrials.clinicaltrials_normalize_v2 import normalize_clinicaltrials_study_v2
 
+from analytics.modality_info_audit import audit_modality_info_flags
+
 from classifiers.therapeutic_area import (
     assign_therapeutic_area,
     detect_therapeutic_area_evidence,
@@ -32,8 +34,6 @@ from analytics.summary_v2 import (
     ta_by_sponsor_class,
     multi_ta_rate_by_phase,
 )
-
-from analytics.modality_info_audit import audit_modality_info_flags
 
 from storage.snapshots_io_v2 import SnapshotMetadataV2, save_trial_snapshot_v2
 from config.settings import CLINICALTRIALS_PAGE_SIZE
@@ -97,7 +97,7 @@ def main():
             # 2) Text-based TA fallback MUST run before non-disease
             text_ta = assign_therapeutic_area(t)
 
-            if text_ta:
+            if text_ta and text_ta != "Other":
                 t.therapeutic_area = text_ta
 
             elif t.is_drug_trial:
@@ -105,6 +105,14 @@ def main():
 
             else:
                 t.therapeutic_area = None
+        # --- Study intent (AUTHORITATIVE) ---
+        if t.is_drug_trial:
+            if t.therapeutic_area == TA_NON_DISEASE:
+                t.study_intent = "non_disease"
+            else:
+                t.study_intent = "disease"
+        else:
+            t.study_intent = None
 
         # --- Modality (UNCHANGED) ---
         if t.is_drug_trial:

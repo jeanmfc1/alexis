@@ -135,7 +135,7 @@ def reclassify_snapshot(
             # 2) Text-based TA fallback MUST run before non-disease
             text_ta = assign_therapeutic_area(t)
 
-            if text_ta:
+            if text_ta and text_ta != "Other":
                 t.therapeutic_area = text_ta
 
             elif t.is_drug_trial:
@@ -143,7 +143,15 @@ def reclassify_snapshot(
 
             else:
                 t.therapeutic_area = None
-
+        # --- Study intent (AUTHORITATIVE) ---
+        if t.is_drug_trial:
+            if t.therapeutic_area == TA_NON_DISEASE:
+                t.study_intent = "non_disease"
+            else:
+                t.study_intent = "disease"
+        else:
+            t.study_intent = None
+            
         # --- Modality (UNCHANGED) ---
         if t.is_drug_trial:
             t.modality = assign_trial_modality_v2(t)

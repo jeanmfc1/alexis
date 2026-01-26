@@ -1,5 +1,6 @@
 from storage.models_v2 import ClinicalTrialSignalV2
 from policy.text_modality_policy_v2 import text_modality_from_text
+from policy.ta_policy import TA_NON_DISEASE
 import re
 
 CTGOV_INTERVENTION_CATEGORIES = [
@@ -342,7 +343,7 @@ def non_disease_drug_subtype_summary(
         if not t.is_drug_trial:
             continue
 
-        if t.therapeutic_area != TA_NON_DISEASE:
+        if t.study_intent != "non_disease":
             continue
 
         text = " ".join(
