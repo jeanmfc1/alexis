@@ -116,9 +116,11 @@ def reclassify_snapshot(
     # -------------------------------------------------
     # Re-run classifiers
     # -------------------------------------------------
-
     for t in tqdm(trials, desc="Classifying trials (v2)", unit="trial"):
-        # --- Therapeutic Area (NEW LOGIC) ---
+        # --- Drug status FIRST (AUTHORITATIVE) ---
+        t.is_drug_trial = is_drug_trial_v2(t)
+
+        # --- Therapeutic Area (FIXED PROVENANCE) ---
 
         # 1) Detect multi-TA using MeSH ancestry
         ta_evidence = detect_therapeutic_area_evidence(t)
@@ -128,13 +130,21 @@ def reclassify_snapshot(
 
         if primary_ta:
             t.therapeutic_area = primary_ta
-        elif t.is_drug_trial and not t.condition_meshes:
-            t.therapeutic_area = "Non-disease drug study"
-        else:
-            t.therapeutic_area = assign_therapeutic_area(t)
 
-        # --- Drug / Modality (UNCHANGED) ---
-        t.is_drug_trial = is_drug_trial_v2(t)
+        else:
+            # 2) Text-based TA fallback MUST run before non-disease
+            text_ta = assign_therapeutic_area(t)
+
+            if text_ta:
+                t.therapeutic_area = text_ta
+
+            elif t.is_drug_trial:
+                t.therapeutic_area = TA_NON_DISEASE
+
+            else:
+                t.therapeutic_area = None
+
+        # --- Modality (UNCHANGED) ---
         if t.is_drug_trial:
             t.modality = assign_trial_modality_v2(t)
         else:

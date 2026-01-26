@@ -341,8 +341,9 @@ def non_disease_drug_subtype_summary(
     for t in trials:
         if not t.is_drug_trial:
             continue
-        if t.condition_meshes:
-            continue  # disease-driven
+
+        if t.therapeutic_area != TA_NON_DISEASE:
+            continue
 
         text = " ".join(
             (t.interventions_text or []) +
