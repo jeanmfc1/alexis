@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import Iterable, List, Optional, Dict
-from storage.models import ClinicalTrialSignal
+from storage.models_v2 import ClinicalTrialSignalV2
 import re
 
 from policy.ta_policy import (
@@ -39,7 +39,7 @@ def _has_any(text: str, keywords: Iterable[str]) -> bool:
 # EXISTING single-label TA assignment (UNCHANGED)
 # ---------------------------------------------------------------------
 
-def assign_therapeutic_area(trial: ClinicalTrialSignal) -> str:
+def assign_therapeutic_area(trial: ClinicalTrialSignalV2) -> str | None:
     text = _norm_text(trial.title, trial.conditions)
     if not text.strip():
         return TA_OTHER
@@ -252,7 +252,10 @@ TA_MESH_ROOTS = {
 }
 
 
-def detect_therapeutic_area_evidence(trial: ClinicalTrialSignal) -> Dict[str, List[Dict[str, str]]]:
+def detect_therapeutic_area_evidence(
+    trial: ClinicalTrialSignalV2,
+) -> dict[str, list[dict]]:
+
     """
     Return mapping: TA -> list of matched MeSH roots (id + term).
     Used for audit and explainability.
