@@ -4,8 +4,6 @@ from functools import lru_cache
 from typing import Any
 import requests
 
-from classifiers.modality_result import ModalityResult
-
 """
 MeSH tree prefix -> drug submodality mapping.
 
