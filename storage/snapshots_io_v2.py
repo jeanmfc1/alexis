@@ -86,6 +86,9 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
 
         # INFO flags (v2)
         "info_flags": list(getattr(t, "info_flags", []) or []),
+
+        "study_intent": getattr(t, "study_intent", None),
+        "mesh_missing_condition": getattr(t, "mesh_missing_condition", None),
     }
 
 def save_trial_snapshot_v2(

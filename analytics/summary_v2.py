@@ -299,10 +299,11 @@ def drug_study_intent_summary(
         if not t.is_drug_trial:
             continue
 
-        if t.condition_meshes:
-            counts["disease"] += 1
-        else:
+        intent = getattr(t, "study_intent", None)
+        if intent == "non_disease":
             counts["non_disease"] += 1
+        elif intent == "disease":
+            counts["disease"] += 1
 
     return counts
 
@@ -331,6 +332,37 @@ HV_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+SAD_MAD_REGEX = re.compile(
+    r"\bsingle\s+ascending\s+dose\b|\bmultiple\s+ascending\s+dose\b|\bSAD\b|\bMAD\b",
+    re.IGNORECASE,
+)
+
+DOSE_ESCALATION_REGEX = re.compile(
+    r"\bdose\s+escalation\b|\bdose\s+expansion\b|\bdose[-\s]?ranging\b",
+    re.IGNORECASE,
+)
+
+FIH_REGEX = re.compile(
+    r"\bfirst[-\s]?in[-\s]?human\b|\bFIH\b",
+    re.IGNORECASE,
+)
+
+FOOD_EFFECT_REGEX = re.compile(
+    r"\bfood[-\s]?effect\b|\bfed\b.*\bfasted\b|\bhigh[-\s]?fat\b",
+    re.IGNORECASE,
+)
+
+QT_REGEX = re.compile(
+    r"\bQTc?\b|\bthorough\s+QT\b|\bTQT\b",
+    re.IGNORECASE,
+)
+
+ADME_REGEX = re.compile(
+    r"\bADME\b|\bmass\s+balance\b|\bradiolabeled\b|\bcarbon[-\s]?14\b|\b14C\b",
+    re.IGNORECASE,
+)
+
+
 def non_disease_drug_subtype_summary(
     trials: list[ClinicalTrialSignalV2],
 ) -> dict:
@@ -343,7 +375,7 @@ def non_disease_drug_subtype_summary(
         if not t.is_drug_trial:
             continue
 
-        if t.study_intent != "non_disease":
+        if getattr(t, "study_intent", None) != "non_disease":
             continue
 
         text = " ".join(
@@ -355,6 +387,14 @@ def non_disease_drug_subtype_summary(
             subtype = "DDI"
         elif BA_BE_REGEX.search(text):
             subtype = "BA/BE"
+        elif FOOD_EFFECT_REGEX.search(text):
+            subtype = "Food effect (fed/fasted)"
+        elif QT_REGEX.search(text):
+            subtype = "Cardiac safety (QT/QTc)"
+        elif ADME_REGEX.search(text):
+            subtype = "ADME / mass balance"
+        elif SAD_MAD_REGEX.search(text) or DOSE_ESCALATION_REGEX.search(text) or FIH_REGEX.search(text):
+            subtype = "Phase I enabling (SAD/MAD/FIH)"
         elif PK_REGEX.search(text) or PKPD_REGEX.search(text):
             subtype = "PK"
         elif ORGAN_IMPAIRMENT_REGEX.search(text):
@@ -364,7 +404,7 @@ def non_disease_drug_subtype_summary(
         elif "formulation" in text or "delivery" in text:
             subtype = "Formulation"
         else:
-            subtype = "Other non-disease"
+            subtype = "General Phase I enabling (unspecified)"
 
         counts[subtype] = counts.get(subtype, 0) + 1
 
@@ -446,4 +486,18 @@ def multi_ta_rate_by_phase(
         for phase in totals
     }
 
+def drug_mesh_missing_condition_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count drug trials with missing condition MeSH.
+    This is a data completeness metric, NOT intent.
+    """
+    return {
+        "mesh_missing_condition": sum(
+            1
+            for t in trials
+            if t.is_drug_trial and not t.condition_meshes
+        )
+    }
 

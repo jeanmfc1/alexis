@@ -134,13 +134,6 @@ def assign_therapeutic_area(trial: ClinicalTrialSignalV2) -> str | None:
         return TA_METABOLIC
     if _has_any(text, RARE_KW):
         return TA_RARE
-    # Organ-system TAs (text anchors)
-    if _has_any(text, GI_KW):
-        return TA_GI
-    if _has_any(text, UROLOGY_KW):
-        return TA_UROLOGY
-    if _has_any(text, OPHTHALMOLOGY_KW):
-        return TA_OPHTHALMOLOGY
 
     return TA_OTHER
 
@@ -183,6 +176,7 @@ TA_MESH_ROOTS = {
     # -----------------------------
     TA_PSYCHIATRY: [
         {"id": "D001523", "term": "Mental Disorders"},
+        {"id": "D009422", "term": "Mood Disorders"},
         {"id": "D003863", "term": "Depressive Disorder"},
         {"id": "D013493", "term": "Substance-Related Disorders"},
     ],
@@ -231,9 +225,6 @@ TA_MESH_ROOTS = {
     TA_OPHTHALMOLOGY: [
         {"id": "D005128", "term": "Eye Diseases"},
         {"id": "D012121", "term": "Retinal Diseases"},
-        {"id": "D015862", "term": "Choroid Diseases"},
-        {"id": "D014603", "term": "Uveal Diseases"},
-
     ],
 
     # -----------------------------
@@ -248,7 +239,6 @@ TA_MESH_ROOTS = {
         {"id": "D005261", "term": "Female Urogenital Diseases and Pregnancy Complications"},
         {"id": "D005831", "term": "Genital Diseases, Female"},
         {"id": "D014591", "term": "Uterine Diseases"},
-        {"id": "D007674", "term": "Kidney Diseases"},
     ],
 
     # -----------------------------

@@ -33,6 +33,7 @@ from analytics.summary_v2 import (
     modality_by_phase,
     ta_by_sponsor_class,
     multi_ta_rate_by_phase,
+    drug_mesh_missing_condition_summary,
 )
 
 from storage.snapshots_io_v2 import SnapshotMetadataV2, save_trial_snapshot_v2
@@ -105,14 +106,19 @@ def main():
 
             else:
                 t.therapeutic_area = None
+                
         # --- Study intent (AUTHORITATIVE) ---
-        if t.is_drug_trial:
-            if t.therapeutic_area == TA_NON_DISEASE:
-                t.study_intent = "non_disease"
-            else:
-                t.study_intent = "disease"
-        else:
+        if not t.is_drug_trial:
             t.study_intent = None
+        elif t.therapeutic_area == TA_NON_DISEASE:
+            t.study_intent = "non_disease"
+        else:
+            t.study_intent = "disease"
+
+        # --- Data completeness flag (NOT intent) ---
+        t.mesh_missing_condition = bool(
+            t.is_drug_trial and not t.condition_meshes
+        )
 
         # --- Modality (UNCHANGED) ---
         if t.is_drug_trial:
@@ -147,6 +153,7 @@ def main():
         "modality_by_phase": modality_by_phase(trials),
         "ta_by_sponsor_class": ta_by_sponsor_class(trials),
         "multi_ta_rate_by_phase": multi_ta_rate_by_phase(trials),
+        "drug_mesh_missing_condition": drug_mesh_missing_condition_summary(trials),
     }
 
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")
@@ -200,6 +207,10 @@ def main():
     print("\nDrug study intent:")
     for k, v in summary["drug_study_intent"].items():
         print(f"  {k:15} | {v}")
+    
+    print("\nDrug mesh-missing condition (DATA COMPLETENESS, NOT INTENT):")
+    for k, v in summary["drug_mesh_missing_condition"].items():
+        print(f"  {k:25} | {v}")
 
     print("\nNon-disease drug study subtypes:")
     for k, v in sorted(summary["non_disease_drug_subtypes"].items()):
