@@ -307,6 +307,24 @@ def drug_study_intent_summary(
 
     return counts
 
+# -------------------------------------------------
+# Non-disease study categories (trial-level)
+# -------------------------------------------------
+
+CAT_SAFETY = "Safety & Tolerability Characterization (Non-escalation)"
+CAT_PROCEDURAL = "Procedural / Perioperative Analgesia & Anesthesia"
+CAT_PK = "Clinical Pharmacokinetics (PK / Exposure)"
+CAT_ESC = "Phase I Dose Escalation & Tolerability (SAD/MAD/FIH)"
+CAT_FORM = "Formulation / Delivery Optimization"
+CAT_BIOM = "Biomarker / Imaging / Method Validation (Drug-involved)"
+CAT_BABE = "Bioavailability / Bioequivalence (BA/BE)"
+CAT_DDI = "Drug–Drug Interaction (DDI)"
+CAT_MOA = "Mechanism of Action / Target Engagement (Non-disease)"
+CAT_ADME = "ADME / Mass Balance"
+CAT_FOOD = "Food Effect"
+CAT_ORGAN_IMPAIR = "Organ Impairment (Renal/Hepatic)"
+CAT_HV = "Healthy Volunteers (Non-disease)"
+
 PK_REGEX = re.compile(
     r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
     re.IGNORECASE,
@@ -362,12 +380,167 @@ ADME_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+# Procedural / pain / anesthesia anchors
+PROCEDURAL_REGEX = re.compile(
+    r"\bnerve block\b|\bgenicular\b|\bregional anesth|\banesthe|\bprocedural sedation\b|"
+    r"\bpostoperative\b|\bperioperative\b|\banalges",
+    re.IGNORECASE,
+)
+
+# Delivery/formulation anchors (separate from BA/BE)
+FORMULATION_REGEX = re.compile(
+    r"\bformulation\b|\bpatch\b|\btransdermal\b|\bophthalmic\b|\bnasal\b|\bspray\b|"
+    r"\bautoinjector\b|\bpre[- ]filled\b|\bon[- ]body injector\b|\bprefilled syringe\b|"
+    r"\binfusion pump\b",
+    re.IGNORECASE,
+)
+
+# Biomarker / imaging / method validation anchors
+BIOMARKER_REGEX = re.compile(
+    r"\bbiomarker\b|\bassay\b|\bmonitoring\b|\bdiagnos|\bimaging\b|\bpet\b|\bmri\b|"
+    r"\bultrasound\b|\bspect\b|\breader\b|\bconspicuity\b|\bcontrast\b",
+    re.IGNORECASE,
+)
+
+# MOA / target engagement anchors (keep conservative)
+MOA_REGEX = re.compile(
+    r"\bmechanism\b|\btarget\b|\breceptor\b|\boccupancy\b|\bpathway\b|\binhibition\b|\bactivation\b|"
+    r"\bcxcr4\b|\brage\b|\bcd38\b|\bcomplement[- ]mediated\b",
+    re.IGNORECASE,
+)
+
+def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
+    """
+    True if title/interventions_text contain explicit enabling-study intent
+    (PK/PD, BA/BE, DDI, organ impairment, HV, SAD/MAD/FIH, food effect,
+     QT/QTc, ADME, formulation/delivery, procedural anesthesia, biomarkers,
+     MOA/target engagement).
+    Deterministic and conservative.
+    """
+    text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
+
+    return bool(
+        # Core PK/PD / BA/BE / DDI
+        DDI_REGEX.search(text)
+        or BA_BE_REGEX.search(text)
+        or PK_REGEX.search(text)
+        or PKPD_REGEX.search(text)
+
+        # Organ impairment / HV
+        or ORGAN_IMPAIRMENT_REGEX.search(text)
+        or HV_REGEX.search(text)
+
+        # SAD/MAD/FIH / dose escalation
+        or SAD_MAD_REGEX.search(text)
+        or DOSE_ESCALATION_REGEX.search(text)
+        or FIH_REGEX.search(text)
+
+        # Food effect
+        or FOOD_EFFECT_REGEX.search(text)
+
+        # QT / cardiac safety
+        or QT_REGEX.search(text)
+
+        # ADME / mass balance
+        or ADME_REGEX.search(text)
+
+        # Procedural anesthesia / nerve block
+        or PROCEDURAL_REGEX.search(text)
+
+        # Formulation / delivery systems
+        or FORMULATION_REGEX.search(text)
+
+        # Biomarker / imaging / assay validation
+        or BIOMARKER_REGEX.search(text)
+
+        # MOA / target engagement
+        or MOA_REGEX.search(text)
+
+        # Simple string fallbacks
+        or ("formulation" in text)
+        or ("delivery" in text)
+    )
+
+def assign_non_disease_study_category(
+    t: ClinicalTrialSignalV2,
+) -> tuple[str, list[str]]:
+    """
+    Assign a non-disease study category with evidence strings.
+
+    IMPORTANT:
+    - Deterministic
+    - Precedence-based
+    - Evidence is the list of rule labels that matched
+    - If no anchors match, classify as safety/tolerability characterization by exclusion
+    """
+
+    text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
+
+    evidence: list[str] = []
+
+    # Precedence order MUST match the exported 239 results:
+    # procedural → ADME → DDI → food → BA/BE → formulation → SAD/MAD/FIH → PK → biomarker → MOA → safety(exclusion)
+
+    if PROCEDURAL_REGEX.search(text):
+        evidence.append("procedural: PROCEDURAL_REGEX")
+        return (CAT_PROCEDURAL, evidence)
+
+    if ADME_REGEX.search(text):
+        evidence.append("adme: ADME_REGEX")
+        return (CAT_ADME, evidence)
+
+    if DDI_REGEX.search(text):
+        evidence.append("ddi: DDI_REGEX")
+        return (CAT_DDI, evidence)
+
+    if FOOD_EFFECT_REGEX.search(text):
+        evidence.append("food_effect: FOOD_EFFECT_REGEX")
+        return (CAT_FOOD, evidence)
+
+    if BA_BE_REGEX.search(text):
+        evidence.append("ba_be: BA_BE_REGEX")
+        return (CAT_BABE, evidence)
+
+    if FORMULATION_REGEX.search(text):
+        evidence.append("formulation: FORMULATION_REGEX")
+        return (CAT_FORM, evidence)
+
+    if SAD_MAD_REGEX.search(text) or DOSE_ESCALATION_REGEX.search(text) or FIH_REGEX.search(text):
+        evidence.append("dose_escalation: SAD_MAD/DOSE_ESCALATION/FIH")
+        return (CAT_ESC, evidence)
+
+    if PK_REGEX.search(text) or PKPD_REGEX.search(text):
+        evidence.append("pk: PK_REGEX/PKPD_REGEX")
+        return (CAT_PK, evidence)
+    
+    if ORGAN_IMPAIRMENT_REGEX.search(text):
+        evidence.append("organ_impairment: ORGAN_IMPAIRMENT_REGEX")
+        return (CAT_ORGAN_IMPAIR, evidence)
+
+    if HV_REGEX.search(text):
+        evidence.append("healthy_volunteers: HV_REGEX")
+        return (CAT_HV, evidence)
+
+    if BIOMARKER_REGEX.search(text):
+        evidence.append("biomarker: BIOMARKER_REGEX")
+        return (CAT_BIOM, evidence)
+
+    if MOA_REGEX.search(text):
+        evidence.append("moa: MOA_REGEX")
+        return (CAT_MOA, evidence)
+
+    # If no anchors matched: real category by exclusion (not "other")
+    evidence.append("safety_default: no category anchors matched")
+    return (CAT_SAFETY, evidence)
 
 def non_disease_drug_subtype_summary(
     trials: list[ClinicalTrialSignalV2],
-) -> dict:
+) -> dict[str, int]:
     """
-    Subclassify non-disease drug studies by intent.
+    Summarize non-disease drug studies by the same categories used in
+    assign_non_disease_study_category().
+
+    Deterministic, consistent, and single-source-of-truth.
     """
     counts: dict[str, int] = {}
 
@@ -378,37 +551,29 @@ def non_disease_drug_subtype_summary(
         if getattr(t, "study_intent", None) != "non_disease":
             continue
 
-        text = " ".join(
-            (t.interventions_text or []) +
-            [t.title or ""]
-        ).lower()
-
-        if DDI_REGEX.search(text):
-            subtype = "DDI"
-        elif BA_BE_REGEX.search(text):
-            subtype = "BA/BE"
-        elif FOOD_EFFECT_REGEX.search(text):
-            subtype = "Food effect (fed/fasted)"
-        elif QT_REGEX.search(text):
-            subtype = "Cardiac safety (QT/QTc)"
-        elif ADME_REGEX.search(text):
-            subtype = "ADME / mass balance"
-        elif SAD_MAD_REGEX.search(text) or DOSE_ESCALATION_REGEX.search(text) or FIH_REGEX.search(text):
-            subtype = "Phase I enabling (SAD/MAD/FIH)"
-        elif PK_REGEX.search(text) or PKPD_REGEX.search(text):
-            subtype = "PK"
-        elif ORGAN_IMPAIRMENT_REGEX.search(text):
-            subtype = "Organ impairment"
-        elif HV_REGEX.search(text):
-            subtype = "Healthy volunteers"
-        elif "formulation" in text or "delivery" in text:
-            subtype = "Formulation"
-        else:
-            subtype = "General Phase I enabling (unspecified)"
-
-        counts[subtype] = counts.get(subtype, 0) + 1
+        category, _evidence = assign_non_disease_study_category(t)
+        counts[category] = counts.get(category, 0) + 1
 
     return counts
+
+def non_disease_study_category_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict[str, int]:
+    """
+    Count non-disease drug trials by study_category.
+    """
+    counts: dict[str, int] = {}
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+        if getattr(t, "study_intent", None) != "non_disease":
+            continue
+
+        cat = getattr(t, "study_category", None) or "UNASSIGNED"
+        counts[cat] = counts.get(cat, 0) + 1
+
+    return counts
+
 
 def ta_by_phase(
     trials: list[ClinicalTrialSignalV2],

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from datetime import date
 from typing import List
-from policy.ta_policy import TA_NON_DISEASE, select_primary_ta
+from policy.ta_policy import TA_NON_DISEASE, select_primary_ta, TA_UNASSIGNED
 
 from classifiers.therapeutic_area import (
     assign_therapeutic_area,
@@ -37,6 +37,9 @@ from analytics.summary_v2 import (
     ta_by_sponsor_class,
     multi_ta_rate_by_phase,
     drug_mesh_missing_condition_summary,
+    has_enabling_signal,
+    assign_non_disease_study_category,
+    non_disease_study_category_summary,
 )
 
 # -------------------------------------------------
@@ -140,18 +143,32 @@ def reclassify_snapshot(
                 t.therapeutic_area = text_ta
 
             elif t.is_drug_trial:
-                t.therapeutic_area = TA_NON_DISEASE
+                if has_enabling_signal(t):
+                    t.therapeutic_area = TA_NON_DISEASE
+                else:
+                    t.therapeutic_area = TA_UNASSIGNED
 
             else:
                 t.therapeutic_area = None
+
         # --- Study intent (AUTHORITATIVE) ---
-        if t.is_drug_trial:
-            if t.therapeutic_area == TA_NON_DISEASE:
-                t.study_intent = "non_disease"
-            else:
-                t.study_intent = "disease"
-        else:
+        if not t.is_drug_trial:
             t.study_intent = None
+        elif t.therapeutic_area == TA_NON_DISEASE:
+            t.study_intent = "non_disease"
+        elif t.therapeutic_area == TA_UNASSIGNED:
+            t.study_intent = None
+        else:
+            t.study_intent = "disease"
+        
+        # --- Non-disease study category (new) ---
+        if t.is_drug_trial and t.study_intent == "non_disease":
+            cat, ev = assign_non_disease_study_category(t)
+            t.study_category = cat
+            t.study_category_evidence = ev
+        else:
+            t.study_category = None
+            t.study_category_evidence = []
 
         # --- Modality (UNCHANGED) ---
         if t.is_drug_trial:
@@ -179,6 +196,7 @@ def reclassify_snapshot(
         "ta_by_sponsor_class": ta_by_sponsor_class(trials),
         "multi_ta_rate_by_phase": multi_ta_rate_by_phase(trials),
         "drug_mesh_missing_condition": drug_mesh_missing_condition_summary(trials),
+        "non_disease_study_categories": non_disease_study_category_summary(trials),
     }
 
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")

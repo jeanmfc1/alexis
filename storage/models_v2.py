@@ -101,3 +101,17 @@ class ClinicalTrialSignalV2:
     # optional, future-proof
     modality_source: Optional[str] = None
 
+    # intent output (computed in pipeline)
+    study_intent: Optional[str] = None
+
+    # data completeness flag (computed in pipeline)
+    mesh_missing_condition: Optional[bool] = None
+
+    # multi-TA detection provenance (computed in pipeline)
+    therapeutic_areas_detected: List[str] = field(default_factory=list)
+
+    # NEW: non-disease study categorization (computed in pipeline)
+    study_category: Optional[str] = None
+    study_category_evidence: List[str] = field(default_factory=list)
+
+

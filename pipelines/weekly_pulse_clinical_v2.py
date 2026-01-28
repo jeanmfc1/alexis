@@ -15,7 +15,7 @@ from classifiers.therapeutic_area import (
 )
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
-from policy.ta_policy import TA_NON_DISEASE, select_primary_ta
+from policy.ta_policy import TA_NON_DISEASE, select_primary_ta, TA_UNASSIGNED
 from analytics.summary_v2 import (
     ta_modality_counts_true_drugs,
     drug_trial_counts,
@@ -34,6 +34,9 @@ from analytics.summary_v2 import (
     ta_by_sponsor_class,
     multi_ta_rate_by_phase,
     drug_mesh_missing_condition_summary,
+    has_enabling_signal,
+    assign_non_disease_study_category,
+    non_disease_study_category_summary,
 )
 
 from storage.snapshots_io_v2 import SnapshotMetadataV2, save_trial_snapshot_v2
@@ -102,18 +105,32 @@ def main():
                 t.therapeutic_area = text_ta
 
             elif t.is_drug_trial:
-                t.therapeutic_area = TA_NON_DISEASE
+                if has_enabling_signal(t):
+                    t.therapeutic_area = TA_NON_DISEASE
+                else:
+                    t.therapeutic_area = TA_UNASSIGNED
 
             else:
                 t.therapeutic_area = None
-                
+
         # --- Study intent (AUTHORITATIVE) ---
         if not t.is_drug_trial:
             t.study_intent = None
         elif t.therapeutic_area == TA_NON_DISEASE:
             t.study_intent = "non_disease"
+        elif t.therapeutic_area == TA_UNASSIGNED:
+            t.study_intent = None
         else:
             t.study_intent = "disease"
+        
+        # --- Non-disease study category (new) ---
+        if t.is_drug_trial and t.study_intent == "non_disease":
+            cat, ev = assign_non_disease_study_category(t)
+            t.study_category = cat
+            t.study_category_evidence = ev
+        else:
+            t.study_category = None
+            t.study_category_evidence = []
 
         # --- Data completeness flag (NOT intent) ---
         t.mesh_missing_condition = bool(
@@ -154,6 +171,7 @@ def main():
         "ta_by_sponsor_class": ta_by_sponsor_class(trials),
         "multi_ta_rate_by_phase": multi_ta_rate_by_phase(trials),
         "drug_mesh_missing_condition": drug_mesh_missing_condition_summary(trials),
+        "non_disease_study_categories": non_disease_study_category_summary(trials),
     }
 
     print("\nTA × Modality counts (TRUE DRUGS ONLY):")

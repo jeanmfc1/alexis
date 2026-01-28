@@ -18,6 +18,7 @@ TA_RESPIRATORY = "Respiratory"
 TA_OPHTHALMOLOGY = "Ophthalmology"
 TA_UROLOGY = "Urology"
 TA_NON_DISEASE = "Non-disease drug study"
+TA_UNASSIGNED = "Unassigned drug study"
 TA_OTHER = "Other"
 
 # Benign guard for oncology phrases in non-disease contexts
