@@ -333,10 +333,14 @@ def extract_condition_mesh_terms(study: Dict[str, Any]) -> tuple[list[MeshTermV2
 # Main normalization
 # --------------------------------
 
-def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSignalV2:
+def normalize_clinicaltrials_study_v2(study: Dict[str, Any], skip_non_essential: bool = True) -> ClinicalTrialSignalV2:
     """
     Normalizes a CT.gov study into a V2 signal object that contains
     only new experimental drugs in `interventions`.
+    
+    Args:
+        study: Raw JSON from ClinicalTrials.gov API
+        skip_non_essential: If True, skip parsing fields not used in classification (faster)
     """
     # Identity
     nct_id = _get(study, ["protocolSection", "identificationModule", "nctId"], default="")
@@ -373,8 +377,11 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any]) -> ClinicalTrialSig
         _get(study, ["protocolSection", "statusModule", "lastUpdatePostDateStruct", "date"])
     )
 
-    # Arms
-    arm_group_map = extract_arm_groups(study)
+    # Arms (only parse if not skipping non-essential fields)
+    if skip_non_essential:
+        arm_group_map = {}  # Empty dict, not used in classification
+    else:
+        arm_group_map = extract_arm_groups(study)
 
     # Interventions — preserve ALL, then filter experimental
     all_interventions = extract_all_structured_interventions(study, arm_group_map)
