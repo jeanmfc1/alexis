@@ -71,6 +71,8 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         # structured interventions (only experimental drugs after normalize_v2)
         "interventions": [_intervention_to_dict(iv) for iv in (t.interventions or [])],
         "interventions_text": list(t.interventions_text or []),
+        "interventions_all": [_intervention_to_dict(iv) for iv in (t.interventions_all or [])],
+
         "arm_group_map": dict(t.arm_group_map or {}),
 
         # meshes

@@ -39,6 +39,14 @@ ONCOLOGY_KW = [
     "hematologic malignancies", "hematological malignancies",
     "b-cell malignancy", "b cell malignancy", "t-cell malignancy", "t cell malignancy", "blood cancer",
 ]
+
+PSYCHIATRY_KW = [
+    "cocaine use disorder",
+    "smoking cessation",
+    "substance use disorder",
+    "addiction",
+]
+
 INFECTIOUS_KW = [
     "infectious", "infection", "viral", "virus", "bacterial", "bacteria",
     "fungal", "fungus", "hiv", "covid", "sars-cov-2", "influenza", "flu",
@@ -68,8 +76,8 @@ CARDIO_KW = [
     "pacing", "conduction system pacing", "left bundle branch", "bundle branch block",
     "pacemaker", "implantable cardioverter defibrillator", "icd", "defibrillator",
     "catheter ablation", "heart catheterization", "cardiac catheterization", "pci", "angioplasty",
-    "cabg", "endarterectomy", "carotid",
-    "pulmonary hypertension", "pulmonary artery hypertension",
+    "cabg", "endarterectomy", "carotid", "pulmonary embolism",
+    "vasospasm", "pulmonary hypertension", "pulmonary artery hypertension",
     "ptca", "balloon catheter", "drug-coated balloon", "dcb",
     "aneurysm", "preeclampsia", "postpartum hypertension", "pregnancy-induced hypertension",
 ]
@@ -80,7 +88,8 @@ METABOLIC_KW = [
 ]
 RARE_KW = [
     "rare disease", "orphan", "genetic", "inherited", "deficiency",
-    "lysosomal", "dystrophy", "fragile x", "cystic fibrosis", "spinal muscular atrophy",
+    "lysosomal", "dystrophy", "fragile x", "cystic fibrosis", "spinal muscular atrophy", "sjögren syndrome",
+    "interferonopathy", "proteinuric kidney disease",
 ]
 MSK_KW = [
     "osteoarthritis", "musculoskeletal", "low back pain", "back pain",
@@ -91,14 +100,18 @@ MSK_KW = [
 ]
 GI_KW = [
     "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis", # NEW: Additional GI conditions
-    "gastrectomy", "pancreatic insufficiency", "pancreatic enzyme", "esophageal", "hemorrhoid", "hemorrhoids",
+    "gastrectomy", "pancreatic insufficiency", "pancreatic enzyme", "esophageal", "hemorrhoid", "hemorrhoids", "colorectal adenoma",
+    "colorectal neoplasia","esophagogastric junction", "achalasia", "bloody diarrhea", "radiation esophagitis",
 ]
 UROLOGY_KW = [
     "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1", # NEW: Bladder/urological conditions
-    "urinary incontinence", "stress incontinence", "neurogenic bladder", "overactive bladder", "ureteral", "urological",
+    "urinary incontinence", "stress incontinence", "neurogenic bladder", "overactive bladder", "ureteral", "urological", "ovarian reserve",
+    "diminished ovarian reserve", "fertility",
 ]
+
 OPHTHALMOLOGY_KW = [
-    "macular degeneration","retinopathy","diabetic eye",
+    "macular degeneration","retinopathy","diabetic eye", "retinal detachment",
+    "rhegmatogenous retinal", "macular telangiectasia", "vitreoretinal",
 ]
 
 DENTAL_KW = [
@@ -113,7 +126,9 @@ DERMATOLOGY_KW = [
     "keloid", "scar tissue", "hypertrophic scar",
     "vitiligo", "alopecia", "hair loss",
     "acne", "rosacea", 
-    "skin lesion", "skin disorder",
+    "skin lesion", "skin disorder", "xerosis",
+    "dry skin",
+    "xerosis cutis",
 ]
 
 HEMATOLOGY_KW = [
@@ -121,7 +136,9 @@ HEMATOLOGY_KW = [
     "granulocyte collection", "stem cell mobilization",
     "clonal cytopenia", "cytopenia", "neutropenia",
     "thrombocytopenia", "anemia non-malignant",
-    "g-csf", "filgrastim", "plerixafor",
+    "g-csf", "filgrastim", "plerixafor", "thalassemia", "alpha-thalassemia", "beta-thalassemia",
+    "monoclonal gammopathy",
+    "neuroblastoma",  
 ]
 
 RESPIRATORY_KW = [

@@ -22,9 +22,9 @@ from analytics.summary_v2 import (
     ta_modality_counts_true_drugs,
     drug_trial_counts,
     info_flag_counts_true_drugs,
-    drug_info_overview,
     drug_modality_summary,
     drug_therapeutic_area_summary,
+    drug_info_overview,
     intervention_type_summary_all_trials,
     study_type_summary_all_trials,
     drug_modality_provenance_summary,
@@ -64,13 +64,41 @@ def reconstruct_trials(raw_trials: List[dict]) -> List[ClinicalTrialSignalV2]:
                 for m in (t.get(key) or [])
             ]
         
-        intervention_objs = [
+        # -------------------------------------------------
+        # Structured interventions reconstruction (AUTHORITATIVE)
+        # -------------------------------------------------
+        # Snapshot schema:
+        #   interventions_all = ALL structured interventions (canonical)
+        #   interventions     = subset (new experimental drugs only)
+        #
+        # Reclassification MUST preserve this invariant.
+
+        all_iv_objs = [
             InterventionV2(
                 name=iv.get("name"),
                 type=iv.get("type"),
+                role=iv.get("role"),
+                arm_group_labels=iv.get("arm_group_labels") or [],
+                other_names=iv.get("other_names") or [],
+                description=iv.get("description"),
+            )
+            for iv in (t.get("interventions_all") or [])
+            if isinstance(iv, dict)
+        ]
+
+        subset_iv_objs = [
+            InterventionV2(
+                name=iv.get("name"),
+                type=iv.get("type"),
+                role=iv.get("role"),
+                arm_group_labels=iv.get("arm_group_labels") or [],
+                other_names=iv.get("other_names") or [],
+                description=iv.get("description"),
             )
             for iv in (t.get("interventions") or [])
+            if isinstance(iv, dict)
         ]
+
 
         trial = ClinicalTrialSignalV2(
             nct_id=t.get("nct_id"),
@@ -81,8 +109,8 @@ def reconstruct_trials(raw_trials: List[dict]) -> List[ClinicalTrialSignalV2]:
             conditions=t.get("conditions") or [],
             first_posted_date=t.get("first_posted_date"),
             last_update_posted_date=t.get("last_update_posted_date"),
-            interventions=intervention_objs,
-            interventions_all=intervention_objs,   
+            interventions=subset_iv_objs,
+            interventions_all=all_iv_objs,
             interventions_text=t.get("interventions_text") or [],
             arm_group_map=t.get("arm_group_map") or {},
             intervention_meshes=mesh_list("intervention_meshes"),
@@ -211,23 +239,20 @@ def reclassify_snapshot(
     # -------------------------------------------------
     # Re-run classifiers IN PARALLEL
     # -------------------------------------------------
-    print(f"\nStarting parallel reclassification of {len(trials)} trials...")
+    # 4) Classify all trials in parallel
     start_time = time.time()
     
     trials = process_trials_parallel(
         trials=trials,
         classifier_function=classify_single_trial,
-        num_workers=None
+        num_workers=None  # Auto-detect optimal worker count
     )
     
     elapsed = time.time() - start_time
     trials_per_sec = len(trials) / elapsed if elapsed > 0 else 0
-    print(f"Parallel reclassification completed in {elapsed:.1f}s ({trials_per_sec:.1f} trials/sec)")
+    print(f"\n✓ Classification completed in {elapsed:.1f}s ({trials_per_sec:.1f} trials/sec)")
 
-    # -------------------------------------------------
-    # Summaries
-    # -------------------------------------------------
-
+    # 6) Compute summaries and save snapshot (v2)
     summary = {
         "ta_modality_counts_true_drugs": ta_modality_counts_true_drugs(trials),
         "drug_trial_counts": drug_trial_counts(trials),
@@ -252,6 +277,7 @@ def reclassify_snapshot(
         for modality, count in mods.items():
             print(f"  {ta:20} | {modality:22} | {count}")
 
+
     print("\nModality INFO summary (TRUE DRUGS ONLY):")
     for flag, count in summary["info_flag_counts_true_drugs"].items():
         print(f"  {flag}: {count}")
@@ -259,20 +285,42 @@ def reclassify_snapshot(
     print("\nDrug trial overview:")
     for k, v in summary["drug_info_overview"].items():
         print(f"  {k}: {v}")
+    
+    print("\nDrug trials by modality:")
+    for k, v in sorted(drug_modality_summary(trials).items()):
+        print(f"  {k:25} | {v}")
 
+    print("\nDrug trials by therapeutic area:")
+    for k, v in sorted(drug_therapeutic_area_summary(trials).items()):
+        print(f"  {k:25} | {v}")
+    
     print("\nStudyType summary (ALL trials):")
-    for st, count in summary["study_type_summary"].items():
+    for st, count in summary.get("study_type_summary", {}).items():
         print(f"  {st}: {count}")
 
-    print("\nCT.gov Intervention Category Summary (ALL trials):")
-    for tp, count in summary["intervention_type_summary"].items():
+    
+    ctgov = summary.get("intervention_type_summary")
+
+    print("\nCT.gov Intervention Category Summary (SOURCE LAYER):")
+    print(f"  Layer: {ctgov.get('_layer')}")
+    print(f"  Requires: {ctgov.get('_requires')}")
+    print(f"  Valid on snapshots: {ctgov.get('_valid_on_snapshots')}")
+
+    print("\n  Category                 | Trials with Category")
+    print("  -----------------------------------------------")
+
+    for tp, count in ctgov["trials_with_category"].items():
         print(f"  {tp:25} | {count}")
+    
+    print("\nDrug modality provenance (drug trials):")
+    for k, v in summary["drug_modality_provenance"].items():
+        print(f"  {k:20} | {v}")
     
     print("\nTherapeutic area provenance (drug trials):")
     for k, v in summary["drug_ta_provenance"].items():
         print(f"  {k:20} | {v}")
     
-        print("\nDrug study intent:")
+    print("\nDrug study intent:")
     for k, v in summary["drug_study_intent"].items():
         print(f"  {k:15} | {v}")
     
@@ -302,6 +350,7 @@ def reclassify_snapshot(
     print("\nMulti-TA rate by phase:")
     for phase, rate in summary["multi_ta_rate_by_phase"].items():
         print(f"  {phase:10} | {rate:.2%}")
+
 
     # -------------------------------------------------
     # Metadata + Save

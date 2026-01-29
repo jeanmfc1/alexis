@@ -1,10 +1,6 @@
-"""
-Parallel processing utilities for ALEXIS classification pipeline.
-Provides multiprocessing support for trial classification.
-"""
-
 from multiprocessing import Pool, cpu_count
 from typing import List, Callable, Any, Optional
+from tqdm import tqdm
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,16 +61,19 @@ def classify_trial_batch(args: tuple) -> List[Any]:
     Cannot use global state or shared objects.
     
     Args:
-        args: Tuple of (trials_batch, classifier_function)
+        args: Tuple of (trials_batch, classifier_function, batch_id, total_batches)
             - trials_batch: List of ClinicalTrialSignalV2 objects
             - classifier_function: Function that classifies a single trial
+            - batch_id: ID of this batch (for progress reporting)
+            - total_batches: Total number of batches
     
     Returns:
         List of classified trial objects
     """
-    trials_batch, classifier_function = args
+    trials_batch, classifier_function, batch_id, total_batches = args
     
     classified_trials = []
+    
     for trial in trials_batch:
         try:
             # Call the classifier function on each trial
@@ -94,7 +93,7 @@ def process_trials_parallel(
     num_workers: Optional[int] = None
 ) -> List[Any]:
     """
-    Process trials in parallel using multiprocessing.
+    Process trials in parallel using multiprocessing with progress bar.
     
     Args:
         trials: List of ClinicalTrialSignalV2 objects to classify
@@ -112,27 +111,33 @@ def process_trials_parallel(
         num_workers = get_optimal_worker_count(len(trials))
     
     logger.info(f"Processing {len(trials)} trials with {num_workers} workers")
-    print(f"Processing {len(trials)} trials with {num_workers} workers")
+    print(f"\nProcessing {len(trials)} trials with {num_workers} parallel workers")
     
-    # Split trials into batches
-    trial_batches = chunk_list(trials, num_workers)
+    # Create MANY small batches (not just num_workers batches)
+    # This ensures the progress bar updates frequently
+    batch_size = 10  # Process 10 trials per batch
+    num_batches = (len(trials) + batch_size - 1) // batch_size  # Ceiling division
     
-    # Prepare arguments for each worker
+    trial_batches = []
+    for i in range(0, len(trials), batch_size):
+        trial_batches.append(trials[i:i+batch_size])
+    
+    # Prepare arguments for each batch
     worker_args = [
-        (batch, classifier_function)
-        for batch in trial_batches
+        (batch, classifier_function, i+1, num_batches)
+        for i, batch in enumerate(trial_batches)
     ]
     
-    # Process in parallel
-    with Pool(num_workers) as pool:
-        results = pool.map(classify_trial_batch, worker_args)
-    
-    # Flatten results (list of lists -> single list)
+    # Process in parallel with progress bar
     classified_trials = []
-    for batch_results in results:
-        classified_trials.extend(batch_results)
+    with Pool(num_workers) as pool:
+        # Create progress bar
+        with tqdm(total=len(trials), desc="Classifying trials", unit="trial") as pbar:
+            # Process batches - workers will pull from the queue as they finish
+            for batch_results in pool.imap_unordered(classify_trial_batch, worker_args, chunksize=1):
+                classified_trials.extend(batch_results)
+                pbar.update(len(batch_results))
     
     logger.info(f"Completed parallel processing of {len(classified_trials)} trials")
-    print(f"Completed parallel processing of {len(classified_trials)} trials")
     
     return classified_trials

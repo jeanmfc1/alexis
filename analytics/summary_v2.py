@@ -329,6 +329,7 @@ CAT_WOUND = "Wound / Tissue Healing"
 CAT_AESTHETIC = "Aesthetic / Cosmetic"
 CAT_WELLNESS = "Wellness / Longevity"
 CAT_CONTRACEPTION = "Contraception / Family Planning"
+CAT_ANESTHESIA = "anesthesia_sedation"
 
 PK_REGEX = re.compile(
     r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
@@ -465,6 +466,12 @@ CONTRACEPTION_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+# Anesthesia and sedation studies
+ANESTHESIA_SEDATION_REGEX = re.compile(
+    r'\b(anesthesia|sedation|postoperative pain|post-operative|perioperative|anesthetic|nausea vomiting|ponv)\b',
+    re.IGNORECASE
+)
+
 def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
     # Use pre-cached text if available, otherwise compute
     text = getattr(t, '_cached_title_interventions', None)
@@ -543,6 +550,10 @@ def assign_non_disease_study_category(
     if PROCEDURAL_REGEX.search(text):
         evidence.append("procedural: PROCEDURAL_REGEX")
         return (CAT_PROCEDURAL, evidence)
+
+    if ANESTHESIA_SEDATION_REGEX.search(text):
+        evidence.append("anesthesia_sedation")
+        return (CAT_ANESTHESIA, evidence)
 
     # NEW: Transplant support (high priority after procedural)
     if TRANSPLANT_REGEX.search(text):

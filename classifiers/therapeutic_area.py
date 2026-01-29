@@ -16,7 +16,7 @@ from policy.ta_policy import (
     NON_CARDIAC_VALVE_EXCLUSIONS, CARDIAC_VALVE_CONTEXT,
     CARDIO_STENT_CONTEXT, STROKE_NEURO_FOCUS_TERMS, TA_PSYCHIATRY,
     TA_GI, TA_RESPIRATORY, TA_OPHTHALMOLOGY, TA_UROLOGY, TA_NON_DISEASE,
-    GI_KW, UROLOGY_KW, OPHTHALMOLOGY_KW,
+    GI_KW, UROLOGY_KW, OPHTHALMOLOGY_KW, PSYCHIATRY_KW,
 )
 
 # ---------------------------------------------------------------------
@@ -154,6 +154,8 @@ def assign_therapeutic_area(trial: ClinicalTrialSignalV2) -> str | None:
         return TA_DERMATOLOGY
     if _has_any(text, HEMATOLOGY_KW):
         return TA_HEMATOLOGY
+    if _has_any(text, PSYCHIATRY_KW):
+        return TA_PSYCHIATRY
 
     return TA_OTHER
 

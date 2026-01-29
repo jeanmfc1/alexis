@@ -15,8 +15,13 @@ from classifiers.therapeutic_area import (
     assign_therapeutic_area,
     detect_therapeutic_area_evidence,
 )
+
 from classifiers.drug_non_drug_v2 import is_drug_trial_v2
+
+from storage.models_v2 import ClinicalTrialSignalV2, MeshTermV2, InterventionV2
+
 from classifiers.trial_modality_v2 import assign_trial_modality_v2
+
 from policy.ta_policy import TA_NON_DISEASE, select_primary_ta, TA_UNASSIGNED
 from analytics.summary_v2 import (
     ta_modality_counts_true_drugs,
@@ -177,7 +182,6 @@ def main():
     print(f"Deduped trials (v2): {len(trials)}")
 
     # 4) Classify all trials in parallel
-    print(f"\nStarting parallel classification of {len(trials)} trials...")
     start_time = time.time()
     
     trials = process_trials_parallel(
@@ -188,7 +192,7 @@ def main():
     
     elapsed = time.time() - start_time
     trials_per_sec = len(trials) / elapsed if elapsed > 0 else 0
-    print(f"Parallel classification completed in {elapsed:.1f}s ({trials_per_sec:.1f} trials/sec)")
+    print(f"\n✓ Classification completed in {elapsed:.1f}s ({trials_per_sec:.1f} trials/sec)")
 
     # 5) Build snapshot metadata (v2)
     metadata = SnapshotMetadataV2(

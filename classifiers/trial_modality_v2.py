@@ -30,13 +30,25 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
     # --- 1) Base modality from structured intervention.type ---
 
     base_modalities: list[str] = []
-    for iv in getattr(trial, "interventions", []) or []:
+    for iv in getattr(trial, "interventions_all", []) or []:
         if iv.type:
             base = type_to_base_modality(iv.type)
             base_modalities.append(base)
 
     # choose representative base modality (first, majority, etc.)
-    base_modality = base_modalities[0] if base_modalities else "other_drug"
+    def select_best_modality(modalities):
+        """Prioritize drug types over non-drug types"""
+        if not modalities:
+            return "other_drug"
+    
+        # Filter out non-drug if there are drug options
+        drug_modalities = [m for m in modalities if m != "non_drug"]
+        if drug_modalities:
+            return drug_modalities[0]
+    
+        return modalities[0]
+
+    base_modality = select_best_modality(base_modalities)
 
     # --- 2) Always try MeSH tree refinement (highest quality) ---
 
