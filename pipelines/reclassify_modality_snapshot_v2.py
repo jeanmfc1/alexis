@@ -1,7 +1,6 @@
-# ALEXIS/pipelines/reclassify_modality_snapshot_v2.py
-
 from __future__ import annotations
-
+import time
+from utils.parallel_processor import process_trials_parallel
 from tqdm import tqdm
 import json
 from pathlib import Path
@@ -103,6 +102,98 @@ def reconstruct_trials(raw_trials: List[dict]) -> List[ClinicalTrialSignalV2]:
 # -------------------------------------------------
 # Reclassification
 # -------------------------------------------------
+def classify_single_trial(trial: ClinicalTrialSignalV2) -> ClinicalTrialSignalV2:
+    """
+    Classify a single trial (drug status, TA, modality, etc.)
+    
+    This function is called by parallel workers and must be self-contained.
+    
+    Args:
+        trial: Trial object to classify
+    
+    Returns:
+        The same trial object with classification fields populated
+    """
+    # --- Pre-cache text for all downstream functions ---
+    trial._cached_title_interventions = " ".join(
+        (trial.interventions_text or []) + [trial.title or ""]
+    ).lower()
+    trial._cached_title_conditions = " ".join(
+        [trial.title or ""] + (trial.conditions or [])
+    ).lower()
+
+    # --- Drug status FIRST (AUTHORITATIVE) ---
+    trial.is_drug_trial = is_drug_trial_v2(trial)
+
+    # OPTIMIZATION: Skip expensive processing for non-drug trials
+    if not trial.is_drug_trial:
+        trial.therapeutic_area = None
+        trial.therapeutic_areas_detected = []
+        trial.study_intent = None
+        trial.study_category = None
+        trial.study_category_evidence = []
+        trial.mesh_missing_condition = False
+        trial.modality = None
+        return trial
+
+    # --- Therapeutic Area (FIXED PROVENANCE) ---
+
+    # 1) Detect multi-TA using MeSH ancestry
+    ta_evidence = detect_therapeutic_area_evidence(trial)
+    trial.therapeutic_areas_detected = sorted(ta_evidence.keys())
+
+    primary_ta = select_primary_ta(trial.therapeutic_areas_detected)
+
+    if primary_ta:
+        trial.therapeutic_area = primary_ta
+
+    else:
+        # 2) Text-based TA fallback MUST run before non-disease
+        text_ta = assign_therapeutic_area(trial)
+
+        if text_ta and text_ta != "Other":
+            trial.therapeutic_area = text_ta
+
+        elif trial.is_drug_trial:
+            if has_enabling_signal(trial):
+                trial.therapeutic_area = TA_NON_DISEASE
+            else:
+                trial.therapeutic_area = TA_UNASSIGNED
+
+        else:
+            trial.therapeutic_area = None
+
+    # --- Study intent (AUTHORITATIVE) ---
+    if not trial.is_drug_trial:
+        trial.study_intent = None
+    elif trial.therapeutic_area == TA_NON_DISEASE:
+        trial.study_intent = "non_disease"
+    elif trial.therapeutic_area == TA_UNASSIGNED:
+        trial.study_intent = None
+    else:
+        trial.study_intent = "disease"
+    
+    # --- Non-disease study category (new) ---
+    if trial.is_drug_trial and trial.study_intent == "non_disease":
+        cat, ev = assign_non_disease_study_category(trial)
+        trial.study_category = cat
+        trial.study_category_evidence = ev
+    else:
+        trial.study_category = None
+        trial.study_category_evidence = []
+
+    # --- Data completeness flag (NOT intent) ---
+    trial.mesh_missing_condition = bool(
+        trial.is_drug_trial and not trial.condition_meshes
+    )
+
+    # --- Modality (UNCHANGED) ---
+    if trial.is_drug_trial:
+        trial.modality = assign_trial_modality_v2(trial)
+    else:
+        trial.modality = None
+    
+    return trial
 
 def reclassify_snapshot(
     snapshot_path: Path,
@@ -118,63 +209,20 @@ def reclassify_snapshot(
     print(f"Loaded trials: {len(trials)}")
 
     # -------------------------------------------------
-    # Re-run classifiers
+    # Re-run classifiers IN PARALLEL
     # -------------------------------------------------
-    for t in tqdm(trials, desc="Classifying trials (v2)", unit="trial"):
-        # --- Drug status FIRST (AUTHORITATIVE) ---
-        t.is_drug_trial = is_drug_trial_v2(t)
-
-        # --- Therapeutic Area (FIXED PROVENANCE) ---
-
-        # 1) Detect multi-TA using MeSH ancestry
-        ta_evidence = detect_therapeutic_area_evidence(t)
-        t.therapeutic_areas_detected = sorted(ta_evidence.keys())
-
-        primary_ta = select_primary_ta(t.therapeutic_areas_detected)
-
-        if primary_ta:
-            t.therapeutic_area = primary_ta
-
-        else:
-            # 2) Text-based TA fallback MUST run before non-disease
-            text_ta = assign_therapeutic_area(t)
-
-            if text_ta and text_ta != "Other":
-                t.therapeutic_area = text_ta
-
-            elif t.is_drug_trial:
-                if has_enabling_signal(t):
-                    t.therapeutic_area = TA_NON_DISEASE
-                else:
-                    t.therapeutic_area = TA_UNASSIGNED
-
-            else:
-                t.therapeutic_area = None
-
-        # --- Study intent (AUTHORITATIVE) ---
-        if not t.is_drug_trial:
-            t.study_intent = None
-        elif t.therapeutic_area == TA_NON_DISEASE:
-            t.study_intent = "non_disease"
-        elif t.therapeutic_area == TA_UNASSIGNED:
-            t.study_intent = None
-        else:
-            t.study_intent = "disease"
-        
-        # --- Non-disease study category (new) ---
-        if t.is_drug_trial and t.study_intent == "non_disease":
-            cat, ev = assign_non_disease_study_category(t)
-            t.study_category = cat
-            t.study_category_evidence = ev
-        else:
-            t.study_category = None
-            t.study_category_evidence = []
-
-        # --- Modality (UNCHANGED) ---
-        if t.is_drug_trial:
-            t.modality = assign_trial_modality_v2(t)
-        else:
-            t.modality = None
+    print(f"\nStarting parallel reclassification of {len(trials)} trials...")
+    start_time = time.time()
+    
+    trials = process_trials_parallel(
+        trials=trials,
+        classifier_function=classify_single_trial,
+        num_workers=None
+    )
+    
+    elapsed = time.time() - start_time
+    trials_per_sec = len(trials) / elapsed if elapsed > 0 else 0
+    print(f"Parallel reclassification completed in {elapsed:.1f}s ({trials_per_sec:.1f} trials/sec)")
 
     # -------------------------------------------------
     # Summaries
