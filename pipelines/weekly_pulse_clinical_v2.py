@@ -94,6 +94,17 @@ def main():
         # --- Drug status FIRST (AUTHORITATIVE) ---
         t.is_drug_trial = is_drug_trial_v2(t)
 
+        # OPTIMIZATION: Skip expensive processing for non-drug trials
+        if not t.is_drug_trial:
+            t.therapeutic_area = None
+            t.therapeutic_areas_detected = []
+            t.study_intent = None
+            t.study_category = None
+            t.study_category_evidence = []
+            t.mesh_missing_condition = False
+            t.modality = None
+            continue 
+
         # --- Therapeutic Area (FIXED PROVENANCE) ---
 
         # 1) Detect multi-TA using MeSH ancestry
