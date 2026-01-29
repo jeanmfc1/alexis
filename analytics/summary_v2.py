@@ -466,16 +466,11 @@ CONTRACEPTION_REGEX = re.compile(
 )
 
 def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
-    """
-    True if title/interventions_text contain explicit enabling-study intent
-    (PK/PD, BA/BE, DDI, organ impairment, HV, SAD/MAD/FIH, food effect,
-     QT/QTc, ADME, formulation/delivery, procedural anesthesia, biomarkers,
-     MOA/target engagement, transplant support, wound healing, aesthetic,
-     wellness/longevity, contraception).
-    Deterministic and conservative.
-    """
-    text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
-
+    # Use pre-cached text if available, otherwise compute
+    text = getattr(t, '_cached_title_interventions', None)
+    if text is None:
+        text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
+    
     return bool(
         # Core PK/PD / BA/BE / DDI
         DDI_REGEX.search(text)
@@ -536,19 +531,11 @@ def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
 def assign_non_disease_study_category(
     t: ClinicalTrialSignalV2,
 ) -> tuple[str, list[str]]:
-    """
-    Assign a non-disease study category with evidence strings.
-
-    IMPORTANT:
-    - Deterministic
-    - Precedence-based
-    - Evidence is the list of rule labels that matched
-    - If no anchors match, classify as safety/tolerability characterization by exclusion
-    """
-
-    text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
-
     evidence: list[str] = []
+    # Use pre-cached text if available, otherwise compute
+    text = getattr(t, '_cached_title_interventions', None)
+    if text is None:
+        text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
 
     # Precedence order MUST match the exported results:
     # procedural → transplant → wound → aesthetic → ADME → DDI → food → BA/BE → formulation → SAD/MAD/FIH → PK → organ_impairment → HV → biomarker → MOA → wellness → contraception → safety(exclusion)
