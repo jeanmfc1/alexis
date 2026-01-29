@@ -63,11 +63,11 @@ def main():
     print(f"Raw studies returned: {len(raw)}")
 
 
-    # 3) Normalize (v2)
+    # 3) Normalize (v2) - FAST MODE: Skip non-essential attributes
     trials = []
     for study in raw:
         try:
-            trials.append(normalize_clinicaltrials_study_v2(study))
+            trials.append(normalize_clinicaltrials_study_v2(study, skip_non_essential=True))
         except Exception:
             # Keep runner robust; skip bad records deterministically
             continue
