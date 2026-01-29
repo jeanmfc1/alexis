@@ -324,6 +324,11 @@ CAT_ADME = "ADME / Mass Balance"
 CAT_FOOD = "Food Effect"
 CAT_ORGAN_IMPAIR = "Organ Impairment (Renal/Hepatic)"
 CAT_HV = "Healthy Volunteers (Non-disease)"
+CAT_TRANSPLANT = "Transplant Support"
+CAT_WOUND = "Wound / Tissue Healing"
+CAT_AESTHETIC = "Aesthetic / Cosmetic"
+CAT_WELLNESS = "Wellness / Longevity"
+CAT_CONTRACEPTION = "Contraception / Family Planning"
 
 PK_REGEX = re.compile(
     r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
@@ -346,7 +351,9 @@ ORGAN_IMPAIRMENT_REGEX = re.compile(
     re.IGNORECASE,
 )
 HV_REGEX = re.compile(
-    r"\bhealthy volunteer(s)?\b|\bhealthy subject(s)?\b",
+    r"\bhealthy volunteers?\b|\bhealthy subjects?\b|\bhealthy adults?\b|"
+    r"\bhealthy participants?\b|\bhealthy males?\b|\bhealthy females?\b|"
+    r"\bhealthy individuals?\b|\bHV\b",
     re.IGNORECASE,
 )
 
@@ -382,8 +389,13 @@ ADME_REGEX = re.compile(
 
 # Procedural / pain / anesthesia anchors
 PROCEDURAL_REGEX = re.compile(
-    r"\bnerve block\b|\bgenicular\b|\bregional anesth|\banesthe|\bprocedural sedation\b|"
-    r"\bpostoperative\b|\bperioperative\b|\banalges",
+    r"\bnerve block\b|\bgenicular\b|\bregional anesth|\banesthe|"
+    r"\bprocedural sedation\b|\bpostoperative\b|\bperioperative\b|\banalges|"
+    r"\bcolonoscopy\b|\bbowel prep|\bbowel preparation\b|"
+    r"\bendometrial biopsy\b|\bbiopsy procedure\b|"
+    r"\bcesarean\b|\bc-section\b|\bcaesarean\b|"
+    r"\bdialysis catheter\b|\bcatheter insertion\b|"
+    r"\blithotripsy\b|\bshockwave",
     re.IGNORECASE,
 )
 
@@ -409,12 +421,57 @@ MOA_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+TRANSPLANT_REGEX = re.compile(
+    r"\btransplants?\b|\btransplantation\b|\brejection\b|\bgrafts?\b|"
+    r"\ballograft\b|\bantibody[- ]mediated rejection\b|"
+    r"\bdelayed graft function\b|\bDGF\b|\bgvhd\b|"
+    r"\bgraft[- ]versus[- ]host\b|\bptld\b|"
+    r"\bpost[- ]transplant\b|\bengraftment\b",
+    re.IGNORECASE,
+)
+
+WOUND_HEALING_REGEX = re.compile(
+    r"\bburns?\b|\bwound healing\b|\btissue regeneration\b|"
+    r"\bosseointegration\b|\bbone regeneration\b|\btissue repair\b|"
+    r"\bxenograft\b|\bautologous graft\b|\ballogenic graft\b|"
+    r"\bplatelet[- ]rich\b|\bPRP\b|\bPRF\b|\bA-PRF\b|"
+    r"\bstem cell therapy\b|\bmesenchymal stem cell",
+    re.IGNORECASE,
+)
+
+AESTHETIC_REGEX = re.compile(
+    r"\baesthetic\b|\bcosmetic\b|\bwrinkles?\b|"
+    r"\bglabellar lines?\b|\bfacial lines?\b|\bfrown lines?\b|"
+    r"\bskin aging\b|\bfacial aging\b|\bfacial rejuvenation\b|"
+    r"\bfillers?\b.*(?:aesthetic|cosmetic|facial)|"
+    r"\bhyaluronic acid filler\b|\bjaw contouring\b|"
+    r"\bbotox.*cosmetic|"
+    r"\bbotulinum.*(?:aesthetic|cosmetic|glabellar)",
+    re.IGNORECASE,
+)
+
+WELLNESS_LONGEVITY_REGEX = re.compile(
+    r"\banti[- ]aging\b|\breverse aging\b|\blongevity\b|"
+    r"\baging intervention\b|\bwellness\b|\bhealth optimization\b|"
+    r"\bperformance enhancement\b|\bmetabolic optimization\b|"
+    r"\bantioxidant.*(?:supplementation|intervention)",
+    re.IGNORECASE,
+)
+
+CONTRACEPTION_REGEX = re.compile(
+    r"\bcontraception\b|\bcontraceptive\b|\bbirth control\b|"
+    r"\bcontraceptive ring\b|\bhormonal contraception\b|"
+    r"\bfamily planning\b",
+    re.IGNORECASE,
+)
+
 def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
     """
     True if title/interventions_text contain explicit enabling-study intent
     (PK/PD, BA/BE, DDI, organ impairment, HV, SAD/MAD/FIH, food effect,
      QT/QTc, ADME, formulation/delivery, procedural anesthesia, biomarkers,
-     MOA/target engagement).
+     MOA/target engagement, transplant support, wound healing, aesthetic,
+     wellness/longevity, contraception).
     Deterministic and conservative.
     """
     text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
@@ -456,6 +513,21 @@ def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
         # MOA / target engagement
         or MOA_REGEX.search(text)
 
+        # NEW: Transplant support
+        or TRANSPLANT_REGEX.search(text)
+
+        # NEW: Wound healing / tissue regeneration
+        or WOUND_HEALING_REGEX.search(text)
+
+        # NEW: Aesthetic / cosmetic procedures
+        or AESTHETIC_REGEX.search(text)
+
+        # NEW: Wellness / longevity interventions
+        or WELLNESS_LONGEVITY_REGEX.search(text)
+
+        # NEW: Contraception / family planning
+        or CONTRACEPTION_REGEX.search(text)
+
         # Simple string fallbacks
         or ("formulation" in text)
         or ("delivery" in text)
@@ -478,12 +550,27 @@ def assign_non_disease_study_category(
 
     evidence: list[str] = []
 
-    # Precedence order MUST match the exported 239 results:
-    # procedural → ADME → DDI → food → BA/BE → formulation → SAD/MAD/FIH → PK → biomarker → MOA → safety(exclusion)
+    # Precedence order MUST match the exported results:
+    # procedural → transplant → wound → aesthetic → ADME → DDI → food → BA/BE → formulation → SAD/MAD/FIH → PK → organ_impairment → HV → biomarker → MOA → wellness → contraception → safety(exclusion)
 
     if PROCEDURAL_REGEX.search(text):
         evidence.append("procedural: PROCEDURAL_REGEX")
         return (CAT_PROCEDURAL, evidence)
+
+    # NEW: Transplant support (high priority after procedural)
+    if TRANSPLANT_REGEX.search(text):
+        evidence.append("transplant: TRANSPLANT_REGEX")
+        return (CAT_TRANSPLANT, evidence)
+
+    # NEW: Wound healing / tissue regeneration
+    if WOUND_HEALING_REGEX.search(text):
+        evidence.append("wound_healing: WOUND_HEALING_REGEX")
+        return (CAT_WOUND, evidence)
+
+    # NEW: Aesthetic / cosmetic procedures
+    if AESTHETIC_REGEX.search(text):
+        evidence.append("aesthetic: AESTHETIC_REGEX")
+        return (CAT_AESTHETIC, evidence)
 
     if ADME_REGEX.search(text):
         evidence.append("adme: ADME_REGEX")
@@ -528,6 +615,16 @@ def assign_non_disease_study_category(
     if MOA_REGEX.search(text):
         evidence.append("moa: MOA_REGEX")
         return (CAT_MOA, evidence)
+
+    # NEW: Wellness / longevity interventions
+    if WELLNESS_LONGEVITY_REGEX.search(text):
+        evidence.append("wellness: WELLNESS_LONGEVITY_REGEX")
+        return (CAT_WELLNESS, evidence)
+
+    # NEW: Contraception / family planning
+    if CONTRACEPTION_REGEX.search(text):
+        evidence.append("contraception: CONTRACEPTION_REGEX")
+        return (CAT_CONTRACEPTION, evidence)
 
     # If no anchors matched: real category by exclusion (not "other")
     evidence.append("safety_default: no category anchors matched")
