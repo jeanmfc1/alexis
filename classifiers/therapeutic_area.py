@@ -7,10 +7,10 @@ import re
 
 from policy.ta_policy import (
     TA_ONCOLOGY, TA_INFECTIOUS, TA_IMMUNO, TA_NEURO, TA_CARDIO,
-    TA_METABOLIC, TA_RARE, TA_MSK, TA_OTHER,
+    TA_METABOLIC, TA_RARE, TA_MSK, TA_OTHER, TA_DENTAL, TA_DERMATOLOGY, TA_HEMATOLOGY,
     BENIGN_GUARD_KWS, STROKE_PATS,
     ONCOLOGY_KW, INFECTIOUS_KW, IMMUNO_KW, NEURO_KW, CARDIO_KW,
-    METABOLIC_KW, RARE_KW, MSK_KW,
+    METABOLIC_KW, RARE_KW, MSK_KW, DENTAL_KW, DERMATOLOGY_KW, HEMATOLOGY_KW, RESPIRATORY_KW,
     PAIN_SYNDROME_PATS, PDPN_PATS,
     NON_CARDIO_CATHETER_EXCLUSIONS, CARDIO_CATHETER_CONTEXT,
     NON_CARDIAC_VALVE_EXCLUSIONS, CARDIAC_VALVE_CONTEXT,
@@ -141,6 +141,15 @@ def assign_therapeutic_area(trial: ClinicalTrialSignalV2) -> str | None:
         return TA_UROLOGY
     if _has_any(text, OPHTHALMOLOGY_KW):
         return TA_OPHTHALMOLOGY
+    # NEW: Additional specialty TAs
+    if _has_any(text, RESPIRATORY_KW):
+        return TA_RESPIRATORY
+    if _has_any(text, DENTAL_KW):
+        return TA_DENTAL
+    if _has_any(text, DERMATOLOGY_KW):
+        return TA_DERMATOLOGY
+    if _has_any(text, HEMATOLOGY_KW):
+        return TA_HEMATOLOGY
 
     return TA_OTHER
 
@@ -271,6 +280,31 @@ TA_MESH_ROOTS = {
     TA_RARE: [
         {"id": "D030342", "term": "Genetic Diseases, Inborn"},
         {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
+    ],
+
+    # -----------------------------
+    # Dental / Oral Health
+    # -----------------------------
+    TA_DENTAL: [
+        {"id": "D014076", "term": "Tooth Diseases"},
+        {"id": "D009057", "term": "Stomatognathic Diseases"},
+        {"id": "D010510", "term": "Periodontal Diseases"},
+    ],
+
+    # -----------------------------
+    # Dermatology
+    # -----------------------------
+    TA_DERMATOLOGY: [
+        {"id": "D012871", "term": "Skin Diseases"},
+        {"id": "D003875", "term": "Dermatitis"},
+    ],
+
+    # -----------------------------
+    # Hematology (non-malignant)
+    # -----------------------------
+    TA_HEMATOLOGY: [
+        {"id": "D006402", "term": "Hematologic Diseases"},
+        {"id": "D006425", "term": "Hemic and Lymphatic Diseases"},
     ],
 }
 
