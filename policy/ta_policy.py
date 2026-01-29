@@ -19,6 +19,9 @@ TA_OPHTHALMOLOGY = "Ophthalmology"
 TA_UROLOGY = "Urology"
 TA_NON_DISEASE = "Non-disease drug study"
 TA_UNASSIGNED = "Unassigned drug study"
+TA_DENTAL = "Dental / Oral Health"
+TA_DERMATOLOGY = "Dermatology"
+TA_HEMATOLOGY = "Hematology"
 TA_OTHER = "Other"
 
 # Benign guard for oncology phrases in non-disease contexts
@@ -45,15 +48,15 @@ INFECTIOUS_KW = [
 IMMUNO_KW = [
     "autoimmune", "inflammation", "inflammatory", "immune", "immuno",
     "lupus", "sle", "rheumatoid", "arthritis", "psoriasis",
-    "eczema", "atopic dermatitis", "crohn", "crohn's", "ulcerative colitis",
+    "eczema", "atopic dermatitis", "atopic hand", "atopic foot", "atopic eczema", "crohn", "crohn's", "ulcerative colitis",
     "ibd", "asthma", "multiple sclerosis", "ms ", "myasthenia gravis", "ocular myasthenia gravis", "gmg",
 ]
 NEURO_KW = [
     "neurology", "neurologic", "neurological", "cns", "brain", "spinal",
     "alzheimer", "parkinson", "dementia", "neurodegenerative", "epilepsy", "seizure",
     "migraine", "depression", "schizophrenia", "bipolar", "psychiatric", "autism", "adhd",
-    # neuro rehab/outcomes for stroke carveout
-    "aphasia", "hemiparesis", "motor recovery", "cognitive impairment", "rehabilitation",
+    "aphasia", "hemiparesis", "motor recovery", "cognitive impairment", "rehabilitation", "palliative care", "palliative sedation", "end of life care",
+    "psychological distress palliative",
 ]
 CARDIO_KW = [
     "cardiovascular", "cardiac", "heart", "myocardial", "coronary",
@@ -68,7 +71,7 @@ CARDIO_KW = [
     "cabg", "endarterectomy", "carotid",
     "pulmonary hypertension", "pulmonary artery hypertension",
     "ptca", "balloon catheter", "drug-coated balloon", "dcb",
-    "aneurysm",
+    "aneurysm", "preeclampsia", "postpartum hypertension", "pregnancy-induced hypertension",
 ]
 METABOLIC_KW = [
     "metabolic", "endocrine", "diabetes", "diabetic", "obesity", "insulin",
@@ -83,16 +86,50 @@ MSK_KW = [
     "osteoarthritis", "musculoskeletal", "low back pain", "back pain",
     "myofascial pain", "hip osteoarthritis", "knee osteoarthritis",
     "arthroplasty", "hip arthroplasty", "knee arthroplasty", "total knee arthroplasty", "total hip arthroplasty", "subacromial",
-    "patellofemoral", "patello femoral", "anterior knee pain", "popliteus",
+    "patellofemoral", "patello femoral", "anterior knee pain", "popliteus", "abdominoplasty", "bunionectomy", "rib fracture",
+    "hernia repair", "hernia surgery",
 ]
 GI_KW = [
-    "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis",
+    "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis", # NEW: Additional GI conditions
+    "gastrectomy", "pancreatic insufficiency", "pancreatic enzyme", "esophageal", "hemorrhoid", "hemorrhoids",
 ]
 UROLOGY_KW = [
-    "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1",
+    "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1", # NEW: Bladder/urological conditions
+    "urinary incontinence", "stress incontinence", "neurogenic bladder", "overactive bladder", "ureteral", "urological",
 ]
 OPHTHALMOLOGY_KW = [
     "macular degeneration","retinopathy","diabetic eye",
+]
+
+DENTAL_KW = [
+    "dental implant", "tooth", "teeth", "periodontal", "peri-implant", 
+    "peri-implantitis", "periimplantitis", "oral health", "bruxism", 
+    "pulpotomy", "extraction socket", "gingivitis", "periodontitis",
+    "bleaching sensitivity", "tooth sensitivity", "dental sensitivity",
+    "oral care", "endodontic", "root canal",
+]
+
+DERMATOLOGY_KW = [
+    "keloid", "scar tissue", "hypertrophic scar",
+    "vitiligo", "alopecia", "hair loss",
+    "acne", "rosacea", 
+    "skin lesion", "skin disorder",
+]
+
+HEMATOLOGY_KW = [
+    "hematopoietic reconstitution", "bone marrow recovery",
+    "granulocyte collection", "stem cell mobilization",
+    "clonal cytopenia", "cytopenia", "neutropenia",
+    "thrombocytopenia", "anemia non-malignant",
+    "g-csf", "filgrastim", "plerixafor",
+]
+
+RESPIRATORY_KW = [
+    "copd", "chronic obstructive pulmonary",
+    "bronchitis", "emphysema",
+    "pulmonary fibrosis", "interstitial lung disease",
+    "fibrosing interstitial lung", "lung disease",
+    "respiratory infection", "otitis media",
 ]
 
 # Pain patterns
@@ -250,6 +287,11 @@ TA_PRIORITY_ORDER = [
     "Ophthalmology",
     "Urology",
     "Musculoskeletal",
+
+    # NEW: Additional organ/specialty categories
+    "Hematology",
+    "Dermatology",
+    "Dental / Oral Health",
 ]
 
 
