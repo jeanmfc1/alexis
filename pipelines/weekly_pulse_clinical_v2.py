@@ -83,6 +83,14 @@ def main():
 
     # 4) Classify (write results onto model objects) with progress bar
     for t in tqdm(trials, desc="Classifying trials (v2)", unit="trial"):
+        # --- Pre-cache text for all downstream functions ---
+        t._cached_title_interventions = " ".join(
+            (t.interventions_text or []) + [t.title or ""]
+        ).lower()
+        t._cached_title_conditions = " ".join(
+            [t.title or ""] + (t.conditions or [])
+        ).lower()
+    
         # --- Drug status FIRST (AUTHORITATIVE) ---
         t.is_drug_trial = is_drug_trial_v2(t)
 

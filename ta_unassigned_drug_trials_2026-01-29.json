@@ -1,0 +1,3239 @@
+[
+  {
+    "nct_id": "NCT06930157",
+    "title": "Multi-center Randomized Controlled Clinical Study of Shenling Baishu Granule to Prevent the Recurrence of Low-risk Colorectal Adenoma",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE4",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Low-risk Colorectal Adenoma"
+    ],
+    "first_posted_date": "2025-04-16",
+    "last_update_posted_date": "2026-01-28",
+    "interventions": [
+      {
+        "name": "Shenling Baizhu granules (TCM patent medicine)",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Experimental Group (Shenling Baizhu Granules)"
+        ],
+        "other_names": [],
+        "description": "Shenling Baizhu granules is a traditional Chinese medicine preparation in granular form. Participants in the experimental group will take 6 g orally three times daily for 6 months, initiated within 3 months after baseline endoscopic resection and health education. The granules should be taken before meals or at the same time as eating. The granules contain multiple Chinese herbs including Ginseng, Poria, Atractylodes macrocephala, and other traditional ingredients. This formulation is standardized according to Chinese pharmacopoeia standards and is manufactured under GMP conditions. This intervention is being tested for its ability to prevent the recurrence of low-risk colorectal adenomas after endoscopic resection."
+      }
+    ],
+    "interventions_text": [
+      "Shenling Baizhu granules (TCM patent medicine)",
+      "Drug: Shenling Baizhu granules (TCM patent medicine)"
+    ],
+    "arm_group_map": {
+      "Experimental Group (Shenling Baizhu Granules)": "EXPERIMENTAL",
+      "Control Group (No intervention)": "NO_INTERVENTION"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT04284397",
+    "title": "Identification of Critical Thermal Environments for Aged Adults",
+    "study_type": "INTERVENTIONAL",
+    "phase": "EARLY_PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Aging"
+    ],
+    "first_posted_date": "2020-02-25",
+    "last_update_posted_date": "2026-01-27",
+    "interventions": [
+      {
+        "name": "Low dose ASA",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Aspirin Supplementation"
+        ],
+        "other_names": [
+          "Low-dose aspirin"
+        ],
+        "description": "A sub-group of older adults will be re-tested after 7 days of treatment with low-dose aspirin."
+      }
+    ],
+    "interventions_text": [
+      "Low dose ASA",
+      "Control",
+      "Other: Control",
+      "Drug: Low dose ASA"
+    ],
+    "arm_group_map": {
+      "Critical Environmental Limits": "EXPERIMENTAL",
+      "Aspirin Supplementation": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D001241",
+        "term": "Aspirin"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D012459",
+        "term": "Salicylates"
+      },
+      {
+        "id": "D062385",
+        "term": "Hydroxybenzoates"
+      },
+      {
+        "id": "D010636",
+        "term": "Phenols"
+      },
+      {
+        "id": "D001555",
+        "term": "Benzene Derivatives"
+      },
+      {
+        "id": "D006841",
+        "term": "Hydrocarbons, Aromatic"
+      },
+      {
+        "id": "D006844",
+        "term": "Hydrocarbons, Cyclic"
+      },
+      {
+        "id": "D006838",
+        "term": "Hydrocarbons"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D018882",
+        "term": "Heat Stress Disorders"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D014947",
+        "term": "Wounds and Injuries"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT04003805",
+    "title": "Biomarkers of Exposure and Effect in Standardized Research E-cigarette (SREC) Users",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Smoking, Cigarette"
+    ],
+    "first_posted_date": "2019-07-01",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Standardized Research E-cigarette (SREC)",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Switching from Smoking Cigarettes to SREC"
+        ],
+        "other_names": [],
+        "description": "The device operates at a single output voltage (3.30 \u00b1 0.05 V) and uses sealed disposable 3-mL cartridges with tobacco-flavored e-liquid (\\~350 puffs/cartridge). The concentration of nicotine in e-liquid is 15 mg/mL, and the vehicle composition is 50:50 propylene glycol and glycerin. The device uses a battery that can be recharged via a micro USB port. A single charge is designed to sustain more than 400 puffs, which is more than the capacity of an e-liquid cartridge. The e-liquid and the aerosol are well-characterized in terms of chemical impurities and by-products (such as aldehydes), which are minimal. Additional information, including the results of pharmacokinetics study is available via NIDA website: https://www.drugabuse.gov/funding/supplemental-information-nida-e-cig"
+      }
+    ],
+    "interventions_text": [
+      "Standardized Research E-cigarette (SREC)",
+      "Drug: Standardized Research E-cigarette (SREC)"
+    ],
+    "arm_group_map": {
+      "Switching from Smoking Cigarettes to SREC": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [
+      {
+        "id": "D000073865",
+        "term": "Cigarette Smoking"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D000073869",
+        "term": "Tobacco Smoking"
+      },
+      {
+        "id": "D012907",
+        "term": "Smoking"
+      },
+      {
+        "id": "D001519",
+        "term": "Behavior"
+      },
+      {
+        "id": "D064424",
+        "term": "Tobacco Use"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT07355296",
+    "title": "PODOMOUNT-Basket, a Phase II, Multicentre, Randomised, 2-arm Parallel-group, Double-blind, Placebo-controlled Basket Trial to Assess Safety, Tolerability, PK, and Efficacy of BI 764198 in Four Proteinuric Kidney Diseases",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Proteinuric Kidney Diseases"
+    ],
+    "first_posted_date": "2026-01-21",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [
+      {
+        "name": "BI 764198",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Alport Syndrome cohort",
+          "Secondary focal segmental glomerulosclerosis (sFSGS) cohort",
+          "Treatment resistant primary Membranous Nephropathy (TR-pMN) cohort",
+          "Treatment resistant primary Minimal Change Disease (TR-pMCD) cohort"
+        ],
+        "other_names": [],
+        "description": "BI 764198"
+      }
+    ],
+    "interventions_text": [
+      "BI 764198",
+      "Placebo matching BI 764198",
+      "Drug: BI 764198",
+      "Drug: Placebo matching BI 764198"
+    ],
+    "arm_group_map": {
+      "Secondary focal segmental glomerulosclerosis (sFSGS) cohort": "EXPERIMENTAL",
+      "Treatment resistant primary Minimal Change Disease (TR-pMCD) cohort": "EXPERIMENTAL",
+      "Alport Syndrome cohort": "EXPERIMENTAL",
+      "Treatment resistant primary Membranous Nephropathy (TR-pMN) cohort": "EXPERIMENTAL",
+      "Placebo cohort": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06256445",
+    "title": "A Multicenter, Randomized, Double-blind, Placebo-controlled, Phase \u2162 Clinical Study to Evaluate Efficacy and Safety of AYP-101 for the Reduction of Submental Fat in Adults",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Healthy"
+    ],
+    "first_posted_date": "2024-02-13",
+    "last_update_posted_date": "2026-01-22",
+    "interventions": [
+      {
+        "name": "Polyene Phosphatidylcholine",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "AYP-101"
+        ],
+        "other_names": [
+          "AYP-101"
+        ],
+        "description": "Formulated as an injectable solution containing Polyene Phosphatidylcholine at concentration of 25 mg/mL"
+      }
+    ],
+    "interventions_text": [
+      "Polyene Phosphatidylcholine",
+      "Matching placebo of AYP-101",
+      "Drug: Polyene Phosphatidylcholine",
+      "Drug: Matching placebo of AYP-101"
+    ],
+    "arm_group_map": {
+      "AYP-101": "EXPERIMENTAL",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C029449",
+        "term": "polyene phosphatidylcholine"
+      }
+    ],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07367672",
+    "title": "The Power of Belief: Expectation-driven and Placebo Modulation of Empathic Pain",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Healthy Participants"
+    ],
+    "first_posted_date": "2026-01-26",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [],
+    "interventions_text": [
+      "Intranasal Oxytocin (OT) 24 IU",
+      "Intranasal placebo administration",
+      "Drug: Intranasal Oxytocin (OT) 24 IU",
+      "Drug: Intranasal placebo administration"
+    ],
+    "arm_group_map": {
+      "Intranasal Oxytocin": "ACTIVE_COMPARATOR",
+      "Intranasal placebo": "ACTIVE_COMPARATOR",
+      "Intranasal nothing (control)": "NO_INTERVENTION"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "other_drug",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT03590821",
+    "title": "Modulating Celecoxib Induced Blood Pressure Changes by Timed Administration of Aspirin and the Human Chronobiome",
+    "study_type": "INTERVENTIONAL",
+    "phase": "EARLY_PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Healthy"
+    ],
+    "first_posted_date": "2018-07-18",
+    "last_update_posted_date": "2026-01-23",
+    "interventions": [
+      {
+        "name": "Aspirin 81 mg",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Aspirin 81 mg/Placebo",
+          "Celecoxib 200mg capsule"
+        ],
+        "other_names": [],
+        "description": "timed administration of aspirin in the evening"
+      },
+      {
+        "name": "Celecoxib 200mg capsule",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Aspirin 81 mg/Placebo",
+          "Celecoxib 200mg capsule"
+        ],
+        "other_names": [],
+        "description": "daily administration of celecoxib"
+      }
+    ],
+    "interventions_text": [
+      "Aspirin 81 mg",
+      "Celecoxib 200mg capsule",
+      "Drug: Aspirin 81 mg",
+      "Drug: Celecoxib 200mg capsule"
+    ],
+    "arm_group_map": {
+      "Aspirin 81 mg/Placebo": "EXPERIMENTAL",
+      "Celecoxib 200mg capsule": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D001241",
+        "term": "Aspirin"
+      },
+      {
+        "id": "D000068579",
+        "term": "Celecoxib"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D012459",
+        "term": "Salicylates"
+      },
+      {
+        "id": "D062385",
+        "term": "Hydroxybenzoates"
+      },
+      {
+        "id": "D010636",
+        "term": "Phenols"
+      },
+      {
+        "id": "D001555",
+        "term": "Benzene Derivatives"
+      },
+      {
+        "id": "D006841",
+        "term": "Hydrocarbons, Aromatic"
+      },
+      {
+        "id": "D006844",
+        "term": "Hydrocarbons, Cyclic"
+      },
+      {
+        "id": "D006838",
+        "term": "Hydrocarbons"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D000096926",
+        "term": "Benzenesulfonamides"
+      },
+      {
+        "id": "D013449",
+        "term": "Sulfonamides"
+      },
+      {
+        "id": "D000577",
+        "term": "Amides"
+      },
+      {
+        "id": "D013450",
+        "term": "Sulfones"
+      },
+      {
+        "id": "D013457",
+        "term": "Sulfur Compounds"
+      },
+      {
+        "id": "D011720",
+        "term": "Pyrazoles"
+      },
+      {
+        "id": "D001393",
+        "term": "Azoles"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07209371",
+    "title": "Rifaximin Versus No Intervention in Patients With IgA Monoclonal Gammopathy of Undetermined Significance",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "IgA Monoclonal Gammopathy of Undetermined Significance"
+    ],
+    "first_posted_date": "2025-10-07",
+    "last_update_posted_date": "2026-01-27",
+    "interventions": [
+      {
+        "name": "Rifaximin",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Arm A (Rifaximin)"
+        ],
+        "other_names": [
+          "Xifaxan"
+        ],
+        "description": "Given PO"
+      }
+    ],
+    "interventions_text": [
+      "Rifaximin",
+      "Biospecimen Collection",
+      "Drug: Rifaximin",
+      "Procedure: Biospecimen Collection"
+    ],
+    "arm_group_map": {
+      "Arm A (Rifaximin)": "EXPERIMENTAL",
+      "Arm B (No intervention)": "OTHER"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D000078262",
+        "term": "Rifaximin"
+      },
+      {
+        "id": "D013048",
+        "term": "Specimen Handling"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D012294",
+        "term": "Rifamycins"
+      },
+      {
+        "id": "D006576",
+        "term": "Heterocyclic Compounds, 4 or More Rings"
+      },
+      {
+        "id": "D000072471",
+        "term": "Heterocyclic Compounds, Fused-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D047029",
+        "term": "Lactams, Macrocyclic"
+      },
+      {
+        "id": "D047028",
+        "term": "Macrocyclic Compounds"
+      },
+      {
+        "id": "D011083",
+        "term": "Polycyclic Compounds"
+      },
+      {
+        "id": "D019411",
+        "term": "Clinical Laboratory Techniques"
+      },
+      {
+        "id": "D019937",
+        "term": "Diagnostic Techniques and Procedures"
+      },
+      {
+        "id": "D003933",
+        "term": "Diagnosis"
+      },
+      {
+        "id": "D008919",
+        "term": "Investigative Techniques"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07375524",
+    "title": "A Phase 2 Study on the Safety and Efficacy of the Anti-BAFF-R Monoclonal Antibody, ESG206, in Patients With Primary Sjogren Syndrome",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Primary Sj\u00f6gren Syndrome"
+    ],
+    "first_posted_date": "2026-01-29",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [],
+    "interventions_text": [
+      "ESG206",
+      "Placebo",
+      "Drug: ESG206",
+      "Drug: Placebo"
+    ],
+    "arm_group_map": {
+      "ESG206 Low Dose": "ACTIVE_COMPARATOR",
+      "ESG206 High Dose": "ACTIVE_COMPARATOR",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "monoclonal_antibody",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06347302",
+    "title": "Study of Vitreoretinal Molecular Changes During Rhegmatogenous Retinal Detachment",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Rhegmatogenous Retinal Detachments"
+    ],
+    "first_posted_date": "2024-04-04",
+    "last_update_posted_date": "2026-01-28",
+    "interventions": [],
+    "interventions_text": [
+      "Blood sampling",
+      "vitreous sampling",
+      "Sub-retinal fluid sampling",
+      "Retinal tissue sampling",
+      "Biological: Blood sampling",
+      "Other: vitreous sampling",
+      "Other: Sub-retinal fluid sampling",
+      "Other: Retinal tissue sampling"
+    ],
+    "arm_group_map": {
+      "Retinal detachment Group": "ACTIVE_COMPARATOR",
+      "Control group": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D001800",
+        "term": "Blood Specimen Collection"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D013048",
+        "term": "Specimen Handling"
+      },
+      {
+        "id": "D019411",
+        "term": "Clinical Laboratory Techniques"
+      },
+      {
+        "id": "D019937",
+        "term": "Diagnostic Techniques and Procedures"
+      },
+      {
+        "id": "D003933",
+        "term": "Diagnosis"
+      },
+      {
+        "id": "D011677",
+        "term": "Punctures"
+      },
+      {
+        "id": "D013514",
+        "term": "Surgical Procedures, Operative"
+      },
+      {
+        "id": "D008919",
+        "term": "Investigative Techniques"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "other_drug",
+    "info_flags": [
+      "mesh_available_but_not_used"
+    ],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07372924",
+    "title": "A Phase II, Multicenter, Randomized, Single-Blind, Dose Exploration, Positive Comparator Study to Evaluate the Efficacy and Safety of Tegileridine Fumarate Lnjection for Prolonged Mechanical Ventilation Abirritation in the Intensive Care Unit (ICU)",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Abirritation in the ICU"
+    ],
+    "first_posted_date": "2026-01-28",
+    "last_update_posted_date": "2026-01-28",
+    "interventions": [
+      {
+        "name": "Tegileridine Fumarate lnjection",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Treatment group A: Tegileridine Fumarate lnjection"
+        ],
+        "other_names": [],
+        "description": "Tegileridine Fumarate lnjection; low dose"
+      },
+      {
+        "name": "Tegileridine Fumarate lnjection",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Treatment group B: Tegileridine Fumarate lnjection"
+        ],
+        "other_names": [],
+        "description": "Tegileridine Fumarate lnjection; high dose"
+      }
+    ],
+    "interventions_text": [
+      "Tegileridine Fumarate lnjection",
+      "Remifentanil Hydrochloride for Injection",
+      "Drug: Tegileridine Fumarate lnjection",
+      "Drug: Remifentanil Hydrochloride for Injection"
+    ],
+    "arm_group_map": {
+      "Treatment group A: Tegileridine Fumarate lnjection": "EXPERIMENTAL",
+      "Treatment group B: Tegileridine Fumarate lnjection": "EXPERIMENTAL",
+      "Treatment group C: Remifentanil Hydrochloride for Injection": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D000077208",
+        "term": "Remifentanil"
+      },
+      {
+        "id": "D007267",
+        "term": "Injections"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D011422",
+        "term": "Propionates"
+      },
+      {
+        "id": "D000144",
+        "term": "Acids, Acyclic"
+      },
+      {
+        "id": "D002264",
+        "term": "Carboxylic Acids"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D010880",
+        "term": "Piperidines"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D004333",
+        "term": "Drug Administration Routes"
+      },
+      {
+        "id": "D004358",
+        "term": "Drug Therapy"
+      },
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06588348",
+    "title": "Corticosteroid Effect on Achalasia Variant Esophagogastric Junction Outflow Obstruction",
+    "study_type": "INTERVENTIONAL",
+    "phase": "EARLY_PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Esophagogastric Junction Outflow Obstruction"
+    ],
+    "first_posted_date": "2024-09-19",
+    "last_update_posted_date": "2026-01-28",
+    "interventions": [
+      {
+        "name": "Steroid treatment",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Steroid Treatment"
+        ],
+        "other_names": [
+          "Prednisone"
+        ],
+        "description": "All enrolled subjects will be prescribed a 14-day course of corticosteroid therapy in the form of Prednisone 20 mg to be taken once daily by mouth."
+      }
+    ],
+    "interventions_text": [
+      "Steroid treatment",
+      "Esophageal Manometry",
+      "Survey",
+      "Drug: Steroid treatment",
+      "Procedure: Esophageal Manometry",
+      "Other: Survey"
+    ],
+    "arm_group_map": {
+      "Steroid Treatment": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D011241",
+        "term": "Prednisone"
+      },
+      {
+        "id": "D011795",
+        "term": "Surveys and Questionnaires"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D011244",
+        "term": "Pregnadienediols"
+      },
+      {
+        "id": "D011245",
+        "term": "Pregnadienes"
+      },
+      {
+        "id": "D011278",
+        "term": "Pregnanes"
+      },
+      {
+        "id": "D013256",
+        "term": "Steroids"
+      },
+      {
+        "id": "D000072473",
+        "term": "Fused-Ring Compounds"
+      },
+      {
+        "id": "D011083",
+        "term": "Polycyclic Compounds"
+      },
+      {
+        "id": "D003625",
+        "term": "Data Collection"
+      },
+      {
+        "id": "D004812",
+        "term": "Epidemiologic Methods"
+      },
+      {
+        "id": "D008919",
+        "term": "Investigative Techniques"
+      },
+      {
+        "id": "D017531",
+        "term": "Health Care Evaluation Mechanisms"
+      },
+      {
+        "id": "D011787",
+        "term": "Quality of Health Care"
+      },
+      {
+        "id": "D017530",
+        "term": "Health Care Quality, Access, and Evaluation"
+      },
+      {
+        "id": "D011634",
+        "term": "Public Health"
+      },
+      {
+        "id": "D004778",
+        "term": "Environment and Public Health"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT05140499",
+    "title": "A Prospective, Randomized Trial of Liposomal Bupivacaine Compared to Continuous Nerve Catheters on Pain Control and Post-Operative Opioid Use in Receiving Popliteal Nerve Blocks for Below the Knee Amputation",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE4",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Pain, Postoperative",
+      "Amputation"
+    ],
+    "first_posted_date": "2021-12-01",
+    "last_update_posted_date": "2026-01-27",
+    "interventions": [],
+    "interventions_text": [
+      "Liposomal bupivacaine",
+      "Bupivacaine Hydrochloride 0.5 % Injectable Solution",
+      "Drug: Liposomal bupivacaine",
+      "Drug: Bupivacaine Hydrochloride 0.5 % Injectable Solution"
+    ],
+    "arm_group_map": {
+      "Single Shot Perineural Popliteal Nerve Block": "ACTIVE_COMPARATOR",
+      "Continuous perineural popliteal nerve block catheter": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D002045",
+        "term": "Bupivacaine"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D000813",
+        "term": "Anilides"
+      },
+      {
+        "id": "D000577",
+        "term": "Amides"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D000814",
+        "term": "Aniline Compounds"
+      },
+      {
+        "id": "D000588",
+        "term": "Amines"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D010149",
+        "term": "Pain, Postoperative"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D011183",
+        "term": "Postoperative Complications"
+      },
+      {
+        "id": "D010335",
+        "term": "Pathologic Processes"
+      },
+      {
+        "id": "D013568",
+        "term": "Pathological Conditions, Signs and Symptoms"
+      },
+      {
+        "id": "D010146",
+        "term": "Pain"
+      },
+      {
+        "id": "D009461",
+        "term": "Neurologic Manifestations"
+      },
+      {
+        "id": "D012816",
+        "term": "Signs and Symptoms"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT07360639",
+    "title": "Effectiveness of a Combination Cream of Gayo Arabica Coffee Bean Extract and Aceh Patchouli (Pogostemon Cablin Benth) Compared to Urea Cream for Dry Skin",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Dry Skin",
+      "Xerosis Cutis"
+    ],
+    "first_posted_date": "2026-01-22",
+    "last_update_posted_date": "2026-01-22",
+    "interventions": [],
+    "interventions_text": [
+      "combination cream",
+      "control cream",
+      "Drug: combination cream",
+      "Drug: control cream"
+    ],
+    "arm_group_map": {
+      "safety check subject": "ACTIVE_COMPARATOR",
+      "experimental group": "ACTIVE_COMPARATOR",
+      "Control group": "OTHER"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D000077442",
+        "term": "Lidocaine, Prilocaine Drug Combination"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D008012",
+        "term": "Lidocaine"
+      },
+      {
+        "id": "D000083",
+        "term": "Acetanilides"
+      },
+      {
+        "id": "D000813",
+        "term": "Anilides"
+      },
+      {
+        "id": "D000577",
+        "term": "Amides"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D011318",
+        "term": "Prilocaine"
+      },
+      {
+        "id": "D000814",
+        "term": "Aniline Compounds"
+      },
+      {
+        "id": "D000588",
+        "term": "Amines"
+      },
+      {
+        "id": "D004338",
+        "term": "Drug Combinations"
+      },
+      {
+        "id": "D004364",
+        "term": "Pharmaceutical Preparations"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07371819",
+    "title": "Effect of Saccharomyces Boulardii CNCM I-745 (Sb) on Bloody Diarrhea in Children. A Double Blind, Randomized, Controlled Study",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE4",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Acute Bloody Diarrhea of 7 Days or Less Duration"
+    ],
+    "first_posted_date": "2026-01-28",
+    "last_update_posted_date": "2026-01-28",
+    "interventions": [
+      {
+        "name": "Saccharomyces boulardi (Sb)",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Treatment Arm"
+        ],
+        "other_names": [],
+        "description": "Drug: Saccharomyces Boulardii 250 MG Saccharomyces boulardi (Sb) 250 mg dose to be administered to the patient : - twice a day, to children from older than 1.0 year, up to 5.99 years, - or once a day to children 1year old or younger"
+      }
+    ],
+    "interventions_text": [
+      "Saccharomyces boulardi (Sb)",
+      "Placebo",
+      "Drug: Saccharomyces boulardi (Sb)",
+      "Drug: Placebo"
+    ],
+    "arm_group_map": {
+      "Treatment Arm": "EXPERIMENTAL",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07369232",
+    "title": "Cerebral Hemodynamic Effects of Oxygen and Antioxidants",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Oxygen",
+      "Hyperoxemia",
+      "Antioxidant",
+      "Cerebral Autoregulation",
+      "Oxidative Stress"
+    ],
+    "first_posted_date": "2026-01-27",
+    "last_update_posted_date": "2026-01-27",
+    "interventions": [
+      {
+        "name": "Vitamin C (Ascorbic Acid)",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Vitamin C Pre-Treatment + Oxygen"
+        ],
+        "other_names": [],
+        "description": "2 g ascorbic acid (vitamin C - ascorbic acid) diluted in 250 mL saline over 20 minutes, 30-60 minutes before breathing 100% oxygen"
+      }
+    ],
+    "interventions_text": [
+      "Oxygen",
+      "Vitamin C (Ascorbic Acid)",
+      "Other: Oxygen",
+      "Drug: Vitamin C (Ascorbic Acid)"
+    ],
+    "arm_group_map": {
+      "Placebo Pre-Treatment + Oxygen": "PLACEBO_COMPARATOR",
+      "Vitamin C Pre-Treatment + Oxygen": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D010100",
+        "term": "Oxygen"
+      },
+      {
+        "id": "D001205",
+        "term": "Ascorbic Acid"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D018011",
+        "term": "Chalcogens"
+      },
+      {
+        "id": "D004602",
+        "term": "Elements"
+      },
+      {
+        "id": "D007287",
+        "term": "Inorganic Chemicals"
+      },
+      {
+        "id": "D005740",
+        "term": "Gases"
+      },
+      {
+        "id": "D013400",
+        "term": "Sugar Acids"
+      },
+      {
+        "id": "D000144",
+        "term": "Acids, Acyclic"
+      },
+      {
+        "id": "D002264",
+        "term": "Carboxylic Acids"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D006880",
+        "term": "Hydroxy Acids"
+      },
+      {
+        "id": "D002241",
+        "term": "Carbohydrates"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D018496",
+        "term": "Hyperoxia"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D012818",
+        "term": "Signs and Symptoms, Respiratory"
+      },
+      {
+        "id": "D012816",
+        "term": "Signs and Symptoms"
+      },
+      {
+        "id": "D013568",
+        "term": "Pathological Conditions, Signs and Symptoms"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT05866471",
+    "title": "Activating Neuroplasticity to ENHANCE the Perception Box Expanding Effects of Psilocybin",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Healthy",
+      "Psychedelic Experiences",
+      "Vagus Nerve Stimulation"
+    ],
+    "first_posted_date": "2023-05-19",
+    "last_update_posted_date": "2026-01-23",
+    "interventions": [
+      {
+        "name": "Psilocybin",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Group 1: Sham taVNS + Psilocybin + taVNS",
+          "Group 2: Sham taVNS + Psilocybin + Sham taVNS",
+          "Group 3: Sham taVNS + Psilocybin + Psychosocial Support Alone",
+          "Group 4: taVNS + Psilocybin + Sham taVNS"
+        ],
+        "other_names": [
+          "Psilocybine, Psilocibin",
+          "Filament Health Psilocybin",
+          "PEX010"
+        ],
+        "description": "The psilocybin is produced under Good Manufacturing Practice and is in a capsule that contains 25 mg of botanically-derived psilocybin."
+      }
+    ],
+    "interventions_text": [
+      "Psilocybin",
+      "Transcutaneous auricular Vagus Nerve Stimulation (taVNS)",
+      "Psychosocial Support Alone",
+      "Sham taVNS",
+      "Drug: Psilocybin",
+      "Device: Transcutaneous auricular Vagus Nerve Stimulation (taVNS)",
+      "Other: Sham taVNS",
+      "Behavioral: Psychosocial Support Alone"
+    ],
+    "arm_group_map": {
+      "Group 1: Sham taVNS + Psilocybin + taVNS": "EXPERIMENTAL",
+      "Group 2: Sham taVNS + Psilocybin + Sham taVNS": "SHAM_COMPARATOR",
+      "Group 3: Sham taVNS + Psilocybin + Psychosocial Support Alone": "ACTIVE_COMPARATOR",
+      "Group 4: taVNS + Psilocybin + Sham taVNS": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D011562",
+        "term": "Psilocybin"
+      },
+      {
+        "id": "D000067250",
+        "term": "Psychiatric Rehabilitation"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D026121",
+        "term": "Indole Alkaloids"
+      },
+      {
+        "id": "D000470",
+        "term": "Alkaloids"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D007211",
+        "term": "Indoles"
+      },
+      {
+        "id": "D006574",
+        "term": "Heterocyclic Compounds, 2-Ring"
+      },
+      {
+        "id": "D000072471",
+        "term": "Heterocyclic Compounds, Fused-Ring"
+      },
+      {
+        "id": "D014363",
+        "term": "Tryptamines"
+      },
+      {
+        "id": "D054836",
+        "term": "Indolizidines"
+      },
+      {
+        "id": "D007212",
+        "term": "Indolizines"
+      },
+      {
+        "id": "D012046",
+        "term": "Rehabilitation"
+      },
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      },
+      {
+        "id": "D006296",
+        "term": "Health Services"
+      },
+      {
+        "id": "D005159",
+        "term": "Health Care Facilities Workforce and Services"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07374978",
+    "title": "Effect of Thrombolysis on 30-day Mortality in Intermediate High Risk Pulmonary Patients With Low Bleeding Risk",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Pulmonary Embolism Subacute Massive",
+      "Thrombolytic Therapy"
+    ],
+    "first_posted_date": "2026-01-29",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [],
+    "interventions_text": [
+      "Thrombolytic therapy for the study group in the form of streptokinase or recombinant tissue plasminogen activator",
+      "Unfractionated Heparin IV",
+      "Drug: Unfractionated Heparin IV",
+      "Drug: Thrombolytic therapy for the study group in the form of streptokinase or recombinant tissue plasminogen activator"
+    ],
+    "arm_group_map": {
+      "Control group": "ACTIVE_COMPARATOR",
+      "Study group": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D015912",
+        "term": "Thrombolytic Therapy"
+      },
+      {
+        "id": "D010959",
+        "term": "Tissue Plasminogen Activator"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D004358",
+        "term": "Drug Therapy"
+      },
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      },
+      {
+        "id": "D012697",
+        "term": "Serine Endopeptidases"
+      },
+      {
+        "id": "D010450",
+        "term": "Endopeptidases"
+      },
+      {
+        "id": "D010447",
+        "term": "Peptide Hydrolases"
+      },
+      {
+        "id": "D006867",
+        "term": "Hydrolases"
+      },
+      {
+        "id": "D004798",
+        "term": "Enzymes"
+      },
+      {
+        "id": "D045762",
+        "term": "Enzymes and Coenzymes"
+      },
+      {
+        "id": "D057057",
+        "term": "Serine Proteases"
+      },
+      {
+        "id": "D010960",
+        "term": "Plasminogen Activators"
+      },
+      {
+        "id": "D001779",
+        "term": "Blood Coagulation Factors"
+      },
+      {
+        "id": "D001798",
+        "term": "Blood Proteins"
+      },
+      {
+        "id": "D011506",
+        "term": "Proteins"
+      },
+      {
+        "id": "D000602",
+        "term": "Amino Acids, Peptides, and Proteins"
+      },
+      {
+        "id": "D001685",
+        "term": "Biological Factors"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "biologic",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT04770779",
+    "title": "A Phase 3, Double-Blind, Randomized, Placebo-Controlled, Multicenter Study Evaluating the Efficacy and Safety of Mitapivat in Subjects With Transfusion-Dependent Alpha- or Beta-Thalassemia (ENERGIZE-T)",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Transfusion-dependent Alpha-Thalassemia",
+      "Transfusion-dependent Beta-Thalassemia"
+    ],
+    "first_posted_date": "2021-02-25",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Mitapivat",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Mitapivat",
+          "Placebo"
+        ],
+        "other_names": [
+          "AG-348",
+          "AG-348 sulfate hydrate",
+          "Mitapivat sulfate"
+        ],
+        "description": "Tablets"
+      }
+    ],
+    "interventions_text": [
+      "Placebo Matching Mitapivat",
+      "Mitapivat",
+      "Drug: Mitapivat",
+      "Drug: Placebo Matching Mitapivat"
+    ],
+    "arm_group_map": {
+      "Mitapivat": "EXPERIMENTAL",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C000634504",
+        "term": "mitapivat"
+      }
+    ],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT04362527",
+    "title": "Milrinone Infusion for VAsospam Treatment in Subarachnoid hemoRrhage",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "OTHER_GOV",
+    "conditions": [
+      "Vasospasm"
+    ],
+    "first_posted_date": "2020-04-27",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [
+      {
+        "name": "Milrinone 1 Mg/mL Solution for Injection",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Milrinone"
+        ],
+        "other_names": [
+          "Corotrope"
+        ],
+        "description": "Blinding procedure will be set up for the administration of the treatment"
+      }
+    ],
+    "interventions_text": [
+      "Milrinone 1 Mg/mL Solution for Injection",
+      "Saline solution for injection",
+      "Drug: Milrinone 1 Mg/mL Solution for Injection",
+      "Drug: Saline solution for injection"
+    ],
+    "arm_group_map": {
+      "Milrinone": "EXPERIMENTAL",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D020105",
+        "term": "Milrinone"
+      },
+      {
+        "id": "D012996",
+        "term": "Solutions"
+      },
+      {
+        "id": "D007267",
+        "term": "Injections"
+      },
+      {
+        "id": "D000077330",
+        "term": "Saline Solution"
+      },
+      {
+        "id": "D012965",
+        "term": "Sodium Chloride"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D000676",
+        "term": "Amrinone"
+      },
+      {
+        "id": "D000631",
+        "term": "Aminopyridines"
+      },
+      {
+        "id": "D000588",
+        "term": "Amines"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D011725",
+        "term": "Pyridines"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D004364",
+        "term": "Pharmaceutical Preparations"
+      },
+      {
+        "id": "D004333",
+        "term": "Drug Administration Routes"
+      },
+      {
+        "id": "D004358",
+        "term": "Drug Therapy"
+      },
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      },
+      {
+        "id": "D000077324",
+        "term": "Crystalloid Solutions"
+      },
+      {
+        "id": "D007552",
+        "term": "Isotonic Solutions"
+      },
+      {
+        "id": "D002712",
+        "term": "Chlorides"
+      },
+      {
+        "id": "D006851",
+        "term": "Hydrochloric Acid"
+      },
+      {
+        "id": "D017606",
+        "term": "Chlorine Compounds"
+      },
+      {
+        "id": "D007287",
+        "term": "Inorganic Chemicals"
+      },
+      {
+        "id": "D017670",
+        "term": "Sodium Compounds"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT05659576",
+    "title": "Reducing Acute Upper Gastrointestinal Side-Effects of Thoracic Irradiation",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Radiation Esophagitis"
+    ],
+    "first_posted_date": "2022-12-21",
+    "last_update_posted_date": "2026-01-27",
+    "interventions": [
+      {
+        "name": "Sucralfate",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Sucralfate"
+        ],
+        "other_names": [],
+        "description": "1. Sucralfate, 1 gram/10 mL oral suspension \"By mouth, take 10 mL twice a day until RT completion, with one dose 30-60 minutes prior to their midday meal and the second dose prior to bedtime\".May increase frequency up to 4 times per day, per physician discretion\". Or\n2. Sucralfate 1 gram tablets By mouth, take one (1) tablet mixed in 15-30 mL warm water twice a day until RT completion, with one dose 30-60 minutes prior to their midday meal and the second dose prior to bedtime\".\n\nThe frequency of sucralfate can be adjusted at anytime at the treating physician's discretion after the patient has started it at twice a day, and the patient may discontinue sucralfate at anytime after RT completion, per physician discretion. May increase frequency up to 4 times per day, per physician discretion\"."
+      }
+    ],
+    "interventions_text": [
+      "Sucralfate",
+      "Usual Care",
+      "One consent",
+      "Two consent",
+      "Other: One consent",
+      "Other: Two consent",
+      "Drug: Sucralfate",
+      "Other: Usual Care"
+    ],
+    "arm_group_map": {
+      "One Stage Consent": "ACTIVE_COMPARATOR",
+      "Two Stage Consent": "EXPERIMENTAL",
+      "Sucralfate": "EXPERIMENTAL",
+      "Usual Care": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D013392",
+        "term": "Sucralfate"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D013865",
+        "term": "Thioglycosides"
+      },
+      {
+        "id": "D013457",
+        "term": "Sulfur Compounds"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D013395",
+        "term": "Sucrose"
+      },
+      {
+        "id": "D004187",
+        "term": "Disaccharides"
+      },
+      {
+        "id": "D009844",
+        "term": "Oligosaccharides"
+      },
+      {
+        "id": "D011134",
+        "term": "Polysaccharides"
+      },
+      {
+        "id": "D002241",
+        "term": "Carbohydrates"
+      },
+      {
+        "id": "D000073893",
+        "term": "Sugars"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07371728",
+    "title": "Effect of Aprepitant on Post-operative Nausea and Vomiting in Otologic Surgery: A Pilot Randomized-Controlled Trial",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE4",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Otologic Disease"
+    ],
+    "first_posted_date": "2026-01-28",
+    "last_update_posted_date": "2026-01-28",
+    "interventions": [
+      {
+        "name": "Aprepitant",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Treatment Arm"
+        ],
+        "other_names": [],
+        "description": "Participants will be randomly assigned to the intervention or control group in a 1:1 ratio. Oral aprepitant of 80mg will be administered within an hour of induction for an otological surgery."
+      }
+    ],
+    "interventions_text": [
+      "Aprepitant",
+      "Placebo",
+      "Drug: Aprepitant",
+      "Other: Placebo"
+    ],
+    "arm_group_map": {
+      "Treatment Arm": "EXPERIMENTAL",
+      "Control Arm": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D000077608",
+        "term": "Aprepitant"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D009025",
+        "term": "Morpholines"
+      },
+      {
+        "id": "D010078",
+        "term": "Oxazines"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D004427",
+        "term": "Ear Diseases"
+      },
+      {
+        "id": "D009325",
+        "term": "Nausea"
+      },
+      {
+        "id": "D014839",
+        "term": "Vomiting"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D010038",
+        "term": "Otorhinolaryngologic Diseases"
+      },
+      {
+        "id": "D012817",
+        "term": "Signs and Symptoms, Digestive"
+      },
+      {
+        "id": "D012816",
+        "term": "Signs and Symptoms"
+      },
+      {
+        "id": "D013568",
+        "term": "Pathological Conditions, Signs and Symptoms"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT05421897",
+    "title": "RAPID Feasibility Study: A Pilot Study for the Rapid Infusion of Dinutuximab",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Neuroblastoma"
+    ],
+    "first_posted_date": "2022-06-16",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Dinutuximab with Chemotherapy",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Rapid infusion of dinutuximab with chemotherapy"
+        ],
+        "other_names": [
+          "Cyclophosphamide",
+          "Topotecan",
+          "Temozolomide",
+          "Irinotecan",
+          "Sagramostim"
+        ],
+        "description": "Rapid infusion of dinutuximab in 5 hours or less"
+      }
+    ],
+    "interventions_text": [
+      "Dinutuximab with Chemotherapy",
+      "Drug: Dinutuximab with Chemotherapy"
+    ],
+    "arm_group_map": {
+      "Rapid infusion of dinutuximab with chemotherapy": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C112746",
+        "term": "dinutuximab"
+      },
+      {
+        "id": "D004358",
+        "term": "Drug Therapy"
+      },
+      {
+        "id": "D003520",
+        "term": "Cyclophosphamide"
+      },
+      {
+        "id": "D019772",
+        "term": "Topotecan"
+      },
+      {
+        "id": "D000077204",
+        "term": "Temozolomide"
+      },
+      {
+        "id": "D000077146",
+        "term": "Irinotecan"
+      },
+      {
+        "id": "D003115",
+        "term": "Colony-Stimulating Factors"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      },
+      {
+        "id": "D010752",
+        "term": "Phosphoramide Mustards"
+      },
+      {
+        "id": "D009588",
+        "term": "Nitrogen Mustard Compounds"
+      },
+      {
+        "id": "D009150",
+        "term": "Mustard Compounds"
+      },
+      {
+        "id": "D006846",
+        "term": "Hydrocarbons, Halogenated"
+      },
+      {
+        "id": "D006838",
+        "term": "Hydrocarbons"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D063088",
+        "term": "Phosphoramides"
+      },
+      {
+        "id": "D009943",
+        "term": "Organophosphorus Compounds"
+      },
+      {
+        "id": "D002166",
+        "term": "Camptothecin"
+      },
+      {
+        "id": "D000470",
+        "term": "Alkaloids"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D003606",
+        "term": "Dacarbazine"
+      },
+      {
+        "id": "D014226",
+        "term": "Triazenes"
+      },
+      {
+        "id": "D007093",
+        "term": "Imidazoles"
+      },
+      {
+        "id": "D001393",
+        "term": "Azoles"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006023",
+        "term": "Glycoproteins"
+      },
+      {
+        "id": "D006001",
+        "term": "Glycoconjugates"
+      },
+      {
+        "id": "D002241",
+        "term": "Carbohydrates"
+      },
+      {
+        "id": "D016298",
+        "term": "Hematopoietic Cell Growth Factors"
+      },
+      {
+        "id": "D016207",
+        "term": "Cytokines"
+      },
+      {
+        "id": "D036341",
+        "term": "Intercellular Signaling Peptides and Proteins"
+      },
+      {
+        "id": "D010455",
+        "term": "Peptides"
+      },
+      {
+        "id": "D000602",
+        "term": "Amino Acids, Peptides, and Proteins"
+      },
+      {
+        "id": "D011506",
+        "term": "Proteins"
+      },
+      {
+        "id": "D001685",
+        "term": "Biological Factors"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D009447",
+        "term": "Neuroblastoma"
+      },
+      {
+        "id": "D009369",
+        "term": "Neoplasms"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D018241",
+        "term": "Neuroectodermal Tumors, Primitive, Peripheral"
+      },
+      {
+        "id": "D018242",
+        "term": "Neuroectodermal Tumors, Primitive"
+      },
+      {
+        "id": "D018302",
+        "term": "Neoplasms, Neuroepithelial"
+      },
+      {
+        "id": "D017599",
+        "term": "Neuroectodermal Tumors"
+      },
+      {
+        "id": "D009373",
+        "term": "Neoplasms, Germ Cell and Embryonal"
+      },
+      {
+        "id": "D009370",
+        "term": "Neoplasms by Histologic Type"
+      },
+      {
+        "id": "D009375",
+        "term": "Neoplasms, Glandular and Epithelial"
+      },
+      {
+        "id": "D009380",
+        "term": "Neoplasms, Nerve Tissue"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT04770753",
+    "title": "A Phase 3, Double-Blind, Randomized, Placebo-Controlled, Multicenter Study Evaluating the Efficacy and Safety of Mitapivat in Subjects With Non-Transfusion-Dependent Alpha- or Beta-Thalassemia (ENERGIZE)",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Non-Transfusion-dependent Alpha-Thalassemia",
+      "Non-Transfusion-dependent Beta-Thalassemia"
+    ],
+    "first_posted_date": "2021-02-25",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Mitapivat",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Mitapivat",
+          "Placebo"
+        ],
+        "other_names": [
+          "AG-348",
+          "AG-348 sulfate hydrate",
+          "Mitapivat sulfate"
+        ],
+        "description": "Tablets"
+      }
+    ],
+    "interventions_text": [
+      "Placebo Matching Mitapivat",
+      "Mitapivat",
+      "Drug: Mitapivat",
+      "Drug: Placebo Matching Mitapivat"
+    ],
+    "arm_group_map": {
+      "Mitapivat": "EXPERIMENTAL",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C000634504",
+        "term": "mitapivat"
+      }
+    ],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06378398",
+    "title": "An Early Phase 1 Trial of Omeprazole and Low Dose Aspirin to Identify Colorectal Biomarkers of Preventive Efficacy: The Omeprazole and Aspirin Polyp Prevention Study",
+    "study_type": "INTERVENTIONAL",
+    "phase": "EARLY_PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Colorectal Neoplasia"
+    ],
+    "first_posted_date": "2024-04-22",
+    "last_update_posted_date": "2026-01-23",
+    "interventions": [
+      {
+        "name": "Omeprazole",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Intervention"
+        ],
+        "other_names": [
+          "Prilosec"
+        ],
+        "description": "Two 20 mg/day omeprazole tablets taken before the first meal each day for 25-45 days."
+      },
+      {
+        "name": "Aspirin",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Intervention"
+        ],
+        "other_names": [
+          "Bayer Aspirin"
+        ],
+        "description": "Two 81 mg/day aspirin tablets taken before the first meal each day for 25-45 days."
+      }
+    ],
+    "interventions_text": [
+      "Omeprazole",
+      "Aspirin",
+      "Drug: Omeprazole",
+      "Drug: Aspirin"
+    ],
+    "arm_group_map": {
+      "Intervention": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D009853",
+        "term": "Omeprazole"
+      },
+      {
+        "id": "D001241",
+        "term": "Aspirin"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D053799",
+        "term": "2-Pyridinylmethylsulfinylbenzimidazoles"
+      },
+      {
+        "id": "D013454",
+        "term": "Sulfoxides"
+      },
+      {
+        "id": "D013457",
+        "term": "Sulfur Compounds"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      },
+      {
+        "id": "D011725",
+        "term": "Pyridines"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D001562",
+        "term": "Benzimidazoles"
+      },
+      {
+        "id": "D006574",
+        "term": "Heterocyclic Compounds, 2-Ring"
+      },
+      {
+        "id": "D000072471",
+        "term": "Heterocyclic Compounds, Fused-Ring"
+      },
+      {
+        "id": "D012459",
+        "term": "Salicylates"
+      },
+      {
+        "id": "D062385",
+        "term": "Hydroxybenzoates"
+      },
+      {
+        "id": "D010636",
+        "term": "Phenols"
+      },
+      {
+        "id": "D001555",
+        "term": "Benzene Derivatives"
+      },
+      {
+        "id": "D006841",
+        "term": "Hydrocarbons, Aromatic"
+      },
+      {
+        "id": "D006844",
+        "term": "Hydrocarbons, Cyclic"
+      },
+      {
+        "id": "D006838",
+        "term": "Hydrocarbons"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06978777",
+    "title": "Effect of Caffeine on Cold-stimulated Brown Adipose Tissue Activity",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Brown Adipose Tissue (BAT) Physiology",
+      "Cold Exposure"
+    ],
+    "first_posted_date": "2025-05-18",
+    "last_update_posted_date": "2026-01-23",
+    "interventions": [],
+    "interventions_text": [
+      "Caffeine (200 mg)",
+      "Placebo",
+      "Drug: Caffeine (200 mg)",
+      "Drug: Placebo"
+    ],
+    "arm_group_map": {
+      "Caffeine": "ACTIVE_COMPARATOR",
+      "Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D002110",
+        "term": "Caffeine"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D014970",
+        "term": "Xanthines"
+      },
+      {
+        "id": "D000470",
+        "term": "Alkaloids"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D011688",
+        "term": "Purinones"
+      },
+      {
+        "id": "D011687",
+        "term": "Purines"
+      },
+      {
+        "id": "D006574",
+        "term": "Heterocyclic Compounds, 2-Ring"
+      },
+      {
+        "id": "D000072471",
+        "term": "Heterocyclic Compounds, Fused-Ring"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07369115",
+    "title": "Intra-Cellular Therapies, Inc. / \"A Randomized, Double-blind, Placebo-controlled, Single Site Study to Evaluate the Efficacy of Lumateperone for the Treatment of Major Depressive Disorder (MDD) and Early Life Trauma in Adult Patients Aged 21 to 70 Years",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE4",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Major Depressive Diorder",
+      "Early Life Trauma"
+    ],
+    "first_posted_date": "2026-01-27",
+    "last_update_posted_date": "2026-01-27",
+    "interventions": [],
+    "interventions_text": [
+      "Lumateperone 42 mg",
+      "Placebo",
+      "Drug: Lumateperone 42 mg",
+      "Other: Placebo"
+    ],
+    "arm_group_map": {
+      "Active Drug Arm - Lumateperone": "ACTIVE_COMPARATOR",
+      "Inactive Drug Arm - Placebo": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C000705749",
+        "term": "lumateperone"
+      }
+    ],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07323043",
+    "title": "The Affiliated Lianyungang Hospital of Xuzhou Medical University",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "General Anesthetic Drug Adverse Reaction"
+    ],
+    "first_posted_date": "2026-01-07",
+    "last_update_posted_date": "2026-01-23",
+    "interventions": [
+      {
+        "name": "Tegilidine",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Tegilidine group"
+        ],
+        "other_names": [],
+        "description": "Inject Tegilidine in the induction of general anesthesia"
+      }
+    ],
+    "interventions_text": [
+      "Tegilidine",
+      "Sufentanil",
+      "Drug: Tegilidine",
+      "Drug: Sufentanil"
+    ],
+    "arm_group_map": {
+      "Tegilidine group": "EXPERIMENTAL",
+      "Sufentanil group": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D017409",
+        "term": "Sufentanil"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D005283",
+        "term": "Fentanyl"
+      },
+      {
+        "id": "D010880",
+        "term": "Piperidines"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07360301",
+    "title": "Consciousness and Psilocybin Effects on Well-Being: The CoPEWell Study",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Well-Being, Psychological",
+      "Psychedelic Experiences"
+    ],
+    "first_posted_date": "2026-01-22",
+    "last_update_posted_date": "2026-01-22",
+    "interventions": [
+      {
+        "name": "Psilocybin",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Placebo While Awake, Psilocybin While Asleep",
+          "Psilocybin While Awake, Placebo While Asleep"
+        ],
+        "other_names": [
+          "intravenous psilocybin"
+        ],
+        "description": "IV administration, infusion of 3.2 mg psilocybin over 10 minutes, followed by an additional 0.8 mg infused over the following 20 minutes"
+      },
+      {
+        "name": "Clonidine",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Placebo While Awake, Placebo While Asleep",
+          "Placebo While Awake, Psilocybin While Asleep",
+          "Psilocybin While Awake, Placebo While Asleep"
+        ],
+        "other_names": [
+          "Clonidine ER"
+        ],
+        "description": "0.2 mg of clonidine will be taken by mouth by all participants 60 minutes prior to the initial infusion on Dosing Night"
+      }
+    ],
+    "interventions_text": [
+      "Psilocybin",
+      "Saline Placebo",
+      "Clonidine",
+      "Drug: Psilocybin",
+      "Other: Saline Placebo",
+      "Drug: Clonidine"
+    ],
+    "arm_group_map": {
+      "Psilocybin While Awake, Placebo While Asleep": "EXPERIMENTAL",
+      "Placebo While Awake, Psilocybin While Asleep": "EXPERIMENTAL",
+      "Placebo While Awake, Placebo While Asleep": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D011562",
+        "term": "Psilocybin"
+      },
+      {
+        "id": "D003000",
+        "term": "Clonidine"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D026121",
+        "term": "Indole Alkaloids"
+      },
+      {
+        "id": "D000470",
+        "term": "Alkaloids"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D007211",
+        "term": "Indoles"
+      },
+      {
+        "id": "D006574",
+        "term": "Heterocyclic Compounds, 2-Ring"
+      },
+      {
+        "id": "D000072471",
+        "term": "Heterocyclic Compounds, Fused-Ring"
+      },
+      {
+        "id": "D014363",
+        "term": "Tryptamines"
+      },
+      {
+        "id": "D054836",
+        "term": "Indolizidines"
+      },
+      {
+        "id": "D007212",
+        "term": "Indolizines"
+      },
+      {
+        "id": "D048288",
+        "term": "Imidazolines"
+      },
+      {
+        "id": "D007093",
+        "term": "Imidazoles"
+      },
+      {
+        "id": "D001393",
+        "term": "Azoles"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D000092862",
+        "term": "Psychological Well-Being"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D010549",
+        "term": "Personal Satisfaction"
+      },
+      {
+        "id": "D001519",
+        "term": "Behavior"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT07257120",
+    "title": "A Phase IV, Open-label, Single-group Study Evaluating KarXT Concentrations in the Breast Milk and Plasma of Healthy Lactating Female Participants",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE4",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Healthy Volunteers"
+    ],
+    "first_posted_date": "2025-12-02",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [
+      {
+        "name": "Xanomeline/trospium chloride",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "KarXT"
+        ],
+        "other_names": [
+          "KarXT",
+          "BMS-986510"
+        ],
+        "description": "Specified dose on specified days"
+      }
+    ],
+    "interventions_text": [
+      "Xanomeline/trospium chloride",
+      "Drug: Xanomeline/trospium chloride"
+    ],
+    "arm_group_map": {
+      "KarXT": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C075257",
+        "term": "xanomeline"
+      },
+      {
+        "id": "C003330",
+        "term": "trospium chloride"
+      }
+    ],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07376577",
+    "title": "A Randomized Controlled Trial on the Efficacy and Safety of Anricofen Combined With Ciprofol for Deep Sedation in Elderly Patients Undergoing Endoscopic Retrograde Cholangiopancreatography",
+    "study_type": "INTERVENTIONAL",
+    "phase": "NA",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Anesthesia",
+      "Sedation",
+      "ERCP",
+      "Ciprofol"
+    ],
+    "first_posted_date": "2026-01-29",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Anricofen",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Anricofen 0.3 \u03bcg/kg + Ciprofol 1.0 mg/kg",
+          "Anricofen 0.5 \u03bcg/kg + Ciprofol 1.0 mg/kg",
+          "Sufentanil 0.1 \u03bcg/kg + Ciprofol 1.0 mg/kg"
+        ],
+        "other_names": [],
+        "description": "Anricofen is a novel peripherally selective \u03ba-opioid receptor agonist. It provides analgesia primarily through peripheral mechanisms with minimal central nervous system penetration, thereby reducing the risk of respiratory depression and addiction compared to traditional \u03bc-opioid agonists. It is administered intravenously."
+      },
+      {
+        "name": "Ciprofol",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Anricofen 0.3 \u03bcg/kg + Ciprofol 1.0 mg/kg",
+          "Anricofen 0.5 \u03bcg/kg + Ciprofol 1.0 mg/kg"
+        ],
+        "other_names": [],
+        "description": "Ciprofol is a novel intravenous sedative agent with higher lipophilicity than propofol, leading to faster onset and recovery. It exhibits less cardiovascular depression compared to propofol and is suitable for procedural sedation, particularly in elderly patients. It is administered intravenously."
+      }
+    ],
+    "interventions_text": [
+      "Sufentanil",
+      "Anricofen",
+      "Ciprofol",
+      "Drug: Anricofen",
+      "Drug: Ciprofol",
+      "Drug: Sufentanil"
+    ],
+    "arm_group_map": {
+      "Anricofen 0.3 \u03bcg/kg + Ciprofol 1.0 mg/kg": "EXPERIMENTAL",
+      "Anricofen 0.5 \u03bcg/kg + Ciprofol 1.0 mg/kg": "EXPERIMENTAL",
+      "Sufentanil 0.1 \u03bcg/kg + Ciprofol 1.0 mg/kg": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D017409",
+        "term": "Sufentanil"
+      },
+      {
+        "id": "C000730795",
+        "term": "(2-(1R)-1-cyclopropyl)ethyl-6-isopropyl-phenol"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D005283",
+        "term": "Fentanyl"
+      },
+      {
+        "id": "D010880",
+        "term": "Piperidines"
+      },
+      {
+        "id": "D006573",
+        "term": "Heterocyclic Compounds, 1-Ring"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06102434",
+    "title": "Safety Profile of 25 mg Psilocybin in Individuals With Cocaine Use Disorder",
+    "study_type": "INTERVENTIONAL",
+    "phase": "EARLY_PHASE1",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Cocaine Use Disorder"
+    ],
+    "first_posted_date": "2023-10-26",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [
+      {
+        "name": "Psilocybin",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Psilocybin"
+        ],
+        "other_names": [],
+        "description": "Five oral capsules containing 5 mg of psilocybin each"
+      }
+    ],
+    "interventions_text": [
+      "Psilocybin",
+      "Drug: Psilocybin"
+    ],
+    "arm_group_map": {
+      "Psilocybin": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D011562",
+        "term": "Psilocybin"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D026121",
+        "term": "Indole Alkaloids"
+      },
+      {
+        "id": "D000470",
+        "term": "Alkaloids"
+      },
+      {
+        "id": "D006571",
+        "term": "Heterocyclic Compounds"
+      },
+      {
+        "id": "D007211",
+        "term": "Indoles"
+      },
+      {
+        "id": "D006574",
+        "term": "Heterocyclic Compounds, 2-Ring"
+      },
+      {
+        "id": "D000072471",
+        "term": "Heterocyclic Compounds, Fused-Ring"
+      },
+      {
+        "id": "D014363",
+        "term": "Tryptamines"
+      },
+      {
+        "id": "D054836",
+        "term": "Indolizidines"
+      },
+      {
+        "id": "D007212",
+        "term": "Indolizines"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07364513",
+    "title": "A Phase 1b Open-Label Study of IMSB301 in Subjects With a Type 1 Interferonopathy",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE1",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Type 1 Interferonopathies"
+    ],
+    "first_posted_date": "2026-01-23",
+    "last_update_posted_date": "2026-01-23",
+    "interventions": [
+      {
+        "name": "IMSB301",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "IMSB301 Treatment"
+        ],
+        "other_names": [],
+        "description": "Twice daily administration for 28 days.\n\nSubjects will be treated as out-patient and will return to the clinic at least once weekly on Days 8, 15, 22 and 29.\n\nContinued treatment beyond Day 28 may be considered on a case-by-case basis for subjects benefiting from treatment."
+      }
+    ],
+    "interventions_text": [
+      "IMSB301",
+      "Drug: IMSB301"
+    ],
+    "arm_group_map": {
+      "IMSB301 Treatment": "EXPERIMENTAL"
+    },
+    "intervention_meshes": [],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT05732272",
+    "title": "Improving Smoking Abstinence Outcomes in the African American Community Through Extended Treatment",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Smoking Cessation"
+    ],
+    "first_posted_date": "2023-02-17",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [],
+    "interventions_text": [
+      "Bupropion",
+      "Drug: Bupropion"
+    ],
+    "arm_group_map": {
+      "Standard Treatment": "ACTIVE_COMPARATOR",
+      "Extended Treatment": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D016642",
+        "term": "Bupropion"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D011427",
+        "term": "Propiophenones"
+      },
+      {
+        "id": "D007659",
+        "term": "Ketones"
+      },
+      {
+        "id": "D009930",
+        "term": "Organic Chemicals"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D016540",
+        "term": "Smoking Cessation"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D015438",
+        "term": "Health Behavior"
+      },
+      {
+        "id": "D001519",
+        "term": "Behavior"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT03845049",
+    "title": "Comparative Multicenter Randomized Study of Aflibercept Versus Placebo in Macular Telangiectasia Type 1",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Macular Telangiectasia"
+    ],
+    "first_posted_date": "2019-02-19",
+    "last_update_posted_date": "2026-01-26",
+    "interventions": [
+      {
+        "name": "Aflibercept Injection [Eylea]",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "group aflibercept"
+        ],
+        "other_names": [],
+        "description": "Intravitreal injection of aflibercept at inclusion, M1, M2, M3 and M4. An additional injection may be planned for M5, on the decision of the clinician and on clinical arguments only."
+      }
+    ],
+    "interventions_text": [
+      "Inclusion examinations",
+      "Aflibercept Injection [Eylea]",
+      "SHAM injection",
+      "Examinations during study (every month)",
+      "Other: Inclusion examinations",
+      "Drug: Aflibercept Injection [Eylea]",
+      "Other: Examinations during study (every month)",
+      "Drug: SHAM injection"
+    ],
+    "arm_group_map": {
+      "group aflibercept": "EXPERIMENTAL",
+      "control group": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "C533178",
+        "term": "aflibercept"
+      },
+      {
+        "id": "C005703",
+        "term": "salicylhydroxamic acid"
+      }
+    ],
+    "intervention_mesh_ancestors": [],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "fusion_protein",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT06783114",
+    "title": "A Clinical Study to Evaluate the Efficacy and Safety of Recombinant Botulinum Toxin Type A (YY001) for Injection in The Treatment of Upper Limb Spasticity in Adults (REHAB-1)",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "INDUSTRY",
+    "conditions": [
+      "Upper Limb Spasticity"
+    ],
+    "first_posted_date": "2025-01-20",
+    "last_update_posted_date": "2026-01-22",
+    "interventions": [
+      {
+        "name": "Recombinant Botulinum Toxin Type A for injection (YY001)",
+        "type": "BIOLOGICAL",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Treatment Group"
+        ],
+        "other_names": [],
+        "description": "Single treatment, prepared by reconstitution of powder with 0.9% Sodium Chloride (NaCl), intramuscular injection, the total injection dose is 200-400 U."
+      }
+    ],
+    "interventions_text": [
+      "Recombinant Botulinum Toxin Type A for injection (YY001)",
+      "BOTOX\u00ae",
+      "Placebo",
+      "Biological: Recombinant Botulinum Toxin Type A for injection (YY001)",
+      "Biological: BOTOX\u00ae",
+      "Biological: Placebo"
+    ],
+    "arm_group_map": {
+      "Treatment Group": "EXPERIMENTAL",
+      "Active-Controlled Group": "ACTIVE_COMPARATOR",
+      "Placebo-Controlled Group": "PLACEBO_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D007267",
+        "term": "Injections"
+      },
+      {
+        "id": "D019274",
+        "term": "Botulinum Toxins, Type A"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D004333",
+        "term": "Drug Administration Routes"
+      },
+      {
+        "id": "D004358",
+        "term": "Drug Therapy"
+      },
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      },
+      {
+        "id": "D001905",
+        "term": "Botulinum Toxins"
+      },
+      {
+        "id": "D008666",
+        "term": "Metalloendopeptidases"
+      },
+      {
+        "id": "D010450",
+        "term": "Endopeptidases"
+      },
+      {
+        "id": "D010447",
+        "term": "Peptide Hydrolases"
+      },
+      {
+        "id": "D006867",
+        "term": "Hydrolases"
+      },
+      {
+        "id": "D004798",
+        "term": "Enzymes"
+      },
+      {
+        "id": "D045762",
+        "term": "Enzymes and Coenzymes"
+      },
+      {
+        "id": "D045726",
+        "term": "Metalloproteases"
+      },
+      {
+        "id": "D001426",
+        "term": "Bacterial Proteins"
+      },
+      {
+        "id": "D011506",
+        "term": "Proteins"
+      },
+      {
+        "id": "D000602",
+        "term": "Amino Acids, Peptides, and Proteins"
+      },
+      {
+        "id": "D001427",
+        "term": "Bacterial Toxins"
+      },
+      {
+        "id": "D014118",
+        "term": "Toxins, Biological"
+      },
+      {
+        "id": "D001685",
+        "term": "Biological Factors"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "biologic",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  },
+  {
+    "nct_id": "NCT07374939",
+    "title": "Medical Cannabis for Nausea in Patients Receiving Moderately or Highly Emetogenic Chemotherapy",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE2",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Nausea and Vomiting Chemotherapy-Induced"
+    ],
+    "first_posted_date": "2026-01-29",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Medical Cannabis",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Delayed use",
+          "Immediate use"
+        ],
+        "other_names": [],
+        "description": "Medical cannabis will be used as an adjunct to standard guideline-recommended antiemetic therapy for chemotherapy-related nausea. Participants will obtain state-certified medical cannabis products through a New York State-licensed dispensary and self-administer cannabis via vaporization using a standardized device. Dose limits and timing of use will be guided by the study protocol to promote consistency while allowing individualized use. Medical cannabis will be used during the acute and delayed nausea period, defined as Days 1 through 4 following chemotherapy administration. Participants randomized to the Immediate Use arm will initiate cannabis use during their first on-study chemotherapy cycle, whereas participants randomized to the Delayed Use arm will initiate cannabis use after completion of the first cycle. Cannabis use patterns, nausea and vomiting symptoms, adverse effects, and patient-reported outcomes will be recorded using participant-completed diaries and questionnaires."
+      }
+    ],
+    "interventions_text": [
+      "Medical Cannabis",
+      "Drug: Medical Cannabis"
+    ],
+    "arm_group_map": {
+      "Immediate use": "EXPERIMENTAL",
+      "Delayed use": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D064086",
+        "term": "Medical Marijuana"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D004364",
+        "term": "Pharmaceutical Preparations"
+      }
+    ],
+    "condition_meshes": [
+      {
+        "id": "D009325",
+        "term": "Nausea"
+      },
+      {
+        "id": "D014839",
+        "term": "Vomiting"
+      }
+    ],
+    "condition_mesh_ancestors": [
+      {
+        "id": "D012817",
+        "term": "Signs and Symptoms, Digestive"
+      },
+      {
+        "id": "D012816",
+        "term": "Signs and Symptoms"
+      },
+      {
+        "id": "D013568",
+        "term": "Pathological Conditions, Signs and Symptoms"
+      }
+    ],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [],
+    "study_intent": null,
+    "mesh_missing_condition": false
+  },
+  {
+    "nct_id": "NCT07376824",
+    "title": "Clinical and Metabolomics Studies on the Improvement of Ovarian Reserve by Acupoint Photodynamic Therapy and Traditional Chinese Medicine Treatment",
+    "study_type": "INTERVENTIONAL",
+    "phase": "PHASE3",
+    "sponsor_class": "OTHER",
+    "conditions": [
+      "Diminished Ovarian Reserve (DOR)"
+    ],
+    "first_posted_date": "2026-01-29",
+    "last_update_posted_date": "2026-01-29",
+    "interventions": [
+      {
+        "name": "Traditional Chinese Medicine",
+        "type": "DRUG",
+        "role": "experimental_drug",
+        "arm_group_labels": [
+          "Chinese Medicine Group",
+          "Combination Therapy Group"
+        ],
+        "other_names": [],
+        "description": "Dingkun Dan 7g, twice daily (bid) for 21 days per month, administered orally for 3 treatment cycles."
+      }
+    ],
+    "interventions_text": [
+      "Traditional Chinese Medicine",
+      "Photodynamic therapy (PDT)",
+      "Placebo",
+      "Drug: Traditional Chinese Medicine",
+      "Device: Photodynamic therapy (PDT)",
+      "Drug: Placebo"
+    ],
+    "arm_group_map": {
+      "Combination Therapy Group": "EXPERIMENTAL",
+      "Photodynamic Therapy Group": "PLACEBO_COMPARATOR",
+      "Chinese Medicine Group": "ACTIVE_COMPARATOR"
+    },
+    "intervention_meshes": [
+      {
+        "id": "D008516",
+        "term": "Medicine, Chinese Traditional"
+      },
+      {
+        "id": "D010778",
+        "term": "Photochemotherapy"
+      }
+    ],
+    "intervention_mesh_ancestors": [
+      {
+        "id": "D008518",
+        "term": "Medicine, East Asian Traditional"
+      },
+      {
+        "id": "D008519",
+        "term": "Medicine, Traditional"
+      },
+      {
+        "id": "D000529",
+        "term": "Complementary Therapies"
+      },
+      {
+        "id": "D013812",
+        "term": "Therapeutics"
+      },
+      {
+        "id": "D003131",
+        "term": "Combined Modality Therapy"
+      },
+      {
+        "id": "D004358",
+        "term": "Drug Therapy"
+      },
+      {
+        "id": "D010789",
+        "term": "Phototherapy"
+      }
+    ],
+    "condition_meshes": [],
+    "condition_mesh_ancestors": [],
+    "therapeutic_area": "Unassigned drug study",
+    "is_drug_trial": true,
+    "modality": "small_molecule",
+    "info_flags": [
+      "mesh_available_but_not_used"
+    ],
+    "study_intent": null,
+    "mesh_missing_condition": true
+  }
+]
