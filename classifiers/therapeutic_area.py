@@ -41,7 +41,11 @@ def _has_any(text: str, keywords: Iterable[str]) -> bool:
 # ---------------------------------------------------------------------
 
 def assign_therapeutic_area(trial: ClinicalTrialSignalV2) -> str | None:
-    text = _norm_text(trial.title, trial.conditions)
+    # Use pre-cached text if available, otherwise compute
+    text = getattr(trial, '_cached_title_conditions', None)
+    if text is None:
+        text = _norm_text(trial.title, trial.conditions)
+    
     if not text.strip():
         return TA_OTHER
 
