@@ -1,5 +1,7 @@
 from datetime import date, timedelta
 import json
+import time
+from utils.parallel_processor import process_trials_parallel
 from pathlib import Path
 
 from tqdm import tqdm
@@ -44,6 +46,99 @@ from config.settings import CLINICALTRIALS_PAGE_SIZE
 
 RAW_STORAGE_DIR = Path("/home/jeanmfc/projects/ALEXIS/storage/raw/ctgov/weekly")
 
+def classify_single_trial(trial: ClinicalTrialSignalV2) -> ClinicalTrialSignalV2:
+    """
+    Classify a single trial (drug status, TA, modality, etc.)
+    
+    This function is called by parallel workers and must be self-contained.
+    
+    Args:
+        trial: Trial object to classify
+    
+    Returns:
+        The same trial object with classification fields populated
+    """
+    # --- Pre-cache text for all downstream functions ---
+    trial._cached_title_interventions = " ".join(
+        (trial.interventions_text or []) + [trial.title or ""]
+    ).lower()
+    trial._cached_title_conditions = " ".join(
+        [trial.title or ""] + (trial.conditions or [])
+    ).lower()
+
+    # --- Drug status FIRST (AUTHORITATIVE) ---
+    trial.is_drug_trial = is_drug_trial_v2(trial)
+
+    # OPTIMIZATION: Skip expensive processing for non-drug trials
+    if not trial.is_drug_trial:
+        trial.therapeutic_area = None
+        trial.therapeutic_areas_detected = []
+        trial.study_intent = None
+        trial.study_category = None
+        trial.study_category_evidence = []
+        trial.mesh_missing_condition = False
+        trial.modality = None
+        return trial
+
+    # --- Therapeutic Area (FIXED PROVENANCE) ---
+
+    # 1) Detect multi-TA using MeSH ancestry
+    ta_evidence = detect_therapeutic_area_evidence(trial)
+    trial.therapeutic_areas_detected = sorted(ta_evidence.keys())
+
+    primary_ta = select_primary_ta(trial.therapeutic_areas_detected)
+
+    if primary_ta:
+        trial.therapeutic_area = primary_ta
+
+    else:
+        # 2) Text-based TA fallback MUST run before non-disease
+        text_ta = assign_therapeutic_area(trial)
+
+        if text_ta and text_ta != "Other":
+            trial.therapeutic_area = text_ta
+
+        elif trial.is_drug_trial:
+            if has_enabling_signal(trial):
+                trial.therapeutic_area = TA_NON_DISEASE
+            else:
+                trial.therapeutic_area = TA_UNASSIGNED
+
+        else:
+            trial.therapeutic_area = None
+
+    # --- Study intent (AUTHORITATIVE) ---
+    if not trial.is_drug_trial:
+        trial.study_intent = None
+    elif trial.therapeutic_area == TA_NON_DISEASE:
+        trial.study_intent = "non_disease"
+    elif trial.therapeutic_area == TA_UNASSIGNED:
+        trial.study_intent = None
+    else:
+        trial.study_intent = "disease"
+    
+    # --- Non-disease study category (new) ---
+    if trial.is_drug_trial and trial.study_intent == "non_disease":
+        cat, ev = assign_non_disease_study_category(trial)
+        trial.study_category = cat
+        trial.study_category_evidence = ev
+    else:
+        trial.study_category = None
+        trial.study_category_evidence = []
+
+    # --- Data completeness flag (NOT intent) ---
+    trial.mesh_missing_condition = bool(
+        trial.is_drug_trial and not trial.condition_meshes
+    )
+
+    # --- Modality (UNCHANGED) ---
+    if trial.is_drug_trial:
+        trial.modality = assign_trial_modality_v2(trial)
+    else:
+        trial.modality = None
+    
+    return trial
+
 def main():
     # 1) Define the window FIRST (same as v01)
     as_of = date.today()
@@ -81,86 +176,19 @@ def main():
     trials = list(dedup.values())
     print(f"Deduped trials (v2): {len(trials)}")
 
-    # 4) Classify (write results onto model objects) with progress bar
-    for t in tqdm(trials, desc="Classifying trials (v2)", unit="trial"):
-        # --- Pre-cache text for all downstream functions ---
-        t._cached_title_interventions = " ".join(
-            (t.interventions_text or []) + [t.title or ""]
-        ).lower()
-        t._cached_title_conditions = " ".join(
-            [t.title or ""] + (t.conditions or [])
-        ).lower()
+    # 4) Classify all trials in parallel
+    print(f"\nStarting parallel classification of {len(trials)} trials...")
+    start_time = time.time()
     
-        # --- Drug status FIRST (AUTHORITATIVE) ---
-        t.is_drug_trial = is_drug_trial_v2(t)
-
-        # OPTIMIZATION: Skip expensive processing for non-drug trials
-        if not t.is_drug_trial:
-            t.therapeutic_area = None
-            t.therapeutic_areas_detected = []
-            t.study_intent = None
-            t.study_category = None
-            t.study_category_evidence = []
-            t.mesh_missing_condition = False
-            t.modality = None
-            continue 
-
-        # --- Therapeutic Area (FIXED PROVENANCE) ---
-
-        # 1) Detect multi-TA using MeSH ancestry
-        ta_evidence = detect_therapeutic_area_evidence(t)
-        t.therapeutic_areas_detected = sorted(ta_evidence.keys())
-
-        primary_ta = select_primary_ta(t.therapeutic_areas_detected)
-
-        if primary_ta:
-            t.therapeutic_area = primary_ta
-
-        else:
-            # 2) Text-based TA fallback MUST run before non-disease
-            text_ta = assign_therapeutic_area(t)
-
-            if text_ta and text_ta != "Other":
-                t.therapeutic_area = text_ta
-
-            elif t.is_drug_trial:
-                if has_enabling_signal(t):
-                    t.therapeutic_area = TA_NON_DISEASE
-                else:
-                    t.therapeutic_area = TA_UNASSIGNED
-
-            else:
-                t.therapeutic_area = None
-
-        # --- Study intent (AUTHORITATIVE) ---
-        if not t.is_drug_trial:
-            t.study_intent = None
-        elif t.therapeutic_area == TA_NON_DISEASE:
-            t.study_intent = "non_disease"
-        elif t.therapeutic_area == TA_UNASSIGNED:
-            t.study_intent = None
-        else:
-            t.study_intent = "disease"
-        
-        # --- Non-disease study category (new) ---
-        if t.is_drug_trial and t.study_intent == "non_disease":
-            cat, ev = assign_non_disease_study_category(t)
-            t.study_category = cat
-            t.study_category_evidence = ev
-        else:
-            t.study_category = None
-            t.study_category_evidence = []
-
-        # --- Data completeness flag (NOT intent) ---
-        t.mesh_missing_condition = bool(
-            t.is_drug_trial and not t.condition_meshes
-        )
-
-        # --- Modality (UNCHANGED) ---
-        if t.is_drug_trial:
-            t.modality = assign_trial_modality_v2(t)
-        else:
-            t.modality = None
+    trials = process_trials_parallel(
+        trials=trials,
+        classifier_function=classify_single_trial,
+        num_workers=None  # Auto-detect optimal worker count
+    )
+    
+    elapsed = time.time() - start_time
+    trials_per_sec = len(trials) / elapsed if elapsed > 0 else 0
+    print(f"Parallel classification completed in {elapsed:.1f}s ({trials_per_sec:.1f} trials/sec)")
 
     # 5) Build snapshot metadata (v2)
     metadata = SnapshotMetadataV2(
