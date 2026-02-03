@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -43,6 +43,25 @@ def _mesh_term_to_dict(m: MeshTermV2) -> Dict[str, Any]:
         "term": m.term,
     }
 
+def _week_of_month(d: date) -> int:
+    """
+    Week-of-month index with Monday as week start.
+    w1 is the week that contains the 1st of the month.
+    """
+    first = d.replace(day=1)
+    first_week_start = first - timedelta(days=first.weekday())  # Monday
+    this_week_start = d - timedelta(days=d.weekday())          # Monday
+    return 1 + ((this_week_start - first_week_start).days // 7)
+
+def _snapshot_week_label(d: date) -> str:
+    """
+    Returns: YYYY_mon_wN where N restarts each month.
+    Example: 2026_feb_w2
+    """
+    month = d.strftime("%b").lower()
+    wom = _week_of_month(d)
+    return f"{d.year}_{month}_w{wom}"
+
 def _intervention_to_dict(iv: InterventionV2) -> Dict[str, Any]:
     return {
         "name": iv.name,
@@ -52,7 +71,6 @@ def _intervention_to_dict(iv: InterventionV2) -> Dict[str, Any]:
         "other_names": list(iv.other_names or []),
         "description": iv.description,
     }
-
 
 def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
     # Keep explicit and stable (avoid dumping __dict__ blindly), like v01.
@@ -109,8 +127,15 @@ def save_trial_snapshot_v2(
     out_dir = Path(base_dir) / basis_folder
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    run_ts = datetime.now().strftime("%H-%M-%S")
-    path = out_dir / f"{_date_to_str(metadata.as_of)}T{run_ts}.json"
+    label = _snapshot_week_label(metadata.as_of)
+
+    if basis_folder == "reclassified":
+        filename = f"reclassified_{label}.json"
+    else:
+        filename = f"{label}.json"
+
+    path = out_dir / filename
+
 
     start = _ensure_date(metadata.window_start)
     end = _ensure_date(metadata.window_end)
@@ -121,14 +146,13 @@ def save_trial_snapshot_v2(
             "window_basis": metadata.window_basis,
             "as_of": _date_to_str(metadata.as_of),
             "window_start": _date_to_str(metadata.window_start),
-            "window_start": _date_to_str(metadata.window_start),
             "window_end": _date_to_str(metadata.window_end),
             "window_days": (end - start).days if start and end else None,
             "condition_query": metadata.condition_query,
             "page_size": metadata.page_size,
             "max_studies": metadata.max_studies,
             "run_time": datetime.now().isoformat(timespec="seconds"),
-            "run_id": f"{_date_to_str(metadata.as_of)}T{run_ts}",
+            "run_id": _snapshot_week_label(metadata.as_of),
             "format": "ALEXIS_SNAPSHOT_V2",
         },
         "trials": [_trial_to_dict(t) for t in trials],
