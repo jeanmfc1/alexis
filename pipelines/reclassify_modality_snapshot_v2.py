@@ -359,7 +359,7 @@ def reclassify_snapshot(
     metadata = SnapshotMetadataV2(
         source=old_metadata.get("source"),
         window_basis=old_metadata.get("window_basis"),
-        as_of=date.today(),
+        as_of=date.fromisoformat(old_metadata["as_of"]) if old_metadata.get("as_of") else date.today(),
         window_start=old_metadata.get("window_start"),
         window_end=old_metadata.get("window_end"),
         page_size=old_metadata.get("page_size"),

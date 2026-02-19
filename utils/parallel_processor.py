@@ -80,8 +80,10 @@ def classify_trial_batch(args: tuple) -> List[Any]:
             classified_trial = classifier_function(trial)
             classified_trials.append(classified_trial)
         except Exception as e:
-            logger.error(f"Error classifying trial {trial.nct_id}: {e}")
-            # Still append the trial even if classification fails
+            import traceback as _tb
+            _msg = f"Error classifying trial {trial.nct_id}: {e}\n{_tb.format_exc()}"
+            logger.error(_msg)
+            print(_msg)
             classified_trials.append(trial)
     
     return classified_trials
