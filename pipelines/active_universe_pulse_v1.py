@@ -164,6 +164,11 @@ def reconstruct_trial(t: dict) -> ClinicalTrialSignalV2:
         is_drug_trial=t.get("is_drug_trial"),
         modality=t.get("modality"),
         info_flags=t.get("info_flags") or [],
+        study_intent=t.get("study_intent"),
+        therapeutic_areas_detected=t.get("therapeutic_areas_detected") or [],
+        study_category=t.get("study_category"),
+        study_category_evidence=t.get("study_category_evidence") or [],
+        mesh_missing_condition=t.get("mesh_missing_condition"),
     )
 
 

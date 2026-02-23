@@ -51,6 +51,32 @@ from config.settings import CLINICALTRIALS_PAGE_SIZE
 
 RAW_STORAGE_DIR = Path("/home/jeanmfc/projects/ALEXIS/storage/raw/ctgov/weekly")
 
+
+def _versioned_save(base_dir: str, basis_folder: str, metadata, trials, summary) -> Path:
+    """
+    Save snapshot with an auto-incrementing version suffix (_v1, _v2, ...).
+    Finds the next available version so existing files are never overwritten.
+    """
+    from storage.snapshots_io_v2 import _snapshot_week_label
+    out_dir = Path(base_dir) / basis_folder
+    out_dir.mkdir(parents=True, exist_ok=True)
+    label = _snapshot_week_label(metadata.as_of)
+
+    version = 1
+    while (out_dir / f"{label}_v{version}.json").exists():
+        version += 1
+
+    tmp_path = save_trial_snapshot_v2(
+        base_dir=base_dir,
+        basis_folder=basis_folder,
+        metadata=metadata,
+        trials=trials,
+        summary=summary,
+    )
+    final_path = out_dir / f"{label}_v{version}.json"
+    tmp_path.rename(final_path)
+    return final_path
+
 def classify_single_trial(trial: ClinicalTrialSignalV2) -> ClinicalTrialSignalV2:
     """
     Classify a single trial (drug status, TA, modality, etc.)
@@ -304,7 +330,7 @@ def main():
     for phase, rate in summary["multi_ta_rate_by_phase"].items():
         print(f"  {phase:10} | {rate:.2%}")
 
-    snapshot_path = save_trial_snapshot_v2(
+    snapshot_path = _versioned_save(
         base_dir="storage/snapshots/clinical_trials_v2",
         basis_folder="last_update",
         metadata=metadata,
