@@ -165,152 +165,101 @@ def assign_therapeutic_area(trial: ClinicalTrialSignalV2) -> str | None:
 
 TA_MESH_ROOTS = {
 
-    # -----------------------------
-    # Oncology
-    # -----------------------------
     TA_ONCOLOGY: [
-        {"id": "D009369", "term": "Neoplasms"},
+        {"id": "D009369", "term": "Neoplasms"},  # C04 ✓
     ],
 
-    # -----------------------------
-    # Immunology / Inflammation
-    # -----------------------------
     TA_IMMUNO: [
-        {"id": "D007154", "term": "Immune System Diseases"},
-        {"id": "D001327", "term": "Autoimmune Diseases"},
-        {"id": "D006967", "term": "Hypersensitivity"},
-        {"id": "D010437", "term": "Inflammation"},
-        {"id": "D012871", "term": "Skin Diseases"},              # immune-mediated subset
-        {"id": "D003875", "term": "Dermatitis"},                # inflammatory skin disease
-        {"id": "D006425", "term": "Hemic and Lymphatic Diseases"},  # immune hematology
+        {"id": "D007154", "term": "Immune System Diseases"},   # C20 ✓
+        {"id": "D001327", "term": "Autoimmune Diseases"},      # C20.111 ✓
+        {"id": "D006967", "term": "Hypersensitivity"},         # C20.543 ✓
+        {"id": "D007249", "term": "Inflammation"},             # C23.550.470 — FIXED from D010437
+        # Removed D012871 (Skin Diseases) — keep in Dermatology only
+        # Removed D003875 (Drug Eruptions) — keep in Dermatology only
+        # Removed D006425 (Hemic and Lymphatic Diseases) — keep in Hematology only
     ],
 
-    # -----------------------------
-    # Neurology / CNS
-    # -----------------------------
     TA_NEURO: [
-        {"id": "D009422", "term": "Nervous System Diseases"},
-        {"id": "D002493", "term": "Central Nervous System Diseases"},
+        {"id": "D009422", "term": "Nervous System Diseases"},  # C10 ✓
+        # Removed D002493 (CNS Diseases C10.228) — redundant child of C10
     ],
 
-    # -----------------------------
-    # Psychiatry
-    # -----------------------------
     TA_PSYCHIATRY: [
-        {"id": "D001523", "term": "Mental Disorders"},
-        {"id": "D003863", "term": "Depressive Disorder"},
-        {"id": "D013493", "term": "Substance-Related Disorders"},
+        {"id": "D001523", "term": "Mental Disorders"},              # F03 ✓
+        {"id": "D003866", "term": "Depressive Disorder"},          # F03.600.300 — FIXED from D003863
+        {"id": "D019966", "term": "Substance-Related Disorders"},  # C25.775/F03.900 — FIXED from D013493
     ],
 
-    # -----------------------------
-    # Cardiovascular
-    # -----------------------------
     TA_CARDIO: [
-        {"id": "D002318", "term": "Cardiovascular Diseases"},
+        {"id": "D002318", "term": "Cardiovascular Diseases"},  # C14 ✓
     ],
 
-    # -----------------------------
-    # Metabolic / Endocrine
-    # -----------------------------
     TA_METABOLIC: [
-        {"id": "D008659", "term": "Metabolic Diseases"},
-        {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},
-        {"id": "D004700", "term": "Endocrine System Diseases"},   # IMPORTANT ADD
+        {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},  # C18 ✓
+        {"id": "D004700", "term": "Endocrine System Diseases"},           # C19 ✓
+        # Removed D008659 (Metabolic Diseases C18.452) — redundant child of C18
     ],
 
-    # -----------------------------
-    # Gastrointestinal / Hepatic
-    # -----------------------------
     TA_GI: [
-        {"id": "D004064", "term": "Digestive System Diseases"},   # existing
-        {"id": "D004066", "term": "Digestive System Diseases"},   # CT.gov variant
-        {"id": "D005767", "term": "Gastrointestinal Diseases"},
-        {"id": "D007410", "term": "Intestinal Diseases"},
-        {"id": "D003108", "term": "Colonic Diseases"},
-        {"id": "D003109", "term": "Colonic Diseases, Functional"},
-        {"id": "D008099", "term": "Liver Diseases"},              # existing
-        {"id": "D008107", "term": "Liver Diseases"}, 
+        {"id": "D004066", "term": "Digestive System Diseases"},       # C06 ✓
+        {"id": "D005767", "term": "Gastrointestinal Diseases"},       # C06.405 ✓
+        {"id": "D007410", "term": "Intestinal Diseases"},             # C06.405.469 ✓
+        {"id": "D008107", "term": "Liver Diseases"},                  # C06.552 ✓
+        # Removed D004064 (Digestive System — anatomy A03)
+        # Removed D008099 (Liver — anatomy A03.620)
+        # Removed D003108, D003109 — redundant children of D007410
     ],
 
-    # -----------------------------
-    # Respiratory
-    # -----------------------------
     TA_RESPIRATORY: [
-        {"id": "D012140", "term": "Respiratory Tract Diseases"},
-        {"id": "D008171", "term": "Lung Diseases"},
+        {"id": "D012140", "term": "Respiratory Tract Diseases"},  # C08 ✓
+        # Removed D008171 (Lung Diseases C08.381) — redundant child of C08
     ],
 
-    # -----------------------------
-    # Ophthalmology
-    # -----------------------------
     TA_OPHTHALMOLOGY: [
-        {"id": "D005128", "term": "Eye Diseases"},
-        {"id": "D012121", "term": "Retinal Diseases"},
-        {"id": "D015862", "term": "Choroid Diseases"},
-        {"id": "D014603", "term": "Uveal Diseases"},
-
+        {"id": "D005128", "term": "Eye Diseases"},     # C11 ✓
+        {"id": "D014603", "term": "Uveal Diseases"},   # C11.941 ✓
+        {"id": "D015862", "term": "Choroid Diseases"}, # C11.941.160 ✓
+        {"id": "D012164", "term": "Retinal Diseases"}, # C11.768 — FIXED from D012121
     ],
 
-    # -----------------------------
-    # Urology
-    # -----------------------------
     TA_UROLOGY: [
-        {"id": "D014596", "term": "Urogenital Diseases"},          # existing
-        {"id": "D000091642", "term": "Urogenital Diseases"},       # CT.gov variant
-        {"id": "D014607", "term": "Urologic Diseases"},            # existing
-        {"id": "D014570", "term": "Urologic Diseases"},            # CT.gov variant
-        {"id": "D052776", "term": "Female Urogenital Diseases"},
-        {"id": "D005261", "term": "Female Urogenital Diseases and Pregnancy Complications"},
-        {"id": "D005831", "term": "Genital Diseases, Female"},
-        {"id": "D014591", "term": "Uterine Diseases"},
-        {"id": "D007674", "term": "Kidney Diseases"},
+        {"id": "D000091642", "term": "Urogenital Diseases"},                              # C12 ✓
+        {"id": "D014570",    "term": "Urologic Diseases"},                                # C12.050.351.968 ✓ — FIXED from D014607
+        {"id": "D052776",    "term": "Female Urogenital Diseases"},                       # C12.050.351 ✓
+        {"id": "D005261",    "term": "Female Urogenital Diseases and Pregnancy Complications"}, # C12.050 ✓
+        {"id": "D005831",    "term": "Genital Diseases, Female"},                         # C12.050.351.500 ✓
+        {"id": "D014591",    "term": "Uterine Diseases"},                                 # C12.050.351.500.852 ✓
+        {"id": "D007674",    "term": "Kidney Diseases"},                                  # C12.050.351.968.419 ✓
+        # Removed D014596 (Uterine Prolapse) — wrong ID
     ],
 
-    # -----------------------------
-    # Musculoskeletal
-    # -----------------------------
     TA_MSK: [
-        {"id": "D009140", "term": "Musculoskeletal Diseases"},
+        {"id": "D009140", "term": "Musculoskeletal Diseases"},  # C05 ✓
     ],
 
-    # -----------------------------
-    # Infectious Disease
-    # -----------------------------
     TA_INFECTIOUS: [
-        {"id": "D007239", "term": "Infections"},
+        {"id": "D007239", "term": "Infections"},  # C01 ✓
     ],
 
-    # -----------------------------
-    # Rare / Genetic
-    # -----------------------------
     TA_RARE: [
-        {"id": "D030342", "term": "Genetic Diseases, Inborn"},
-        {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},
+        {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},  # C16 ✓
+        # Removed D030342 (Genetic Diseases, Inborn C16.320) — redundant child of C16
     ],
 
-    # -----------------------------
-    # Dental / Oral Health
-    # -----------------------------
     TA_DENTAL: [
-        {"id": "D014076", "term": "Tooth Diseases"},
-        {"id": "D009057", "term": "Stomatognathic Diseases"},
-        {"id": "D010510", "term": "Periodontal Diseases"},
+        {"id": "D009057", "term": "Stomatognathic Diseases"},  # C07 ✓
+        # Removed D014076 (Tooth Diseases C07.793) — redundant child of C07
+        # Removed D010510 (Periodontal Diseases C07.465.714) — redundant child of C07
     ],
 
-    # -----------------------------
-    # Dermatology
-    # -----------------------------
     TA_DERMATOLOGY: [
-        {"id": "D012871", "term": "Skin Diseases"},
-        {"id": "D003875", "term": "Dermatitis"},
+        {"id": "D012871", "term": "Skin Diseases"},  # C17.800 ✓
+        {"id": "D003872", "term": "Dermatitis"},     # C17.800.174 — FIXED from D003875
     ],
 
-    # -----------------------------
-    # Hematology (non-malignant)
-    # -----------------------------
     TA_HEMATOLOGY: [
-        {"id": "D006402", "term": "Hematologic Diseases"},
-        {"id": "D006425", "term": "Hemic and Lymphatic Diseases"},
+        {"id": "D006425", "term": "Hemic and Lymphatic Diseases"},  # C15 ✓
+        # Removed D006402 (Hematologic Diseases C15.378) — redundant child of C15
     ],
 }
 
