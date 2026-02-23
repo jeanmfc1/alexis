@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://claude.ai/chat/7ba703e3-ddc1-479c-8504-dd11d86cc6ac
+HostUrl=https://claude.ai/api/organizations/9495cca6-a307-4838-8b6a-f3dde0ced886/conversations/7ba703e3-ddc1-479c-8504-dd11d86cc6ac/wiggle/download-file?path=%2Fmnt%2Fuser-data%2Foutputs%2Fbuild_mesh_lookup.py

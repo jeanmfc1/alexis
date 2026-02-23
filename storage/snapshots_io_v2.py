@@ -103,6 +103,7 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         "therapeutic_area": getattr(t, "therapeutic_area", None),
         "is_drug_trial": getattr(t, "is_drug_trial", None),
         "modality": getattr(t, "modality", None),
+        "therapeutic_areas_detected": list(getattr(t, "therapeutic_areas_detected", []) or []),
 
         # INFO flags (v2)
         "info_flags": list(getattr(t, "info_flags", []) or []),

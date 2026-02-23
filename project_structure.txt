@@ -1,0 +1,97 @@
+.
+├── alexis_weekly_summaries.py
+├── analytics
+│   ├── __init__.py
+│   ├── modality_info_audit.py
+│   └── summary_v2.py
+├── archive
+│   ├── analytics
+│   │   ├── modality_audit.py
+│   │   ├── modality_audit_writer.py
+│   │   ├── summary.py
+│   │   └── ta_audit.py
+│   ├── classifiers
+│   │   ├── drug_non_drug.py
+│   │   ├── modality.py
+│   │   └── modality_result.py
+│   ├── collectors
+│   │   └── clinicaltrials_normalize.py
+│   ├── pipelines
+│   │   ├── audit_modality_snapshot.py
+│   │   ├── audit_ta_snapshot.py
+│   │   ├── reclassify_modality_snapshot.py
+│   │   ├── reclassify_ta_snapshot.py
+│   │   └── weekly_pulse_clinical_pubmed.py
+│   ├── policy
+│   │   └── modality_policy.py
+│   ├── storage
+│   │   ├── models.py
+│   │   └── snapshots_io.py
+│   └── tests
+│       ├── test_drug_non_drug_classifier.py
+│       ├── test_modality_audit.py
+│       ├── test_modality_classifier.py
+│       ├── test_ta_audit.py
+│       └── test_ta_classifier.py
+├── build_trial_tracking_db.py
+├── classifiers
+│   ├── __init__.py
+│   ├── classify_aact_monthly.py
+│   ├── classify_aact_monthly.py:Zone.Identifier
+│   ├── drug_non_drug_v2.py
+│   ├── modality_result.py
+│   ├── modality_result.py:Zone.Identifier
+│   ├── therapeutic_area - Copy.py:Zone.Identifier
+│   ├── therapeutic_area.py
+│   ├── therapeutic_area.txt
+│   ├── trial_modality_v2.py
+│   └── trial_modality_v2.py:Zone.Identifier
+├── collectors
+│   ├── clinicaltrials
+│   │   ├── clinicaltrials_fetch.py
+│   │   ├── clinicaltrials_normalize_v2.py
+│   │   ├── extract_aact_tables.py
+│   │   ├── extract_aact_tables.py:Zone.Identifier
+│   │   ├── normalize_aact_tables.py
+│   │   └── normalize_aact_tables.py:Zone.Identifier
+│   └── pubmed
+├── config
+│   └── settings.py
+├── pipelines
+│   ├── __init__.py
+│   ├── process_aact_continuous.py
+│   ├── process_aact_continuous.py:Zone.Identifier
+│   ├── reclassify_modality_snapshot_v2.py
+│   └── weekly_pulse_clinical_v2.py
+├── policy
+│   ├── __init__.py
+│   ├── drug_detection_policy_v2.py
+│   ├── mesh_tree_modality_policy_v2.py
+│   ├── ta_policy - Copy.py:Zone.Identifier
+│   ├── ta_policy.py
+│   ├── ta_policy.txt
+│   ├── text_modality_policy_v2.py
+│   └── type_modality_policy_v2.py
+├── project_structure.txt
+├── reclassify_all_snapshots.py
+├── reclassify_all_snapshots.py:Zone.Identifier
+├── storage
+│   ├── __init__.py
+│   ├── models_v2.py
+│   ├── raw
+│   │   └── ctgov
+│   ├── snapshots
+│   │   ├── clinical_trials
+│   │   └── clinical_trials_v2
+│   ├── snapshots_io_v2.py
+│   ├── trial_tracking_database.json
+│   └── trial_tracking_indices.json
+├── tests
+│   ├── test_mesh_tree_modality_policy_v2.py
+│   ├── test_modality_end_to_end.py
+│   ├── test_text_modality_policy_v2.py
+│   └── test_type_modality_policy_v2.py
+└── utils
+    └── parallel_processor.py
+
+25 directories, 70 files
