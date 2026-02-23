@@ -274,15 +274,24 @@ def detect_therapeutic_area_evidence(
     """
     evidence: Dict[str, List[Dict[str, str]]] = {}
 
-    ancestors = trial.condition_mesh_ancestors or []
+    # Check both condition terms AND their ancestors.
+    # ct.gov's ancestor chain does not include the term itself, so a trial
+    # whose condition IS a root term (e.g. D005128 Eye Diseases listed
+    # directly as a condition MeSH) would be missed with ancestors alone.
+    condition_ids = {
+        m.id
+        for m in (trial.condition_meshes or [])
+        if hasattr(m, "id") and isinstance(m.id, str)
+    }
     ancestor_ids = {
         a.id
-        for a in ancestors
+        for a in (trial.condition_mesh_ancestors or [])
         if hasattr(a, "id") and isinstance(a.id, str)
     }
+    all_ids = condition_ids | ancestor_ids
 
     for ta, roots in TA_MESH_ROOTS.items():
-        matches = [r for r in roots if r["id"] in ancestor_ids]
+        matches = [r for r in roots if r["id"] in all_ids]
         if matches:
             evidence[ta] = matches
 
