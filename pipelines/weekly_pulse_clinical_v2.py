@@ -35,7 +35,6 @@ from analytics.summary_v2 import (
     drug_modality_provenance_summary,
     drug_ta_provenance_summary,
     drug_study_intent_summary,
-    non_disease_drug_subtype_summary,
     ta_by_phase,
     modality_by_phase,
     ta_by_sponsor_class,
@@ -242,7 +241,6 @@ def main():
         "drug_modality_provenance": drug_modality_provenance_summary(trials),
         "drug_ta_provenance": drug_ta_provenance_summary(trials),
         "drug_study_intent": drug_study_intent_summary(trials),
-        "non_disease_drug_subtypes": non_disease_drug_subtype_summary(trials),
         "ta_by_phase": ta_by_phase(trials),
         "modality_by_phase": modality_by_phase(trials),
         "ta_by_sponsor_class": ta_by_sponsor_class(trials),
@@ -305,10 +303,6 @@ def main():
     
     print("\nDrug mesh-missing condition (DATA COMPLETENESS, NOT INTENT):")
     for k, v in summary["drug_mesh_missing_condition"].items():
-        print(f"  {k:25} | {v}")
-
-    print("\nNon-disease drug study subtypes:")
-    for k, v in sorted(summary["non_disease_drug_subtypes"].items()):
         print(f"  {k:25} | {v}")
     
     print("\nTA × Phase:")
