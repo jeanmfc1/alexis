@@ -262,6 +262,10 @@ def main():
         max_studies=max_studies,
     )
 
+    if not trials:
+        print("\nNo trials found for this window. Nothing to save.")
+        return
+
     # ---- Summary ----
     summary = {
         "ta_modality_counts_true_drugs": ta_modality_counts_true_drugs(trials),
