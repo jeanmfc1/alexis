@@ -53,10 +53,9 @@ PSYCHIATRY_KW = [
     "addiction",
     # Suicidality
     "suicidal ideation", "suicidality", "suicide attempt", "self-harm",
-    # Cannabis / opioid / psychedelic
-    "cannabis use disorder", "opioid use disorder", "opioid use",
+    # Cannabis / opioid / psychedelic — only specific disorder terms, not drug names
+    "cannabis use disorder", "opioid use disorder",
     "alcohol use disorder", "alcohol dependence",
-    "psilocybin", "ketamine", "mdma", "psychedelic",
     # Eating / anxiety / other
     "anorexia nervosa", "bulimia", "binge eating",
     "obsessive-compulsive", "ocd", "ptsd", "post-traumatic stress",
@@ -189,7 +188,7 @@ DERMATOLOGY_KW = [
     "xerosis cutis",
     # Additional conditions seen in unassigned trials
     "prurigo nodularis", "prurigo",
-    "hidradenitis suppurativa", "hs ",
+    "hidradenitis suppurativa",
     "pemphigus", "pemphigoid", "epidermolysis bullosa",
     "ichthyosis", "psoriatic skin",
     "urticaria", "chronic urticaria", "chronic spontaneous urticaria",

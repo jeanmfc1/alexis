@@ -330,6 +330,7 @@ CAT_AESTHETIC = "Aesthetic / Cosmetic"
 CAT_WELLNESS = "Wellness / Longevity"
 CAT_CONTRACEPTION = "Contraception / Family Planning"
 CAT_ANESTHESIA = "anesthesia_sedation"
+CAT_ACUTE_PAIN = "Acute Pain / Perioperative Analgesia"
 
 PK_REGEX = re.compile(
     r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
@@ -472,6 +473,17 @@ ANESTHESIA_SEDATION_REGEX = re.compile(
     re.IGNORECASE
 )
 
+# Acute pain / perioperative — matched against CONDITIONS text (not title/interventions)
+# because these trials list the symptom/procedure as the condition rather than a disease
+ACUTE_PAIN_COND_REGEX = re.compile(
+    r'\bpostoperative\b|\bpost[-\s]?operative\b|\bpostsurgical\b|\bpost[-\s]?surgical\b|'
+    r'\bperioperative\b|\bprocedural pain\b|\blabor pain\b|\blabour pain\b|'
+    r'\bneuromuscular blockade\b|'
+    r'\bacute pain\b|\bpain,?\s+acute\b|'
+    r'\banesthesia\b|\bsedation\b|\banalgesia\b',
+    re.IGNORECASE,
+)
+
 def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
     # Use pre-cached text if available, otherwise compute
     text = getattr(t, '_cached_title_interventions', None)
@@ -533,6 +545,12 @@ def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
         # Simple string fallbacks
         or ("formulation" in text)
         or ("delivery" in text)
+
+        # Acute pain / perioperative — check conditions text since
+        # these trials list the symptom as condition, not in title/interventions
+        or ACUTE_PAIN_COND_REGEX.search(
+            " ".join(getattr(t, "conditions", None) or [])
+        )
     )
 
 def assign_non_disease_study_category(
@@ -554,6 +572,12 @@ def assign_non_disease_study_category(
     if ANESTHESIA_SEDATION_REGEX.search(text):
         evidence.append("anesthesia_sedation")
         return (CAT_ANESTHESIA, evidence)
+
+    # Acute pain / perioperative — checked against conditions text
+    cond_text = " ".join(getattr(t, "conditions", None) or [])
+    if ACUTE_PAIN_COND_REGEX.search(cond_text) or PROCEDURAL_REGEX.search(cond_text):
+        evidence.append("acute_pain: ACUTE_PAIN_COND_REGEX on conditions")
+        return (CAT_ACUTE_PAIN, evidence)
 
     # NEW: Transplant support (high priority after procedural)
     if TRANSPLANT_REGEX.search(text):
