@@ -174,20 +174,16 @@ TA_MESH_ROOTS = {
         {"id": "D001327", "term": "Autoimmune Diseases"},      # C20.111 ✓
         {"id": "D006967", "term": "Hypersensitivity"},         # C20.543 ✓
         {"id": "D007249", "term": "Inflammation"},             # C23.550.470 — FIXED from D010437
-        # Removed D012871 (Skin Diseases) — keep in Dermatology only
-        # Removed D003875 (Drug Eruptions) — keep in Dermatology only
-        # Removed D006425 (Hemic and Lymphatic Diseases) — keep in Hematology only
     ],
 
     TA_NEURO: [
         {"id": "D009422", "term": "Nervous System Diseases"},  # C10 ✓
-        # Removed D002493 (CNS Diseases C10.228) — redundant child of C10
     ],
 
     TA_PSYCHIATRY: [
-        {"id": "D001523", "term": "Mental Disorders"},              # F03 ✓
-        {"id": "D003866", "term": "Depressive Disorder"},          # F03.600.300 — FIXED from D003863
-        {"id": "D019966", "term": "Substance-Related Disorders"},  # C25.775/F03.900 — FIXED from D013493
+        {"id": "D001523", "term": "Mental Disorders"},             # F03 ✓
+        {"id": "D003866", "term": "Depressive Disorder"},         # F03.600.300 — FIXED from D003863
+        {"id": "D019966", "term": "Substance-Related Disorders"}, # C25.775/F03.900 — FIXED from D013493
     ],
 
     TA_CARDIO: [
@@ -197,22 +193,17 @@ TA_MESH_ROOTS = {
     TA_METABOLIC: [
         {"id": "D009750", "term": "Nutritional and Metabolic Diseases"},  # C18 ✓
         {"id": "D004700", "term": "Endocrine System Diseases"},           # C19 ✓
-        # Removed D008659 (Metabolic Diseases C18.452) — redundant child of C18
     ],
 
     TA_GI: [
-        {"id": "D004066", "term": "Digestive System Diseases"},       # C06 ✓
-        {"id": "D005767", "term": "Gastrointestinal Diseases"},       # C06.405 ✓
-        {"id": "D007410", "term": "Intestinal Diseases"},             # C06.405.469 ✓
-        {"id": "D008107", "term": "Liver Diseases"},                  # C06.552 ✓
-        # Removed D004064 (Digestive System — anatomy A03)
-        # Removed D008099 (Liver — anatomy A03.620)
-        # Removed D003108, D003109 — redundant children of D007410
+        {"id": "D004066", "term": "Digestive System Diseases"},  # C06 ✓
+        {"id": "D005767", "term": "Gastrointestinal Diseases"},  # C06.405 ✓
+        {"id": "D007410", "term": "Intestinal Diseases"},        # C06.405.469 ✓
+        {"id": "D008107", "term": "Liver Diseases"},             # C06.552 ✓
     ],
 
     TA_RESPIRATORY: [
         {"id": "D012140", "term": "Respiratory Tract Diseases"},  # C08 ✓
-        # Removed D008171 (Lung Diseases C08.381) — redundant child of C08
     ],
 
     TA_OPHTHALMOLOGY: [
@@ -223,14 +214,13 @@ TA_MESH_ROOTS = {
     ],
 
     TA_UROLOGY: [
-        {"id": "D000091642", "term": "Urogenital Diseases"},                              # C12 ✓
-        {"id": "D014570",    "term": "Urologic Diseases"},                                # C12.050.351.968 ✓ — FIXED from D014607
-        {"id": "D052776",    "term": "Female Urogenital Diseases"},                       # C12.050.351 ✓
+        {"id": "D000091642", "term": "Urogenital Diseases"},                                    # C12 ✓
+        {"id": "D014570",    "term": "Urologic Diseases"},                                      # C12.050.351.968 — FIXED from D014607
+        {"id": "D052776",    "term": "Female Urogenital Diseases"},                             # C12.050.351 ✓
         {"id": "D005261",    "term": "Female Urogenital Diseases and Pregnancy Complications"}, # C12.050 ✓
-        {"id": "D005831",    "term": "Genital Diseases, Female"},                         # C12.050.351.500 ✓
-        {"id": "D014591",    "term": "Uterine Diseases"},                                 # C12.050.351.500.852 ✓
-        {"id": "D007674",    "term": "Kidney Diseases"},                                  # C12.050.351.968.419 ✓
-        # Removed D014596 (Uterine Prolapse) — wrong ID
+        {"id": "D005831",    "term": "Genital Diseases, Female"},                               # C12.050.351.500 ✓
+        {"id": "D014591",    "term": "Uterine Diseases"},                                       # C12.050.351.500.852 ✓
+        {"id": "D007674",    "term": "Kidney Diseases"},                                        # C12.050.351.968.419 ✓
     ],
 
     TA_MSK: [
@@ -243,13 +233,10 @@ TA_MESH_ROOTS = {
 
     TA_RARE: [
         {"id": "D009358", "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"},  # C16 ✓
-        # Removed D030342 (Genetic Diseases, Inborn C16.320) — redundant child of C16
     ],
 
     TA_DENTAL: [
         {"id": "D009057", "term": "Stomatognathic Diseases"},  # C07 ✓
-        # Removed D014076 (Tooth Diseases C07.793) — redundant child of C07
-        # Removed D010510 (Periodontal Diseases C07.465.714) — redundant child of C07
     ],
 
     TA_DERMATOLOGY: [
@@ -259,34 +246,48 @@ TA_MESH_ROOTS = {
 
     TA_HEMATOLOGY: [
         {"id": "D006425", "term": "Hemic and Lymphatic Diseases"},  # C15 ✓
-        # Removed D006402 (Hematologic Diseases C15.378) — redundant child of C15
     ],
+}
+
+
+# MeSH nodes that are symptom/manifestation categories — excluded from
+# TA matching because they appear as ancestors of many non-disease
+# conditions and would cause false TA assignments.
+MESH_TRAVERSAL_EXCLUSIONS = {
+    "D009461",  # Neurologic Manifestations (C10.597) — ancestor of pain,
+                # nausea, vomiting, wounds; would falsely fire Neurology
 }
 
 
 def detect_therapeutic_area_evidence(
     trial: ClinicalTrialSignalV2,
 ) -> dict[str, list[dict]]:
-
     """
     Return mapping: TA -> list of matched MeSH roots (id + term).
     Used for audit and explainability.
+
+    Checks both condition_meshes (the terms themselves) AND
+    condition_mesh_ancestors. ct.gov's ancestor chain does not include
+    the term itself, so a trial whose condition IS a root term would be
+    missed if we only checked ancestors.
+
+    IDs in MESH_TRAVERSAL_EXCLUSIONS are skipped — these are
+    symptom/manifestation nodes that appear in ancestor chains of many
+    non-disease conditions and would cause false TA matches.
     """
     evidence: Dict[str, List[Dict[str, str]]] = {}
 
-    # Check both condition terms AND their ancestors.
-    # ct.gov's ancestor chain does not include the term itself, so a trial
-    # whose condition IS a root term (e.g. D005128 Eye Diseases listed
-    # directly as a condition MeSH) would be missed with ancestors alone.
     condition_ids = {
         m.id
         for m in (trial.condition_meshes or [])
         if hasattr(m, "id") and isinstance(m.id, str)
+        and m.id not in MESH_TRAVERSAL_EXCLUSIONS
     }
     ancestor_ids = {
         a.id
         for a in (trial.condition_mesh_ancestors or [])
         if hasattr(a, "id") and isinstance(a.id, str)
+        and a.id not in MESH_TRAVERSAL_EXCLUSIONS
     }
     all_ids = condition_ids | ancestor_ids
 
