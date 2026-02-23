@@ -3,6 +3,8 @@
 from __future__ import annotations
 from typing import Iterable, List, Optional, Dict
 from storage.models_v2 import ClinicalTrialSignalV2
+from pathlib import Path
+import json
 import re
 
 from policy.ta_policy import (
@@ -258,6 +260,37 @@ MESH_TRAVERSAL_EXCLUSIONS = {
                 # nausea, vomiting, wounds; would falsely fire Neurology
 }
 
+# ---------------------------------------------------------------------
+# MeSH descriptor cache — loaded once on first use
+# ---------------------------------------------------------------------
+
+_MESH_DESC_PATH = Path("storage/mesh/mesh_descriptors.json")
+_mesh_desc: dict = {}
+_ta_prefixes: list = []  # [(tree_number_prefix, ta_name), ...] sorted longest-first
+
+
+def _load_mesh() -> None:
+    """Load mesh_descriptors.json and build prefix → TA lookup. No-op after first call."""
+    global _mesh_desc, _ta_prefixes
+    if _mesh_desc:
+        return
+    if not _MESH_DESC_PATH.exists():
+        return  # graceful degradation — falls back to ID-only matching
+    _mesh_desc = json.loads(_MESH_DESC_PATH.read_text(encoding="utf-8"))
+    prefixes = []
+    for ta, roots in TA_MESH_ROOTS.items():
+        for r in roots:
+            entry = _mesh_desc.get(r["id"])
+            if entry:
+                for tree_num in entry["tree_numbers"]:
+                    prefixes.append((tree_num, ta, r))
+    # Longest prefix first — ensures C20.111 matches before C20
+    _ta_prefixes = sorted(prefixes, key=lambda x: -len(x[0]))
+
+
+# ---------------------------------------------------------------------
+# detect_therapeutic_area_evidence
+# ---------------------------------------------------------------------
 
 def detect_therapeutic_area_evidence(
     trial: ClinicalTrialSignalV2,
@@ -266,17 +299,25 @@ def detect_therapeutic_area_evidence(
     Return mapping: TA -> list of matched MeSH roots (id + term).
     Used for audit and explainability.
 
-    Checks both condition_meshes (the terms themselves) AND
-    condition_mesh_ancestors. ct.gov's ancestor chain does not include
-    the term itself, so a trial whose condition IS a root term would be
-    missed if we only checked ancestors.
+    Strategy (two layers):
+    1. Direct ID match — condition_meshes or condition_mesh_ancestors
+       contain a root ID from TA_MESH_ROOTS directly.
+    2. Tree-number prefix match — for remaining IDs, look up their tree
+       numbers in mesh_descriptors.json and check if any start with a
+       root's tree number prefix. Recovers trials where ct.gov's
+       ancestor chain stops short of the root.
 
-    IDs in MESH_TRAVERSAL_EXCLUSIONS are skipped — these are
-    symptom/manifestation nodes that appear in ancestor chains of many
-    non-disease conditions and would cause false TA matches.
+    Notes:
+    - condition_meshes are included alongside ancestors because ct.gov
+      does not include the term itself in its own ancestor chain.
+    - IDs in MESH_TRAVERSAL_EXCLUSIONS are skipped — symptom/
+      manifestation nodes that would cause false TA matches.
     """
+    _load_mesh()
+
     evidence: Dict[str, List[Dict[str, str]]] = {}
 
+    # Build unified ID set — condition terms + ancestors, minus exclusions
     condition_ids = {
         m.id
         for m in (trial.condition_meshes or [])
@@ -291,9 +332,23 @@ def detect_therapeutic_area_evidence(
     }
     all_ids = condition_ids | ancestor_ids
 
+    # Layer 1: direct root ID match
     for ta, roots in TA_MESH_ROOTS.items():
         matches = [r for r in roots if r["id"] in all_ids]
         if matches:
             evidence[ta] = matches
+
+    # Layer 2: tree-number prefix match (only if mesh_descriptors loaded)
+    if _ta_prefixes:
+        for mid in all_ids:
+            entry = _mesh_desc.get(mid)
+            if not entry:
+                continue
+            for tree_num in entry["tree_numbers"]:
+                for prefix, ta, root in _ta_prefixes:
+                    if tree_num.startswith(prefix):
+                        if ta not in evidence:
+                            evidence[ta] = [root]
+                        break  # longest prefix matched for this tree_num
 
     return evidence

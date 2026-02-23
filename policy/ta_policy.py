@@ -38,6 +38,12 @@ ONCOLOGY_KW = [
     "hematologic malignancy", "hematological malignancy",
     "hematologic malignancies", "hematological malignancies",
     "b-cell malignancy", "b cell malignancy", "t-cell malignancy", "t cell malignancy", "blood cancer",
+    # Common abbreviations not caught by above
+    "nsclc", "sclc", "hcc", "crc", "rcc", "urothelial carcinoma",
+    "pdac", "pancreatic ductal adenocarcinoma",
+    "tnbc", "triple negative breast",
+    "aml", "cml", "cll", "mds", "myelodysplastic",
+    "dlbcl", "follicular lymphoma", "hodgkin", "non-hodgkin",
 ]
 
 PSYCHIATRY_KW = [
@@ -45,6 +51,16 @@ PSYCHIATRY_KW = [
     "smoking cessation",
     "substance use disorder",
     "addiction",
+    # Suicidality
+    "suicidal ideation", "suicidality", "suicide attempt", "self-harm",
+    # Cannabis / opioid / psychedelic
+    "cannabis use disorder", "opioid use disorder", "opioid use",
+    "alcohol use disorder", "alcohol dependence",
+    "psilocybin", "ketamine", "mdma", "psychedelic",
+    # Eating / anxiety / other
+    "anorexia nervosa", "bulimia", "binge eating",
+    "obsessive-compulsive", "ocd", "ptsd", "post-traumatic stress",
+    "borderline personality", "attention deficit",
 ]
 
 INFECTIOUS_KW = [
@@ -85,11 +101,31 @@ METABOLIC_KW = [
     "metabolic", "endocrine", "diabetes", "diabetic", "obesity", "insulin",
     "lipid", "cholesterol", "dyslipidemia", "thyroid", "hyperthyroid",
     "hypothyroid", "metabolic syndrome", "fatty liver", "nafld", "nash",
+    # Rare lipid disorders
+    "familial chylomicronemia", "fcs", "hypertriglyceridemia",
+    "familial hypercholesterolemia", "lipoprotein lipase deficiency",
+    # Other metabolic
+    "hyperuricemia", "gout", "phenylketonuria", "pku",
+    "gaucher", "fabry", "pompe",
 ]
 RARE_KW = [
     "rare disease", "orphan", "genetic", "inherited", "deficiency",
     "lysosomal", "dystrophy", "fragile x", "cystic fibrosis", "spinal muscular atrophy", "sjögren syndrome",
     "interferonopathy", "proteinuric kidney disease",
+    # Specific rare syndromes seen in unassigned trials
+    "phelan-mcdermid", "phelan mcdermid",
+    "pitt hopkins", "pitt-hopkins",
+    "angelman syndrome", "angelman",
+    "prader-willi", "prader willi",
+    "rett syndrome", "rett's syndrome",
+    "kabuki syndrome",
+    "dravet syndrome",
+    "batten disease",
+    "hunter syndrome", "hurler syndrome",
+    "niemann-pick", "niemann pick",
+    "sanfilippo",
+    "mucopolysaccharidosis", "mps ",
+    "transthyretin", "ttr amyloid",
 ]
 MSK_KW = [
     "osteoarthritis", "musculoskeletal", "low back pain", "back pain",
@@ -97,6 +133,20 @@ MSK_KW = [
     "arthroplasty", "hip arthroplasty", "knee arthroplasty", "total knee arthroplasty", "total hip arthroplasty", "subacromial",
     "patellofemoral", "patello femoral", "anterior knee pain", "popliteus", "abdominoplasty", "bunionectomy", "rib fracture",
     "hernia repair", "hernia surgery",
+    # Fractures seen in unassigned trials
+    "hip fracture", "hip fractures", "femoral fracture", "femur fracture",
+    "wrist fracture", "distal radius fracture",
+    "vertebral fracture", "compression fracture",
+    "tibial fracture", "ankle fracture",
+    # Ligament / tendon injuries
+    "anterior cruciate ligament", "acl injury", "acl reconstruction",
+    "rotator cuff", "rotator cuff tear", "rotator cuff repair",
+    "achilles tendon", "achilles tendinopathy",
+    # Other MSK
+    "scoliosis", "kyphosis", "spinal stenosis",
+    "intervertebral disc", "disc herniation",
+    "osteonecrosis", "avascular necrosis",
+    "osteoporosis", "bone density",
 ]
 GI_KW = [
     "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis", # NEW: Additional GI conditions
@@ -104,9 +154,17 @@ GI_KW = [
     "colorectal neoplasia","esophagogastric junction", "achalasia", "bloody diarrhea", "radiation esophagitis",
 ]
 UROLOGY_KW = [
-    "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1", # NEW: Bladder/urological conditions
+    "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1",
     "urinary incontinence", "stress incontinence", "neurogenic bladder", "overactive bladder", "ureteral", "urological", "ovarian reserve",
     "diminished ovarian reserve", "fertility",
+    # Gynecological / reproductive seen in unassigned trials
+    "primary dysmenorrhea", "dysmenorrhea", "endometriosis",
+    "ivf", "in vitro fertilization", "in vitro fertilisation",
+    "polycystic ovary", "pcos",
+    "uterine fibroid", "leiomyoma",
+    "vulvodynia", "vaginismus",
+    "benign prostatic hyperplasia", "bph", "lower urinary tract",
+    "renal colic", "nephrolithiasis", "kidney stone",
 ]
 
 OPHTHALMOLOGY_KW = [
@@ -129,6 +187,12 @@ DERMATOLOGY_KW = [
     "skin lesion", "skin disorder", "xerosis",
     "dry skin",
     "xerosis cutis",
+    # Additional conditions seen in unassigned trials
+    "prurigo nodularis", "prurigo",
+    "hidradenitis suppurativa", "hs ",
+    "pemphigus", "pemphigoid", "epidermolysis bullosa",
+    "ichthyosis", "psoriatic skin",
+    "urticaria", "chronic urticaria", "chronic spontaneous urticaria",
 ]
 
 HEMATOLOGY_KW = [
