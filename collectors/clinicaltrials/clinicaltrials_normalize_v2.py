@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional, Union
 
 from storage.models_v2 import (
     ClinicalTrialSignalV2,
+    DesignOutcomeV2,
+    FacilityV2,
     InterventionV2,
     MeshTermV2,
 )
@@ -49,7 +51,7 @@ def _parse_date(value: Optional[str]) -> ParsedDate:
 
     # Partial: yyyy
     if len(v) == 4 and v.isdigit():
-        return f"{v} missing month, day"
+        return v
     # Partial: yyyy-MM
     if (
         len(v) == 7
@@ -57,7 +59,7 @@ def _parse_date(value: Optional[str]) -> ParsedDate:
         and v[:4].isdigit()
         and v[5:7].isdigit()
     ):
-        return f"{v} missing day"
+        return v
     return None
 # --------------------------------
 # Arm groups extraction
@@ -330,6 +332,66 @@ def extract_condition_mesh_terms(study: Dict[str, Any]) -> tuple[list[MeshTermV2
     return parse(meshes), parse(ancestors)
 
 # --------------------------------
+# Outcome measures extraction
+# --------------------------------
+
+def extract_outcomes(study: Dict[str, Any]) -> tuple[List[DesignOutcomeV2], List[DesignOutcomeV2]]:
+    """
+    Extract primary and secondary outcome measures from:
+      protocolSection.outcomesModule.primaryOutcomes
+      protocolSection.outcomesModule.secondaryOutcomes
+    """
+    def _parse_outcomes(items: list, outcome_type: str) -> List[DesignOutcomeV2]:
+        out: List[DesignOutcomeV2] = []
+        if not isinstance(items, list):
+            return out
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            measure = item.get("measure")
+            if not isinstance(measure, str) or not measure.strip():
+                continue
+            out.append(DesignOutcomeV2(
+                type=outcome_type,
+                measure=measure.strip(),
+                time_frame=item.get("timeFrame"),
+                description=item.get("description"),
+            ))
+        return out
+
+    primary_raw = _get(study, ["protocolSection", "outcomesModule", "primaryOutcomes"], default=[]) or []
+    secondary_raw = _get(study, ["protocolSection", "outcomesModule", "secondaryOutcomes"], default=[]) or []
+
+    return _parse_outcomes(primary_raw, "PRIMARY"), _parse_outcomes(secondary_raw, "SECONDARY")
+
+
+# --------------------------------
+# Facilities extraction
+# --------------------------------
+
+def extract_facilities(study: Dict[str, Any]) -> List[FacilityV2]:
+    """
+    Extract study site / facility records from:
+      protocolSection.contactsLocationsModule.locations
+    """
+    raw = _get(study, ["protocolSection", "contactsLocationsModule", "locations"], default=[]) or []
+    out: List[FacilityV2] = []
+    if not isinstance(raw, list):
+        return out
+    for loc in raw:
+        if not isinstance(loc, dict):
+            continue
+        out.append(FacilityV2(
+            name=loc.get("facility"),
+            city=loc.get("city"),
+            state=loc.get("state"),
+            country=loc.get("country"),
+            status=loc.get("status"),
+        ))
+    return out
+
+
+# --------------------------------
 # Main normalization
 # --------------------------------
 
@@ -370,6 +432,40 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any], skip_non_essential:
         default=None,
     )
 
+    # NEW: Sponsor name
+    sponsor_name = _get(
+        study,
+        ["protocolSection", "sponsorCollaboratorsModule", "leadSponsor", "name"],
+        default=None,
+    )
+
+    # NEW: Overall status
+    overall_status = _get(
+        study,
+        ["protocolSection", "statusModule", "overallStatus"],
+        default=None,
+    )
+
+    # NEW: Enrollment
+    enrollment_raw = _get(study, ["protocolSection", "designModule", "enrollmentInfo", "count"], default=None)
+    enrollment = int(enrollment_raw) if enrollment_raw is not None else None
+    enrollment_type = _get(study, ["protocolSection", "designModule", "enrollmentInfo", "type"], default=None)
+
+    # NEW: Why stopped
+    why_stopped = _get(study, ["protocolSection", "statusModule", "whyStopped"], default=None)
+
+    # NEW: Key protocol dates
+    start_date = _parse_date(
+        _get(study, ["protocolSection", "statusModule", "startDateStruct", "date"])
+    )
+    completion_date = _parse_date(
+        _get(study, ["protocolSection", "statusModule", "completionDateStruct", "date"])
+    )
+    primary_completion_date = _parse_date(
+        _get(study, ["protocolSection", "statusModule", "primaryCompletionDateStruct", "date"])
+    )
+
+    # Posting dates (existing)
     first_posted_date = _parse_date(
         _get(study, ["protocolSection", "statusModule", "studyFirstPostDateStruct", "date"])
     )
@@ -394,6 +490,13 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any], skip_non_essential:
     # MeSH (optional)
     mesh_terms, mesh_ancestors = extract_mesh_terms(study)
 
+    # NEW: Outcomes
+    primary_outcomes, secondary_outcomes = extract_outcomes(study)
+
+    # NEW: Facilities (always extracted — needed for sites_changed categorizer)
+    facilities = extract_facilities(study)
+    facility_count = len(facilities) if facilities else 0
+
     return ClinicalTrialSignalV2(
         nct_id=str(nct_id),
         title=str(title),
@@ -401,12 +504,40 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any], skip_non_essential:
         study_type=study_type,
         phase=phase,
         sponsor_class=sponsor_class,
+
+        # NEW: Status & enrollment
+        overall_status=overall_status,
+        enrollment=enrollment,
+        enrollment_type=enrollment_type,
+        why_stopped=why_stopped,
+
+        # NEW: Sponsor identity
+        sponsor_name=sponsor_name,
+
+        # NEW: Outcomes
+        primary_outcomes=primary_outcomes,
+        secondary_outcomes=secondary_outcomes,
+
+        # NEW: Facilities
+        facilities=facilities,
+        facility_count=facility_count,
+
+        # NEW: Key dates
+        start_date=start_date if isinstance(start_date, str) else (start_date.isoformat() if start_date else None),
+        completion_date=completion_date if isinstance(completion_date, str) else (completion_date.isoformat() if completion_date else None),
+        primary_completion_date=primary_completion_date if isinstance(primary_completion_date, str) else (primary_completion_date.isoformat() if primary_completion_date else None),
+
+        # Posting dates (existing)
         first_posted_date=first_posted_date,
         last_update_posted_date=last_update_date,
+
+        # Interventions
         interventions_all=all_interventions,
-        interventions=structured_interventions,        # only new drugs
+        interventions=structured_interventions,
         interventions_text=interventions_text,
         arm_group_map=arm_group_map,
+
+        # MeSH
         intervention_meshes=mesh_terms,
         intervention_mesh_ancestors=mesh_ancestors,
         condition_meshes=condition_mesh_terms,

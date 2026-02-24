@@ -6,7 +6,16 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from storage.models_v2 import ClinicalTrialSignalV2, InterventionV2, MeshTermV2
+from storage.models_v2 import (
+    ClinicalTrialSignalV2,
+    DesignOutcomeV2,
+    FacilityV2,
+    InterventionV2,
+    LinkedTrialV2,
+    MeshTermV2,
+    OutcomeAssessmentV2,
+    UpdateCategoryV2,
+)
 
 from datetime import date
 
@@ -41,6 +50,60 @@ def _mesh_term_to_dict(m: MeshTermV2) -> Dict[str, Any]:
     return {
         "id": m.id,
         "term": m.term,
+    }
+
+def _outcome_to_dict(o: DesignOutcomeV2) -> Dict[str, Any]:
+    return {
+        "type": o.type,
+        "measure": o.measure,
+        "time_frame": o.time_frame,
+        "description": o.description,
+    }
+
+def _facility_to_dict(f: FacilityV2) -> Dict[str, Any]:
+    return {
+        "name": f.name,
+        "city": f.city,
+        "state": f.state,
+        "country": f.country,
+        "status": f.status,
+    }
+
+def _update_category_to_dict(uc: UpdateCategoryV2) -> Dict[str, Any]:
+    d: Dict[str, Any] = {
+        "category": uc.category,
+        "tier": uc.tier,
+    }
+    if uc.direction is not None:
+        d["direction"] = uc.direction
+    if uc.field_name is not None:
+        d["field_name"] = uc.field_name
+    if uc.old_value is not None:
+        d["old_value"] = uc.old_value
+    if uc.new_value is not None:
+        d["new_value"] = uc.new_value
+    if uc.delta is not None:
+        d["delta"] = uc.delta
+    if uc.delta_pct is not None:
+        d["delta_pct"] = uc.delta_pct
+    if uc.note is not None:
+        d["note"] = uc.note
+    return d
+
+def _linked_trial_to_dict(lt: LinkedTrialV2) -> Dict[str, Any]:
+    return {
+        "nct_id": lt.nct_id,
+        "phase": lt.phase,
+        "link_confidence": lt.link_confidence,
+        "link_type": lt.link_type,
+    }
+
+def _outcome_assessment_to_dict(oa: OutcomeAssessmentV2) -> Dict[str, Any]:
+    return {
+        "assessment": oa.assessment,
+        "confidence": oa.confidence,
+        "signals": list(oa.signals or []),
+        "assessed_at": oa.assessed_at,
     }
 
 def _week_of_month(d: date) -> int:
@@ -82,9 +145,31 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         "sponsor_class": t.sponsor_class,
         "conditions": list(t.conditions or []),
 
-        # v2 dates are Union[date,str,None] (see models_v2)
+        # Status & enrollment (new)
+        "overall_status": t.overall_status,
+        "enrollment": t.enrollment,
+        "enrollment_type": t.enrollment_type,
+        "why_stopped": t.why_stopped,
+
+        # Sponsor identity (new)
+        "sponsor_name": t.sponsor_name,
+
+        # Key protocol dates (new)
+        "start_date": t.start_date,
+        "completion_date": t.completion_date,
+        "primary_completion_date": t.primary_completion_date,
+
+        # v2 posting dates are Union[date,str,None] (see models_v2)
         "first_posted_date": t.first_posted_date.isoformat() if hasattr(t.first_posted_date, "isoformat") else t.first_posted_date,
         "last_update_posted_date": t.last_update_posted_date.isoformat() if hasattr(t.last_update_posted_date, "isoformat") else t.last_update_posted_date,
+
+        # Outcomes (new)
+        "primary_outcomes": [_outcome_to_dict(o) for o in (t.primary_outcomes or [])],
+        "secondary_outcomes": [_outcome_to_dict(o) for o in (t.secondary_outcomes or [])],
+
+        # Facilities (new)
+        "facilities": [_facility_to_dict(f) for f in (t.facilities or [])],
+        "facility_count": t.facility_count,
 
         # structured interventions (only experimental drugs after normalize_v2)
         "interventions": [_intervention_to_dict(iv) for iv in (t.interventions or [])],
@@ -100,19 +185,24 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         "condition_mesh_ancestors": [_mesh_term_to_dict(m) for m in (t.condition_mesh_ancestors or [])],
 
         # classification outputs (set by pipeline)
-        "therapeutic_area": getattr(t, "therapeutic_area", None),
-        "is_drug_trial": getattr(t, "is_drug_trial", None),
-        "modality": getattr(t, "modality", None),
-        "therapeutic_areas_detected": list(getattr(t, "therapeutic_areas_detected", []) or []),
+        "therapeutic_area": t.therapeutic_area,
+        "is_drug_trial": t.is_drug_trial,
+        "modality": t.modality,
+        "therapeutic_areas_detected": list(t.therapeutic_areas_detected or []),
 
         # INFO flags (v2)
-        "info_flags": list(getattr(t, "info_flags", []) or []),
+        "info_flags": list(t.info_flags or []),
 
-        "study_intent": getattr(t, "study_intent", None),
-        "study_category": getattr(t, "study_category", None),
-        "study_category_evidence": list(getattr(t, "study_category_evidence", []) or []),
-        "mesh_missing_condition": getattr(t, "mesh_missing_condition", None),
-        "mesh_missing_condition": getattr(t, "mesh_missing_condition", None),
+        "study_intent": t.study_intent,
+        "study_category": t.study_category,
+        "study_category_evidence": list(t.study_category_evidence or []),
+        "mesh_missing_condition": t.mesh_missing_condition,
+
+        # Update categorization outputs (new)
+        "update_type": t.update_type,
+        "update_categories": [_update_category_to_dict(uc) for uc in (t.update_categories or [])],
+        "linked_from": _linked_trial_to_dict(t.linked_from) if t.linked_from else None,
+        "outcome": _outcome_assessment_to_dict(t.outcome) if t.outcome else None,
     }
 
 def save_trial_snapshot_v2(
