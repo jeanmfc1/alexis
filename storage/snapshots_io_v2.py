@@ -109,6 +109,9 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         "info_flags": list(getattr(t, "info_flags", []) or []),
 
         "study_intent": getattr(t, "study_intent", None),
+        "study_category": getattr(t, "study_category", None),
+        "study_category_evidence": list(getattr(t, "study_category_evidence", []) or []),
+        "mesh_missing_condition": getattr(t, "mesh_missing_condition", None),
         "mesh_missing_condition": getattr(t, "mesh_missing_condition", None),
     }
 

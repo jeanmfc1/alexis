@@ -329,8 +329,10 @@ CAT_WOUND = "Wound / Tissue Healing"
 CAT_AESTHETIC = "Aesthetic / Cosmetic"
 CAT_WELLNESS = "Wellness / Longevity"
 CAT_CONTRACEPTION = "Contraception / Family Planning"
-CAT_ANESTHESIA = "anesthesia_sedation"
+CAT_ANESTHESIA = "Anesthesia / Sedation"
 CAT_ACUTE_PAIN = "Acute Pain / Perioperative Analgesia"
+CAT_AGING = "Aging / Frailty / Longevity"
+CAT_ICU = "Critical Care / ICU"
 
 PK_REGEX = re.compile(
     r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
@@ -479,8 +481,16 @@ ACUTE_PAIN_COND_REGEX = re.compile(
     r'\bpostoperative\b|\bpost[-\s]?operative\b|\bpostsurgical\b|\bpost[-\s]?surgical\b|'
     r'\bperioperative\b|\bprocedural pain\b|\blabor pain\b|\blabour pain\b|'
     r'\bneuromuscular blockade\b|'
-    r'\bacute pain\b|\bpain,?\s+acute\b|'
-    r'\banesthesia\b|\bsedation\b|\banalgesia\b',
+    r'\bacute pain\b|\bpain,?\s+acute\b|\bpain,?\s+postoperative\b|'
+    r'\banesthesia\b|\bsedation\b|\banalgesia\b|'
+    # Trauma / hemorrhage / shock — acute care, not disease TAs
+    r'\btrauma\b|\btrauma injury\b|\btrauma, multiple\b|'
+    r'\bhemorrhage\b|\bhemorrhagic shock\b|\bhypovolemic shock\b|\bblood loss\b|'
+    r'\bburns?\b|'
+    # ICU / critical care
+    r'\bintensive care\b|\bicu\b|\bcritically ill\b|'
+    r'\bmechanical ventilation\b|\bvasopressor\b|\bintubation\b|'
+    r'\bextracorporeal membrane\b|\becmo\b',
     re.IGNORECASE,
 )
 
@@ -515,8 +525,9 @@ def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
         # ADME / mass balance
         or ADME_REGEX.search(text)
 
-        # Procedural anesthesia / nerve block
+        # Procedural anesthesia / nerve block / sedation
         or PROCEDURAL_REGEX.search(text)
+        or ANESTHESIA_SEDATION_REGEX.search(text)
 
         # Formulation / delivery systems
         or FORMULATION_REGEX.search(text)
@@ -551,6 +562,16 @@ def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
         or ACUTE_PAIN_COND_REGEX.search(
             " ".join(getattr(t, "conditions", None) or [])
         )
+
+        # Transplant / wound / sedation / aging — also check conditions text
+        or TRANSPLANT_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        or WOUND_HEALING_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        or ANESTHESIA_SEDATION_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        or WELLNESS_LONGEVITY_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        # Bare "Healthy" as a condition entry (HV trials that list condition as just "Healthy")
+        or any(c.strip().lower() == "healthy" for c in (getattr(t, "conditions", None) or []))
+        # HV regex against conditions text too
+        or HV_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
     )
 
 def assign_non_disease_study_category(
@@ -578,6 +599,38 @@ def assign_non_disease_study_category(
     if ACUTE_PAIN_COND_REGEX.search(cond_text) or PROCEDURAL_REGEX.search(cond_text):
         evidence.append("acute_pain: ACUTE_PAIN_COND_REGEX on conditions")
         return (CAT_ACUTE_PAIN, evidence)
+
+    # ICU / critical care — checked against conditions text
+    if re.search(
+        r'\bintensive care\b|\bicu\b|\bcritically ill\b|\bmechanical ventilation\b|'
+        r'\bvasopressor\b|\bintubation\b|\becmo\b|\bextracorporeal membrane\b',
+        cond_text, re.IGNORECASE
+    ):
+        evidence.append("icu: ICU_COND on conditions")
+        return (CAT_ICU, evidence)
+
+    # Transplant — check conditions text too
+    if TRANSPLANT_REGEX.search(cond_text):
+        evidence.append("transplant: TRANSPLANT_REGEX on conditions")
+        return (CAT_TRANSPLANT, evidence)
+
+    # Wound healing — check conditions text too
+    if WOUND_HEALING_REGEX.search(cond_text):
+        evidence.append("wound_healing: WOUND_HEALING_REGEX on conditions")
+        return (CAT_WOUND, evidence)
+
+    # Anesthesia/sedation — check conditions text too
+    if ANESTHESIA_SEDATION_REGEX.search(cond_text):
+        evidence.append("anesthesia_sedation: ANESTHESIA_SEDATION_REGEX on conditions")
+        return (CAT_ANESTHESIA, evidence)
+
+    # Aging / frailty / longevity — check conditions text too
+    if WELLNESS_LONGEVITY_REGEX.search(cond_text) or re.search(
+        r'\baging\b|\bageing\b|\bfrailty\b|\bfrail\b|\bsarcopenia\b|\bgeriatric\b',
+        cond_text, re.IGNORECASE
+    ):
+        evidence.append("aging: WELLNESS/AGING on conditions")
+        return (CAT_AGING, evidence)
 
     # NEW: Transplant support (high priority after procedural)
     if TRANSPLANT_REGEX.search(text):

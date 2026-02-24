@@ -84,6 +84,8 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
     # collect all candidate MeSH submodalities
     mesh_submods: list[str] = []
     mesh_used = False
+    mesh_drug_names_matched = 0   # mesh terms that passed the drug-name filter
+    mesh_tree_misses = 0          # passed filter but no tree lookup hit
 
     for m in getattr(trial, "intervention_meshes", []) or []:
         # Bug 2 fix: skip meshes that don't correspond to a DRUG intervention.
@@ -91,11 +93,15 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
         if m.term.lower() not in drug_intervention_names:
             continue
 
+        mesh_drug_names_matched += 1
+
         # Try direct lookup (works when mesh_tree has this specific ID)
         mesh_result = mesh_tree_to_submodality(m.id)
         if mesh_result.modality:
             mesh_used = True
             mesh_submods.append(mesh_result.modality)
+        else:
+            mesh_tree_misses += 1
 
     # Bug 1 fix: if direct lookups produced nothing, fall back to the pre-computed
     # ancestor chain. We scan once (not per-mesh) because intervention_mesh_ancestors
@@ -122,6 +128,15 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
 
     if mesh_available and not mesh_used:
         trial.info_flags.append("mesh_available_but_not_used")
+        # Subflags explaining WHY mesh wasn't used:
+        if mesh_drug_names_matched == 0:
+            # No mesh term matched any drug intervention name —
+            # mesh terms are procedures, comparators, or non-drug co-interventions
+            trial.info_flags.append("mesh_reason:no_drug_name_match")
+        else:
+            # Mesh terms matched drug names but the drug isn't in the modality tree —
+            # investigational agent is too novel to have a MeSH tree entry yet
+            trial.info_flags.append("mesh_reason:drug_not_in_tree")
 
     # --- 3) Fallback: use legacy text matcher from ALEXIS V1 ---
 
@@ -132,6 +147,11 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
 
 
     # --- 4) Default to base modality if no refinement ---
+    # If we reach here with no mesh and no text match, modality came purely
+    # from intervention.type. This is expected for novel/recent drugs where
+    # CT.gov has not yet assigned intervention MeSH.
+    if not mesh_available:
+        trial.info_flags.append("base_reason:no_mesh")
 
     return base_modality
 

@@ -158,9 +158,14 @@ def reconstruct_trials(raw_trials: List[dict]) -> List[ClinicalTrialSignalV2]:
             condition_meshes=mesh_list("condition_meshes"),
             condition_mesh_ancestors=mesh_list("condition_mesh_ancestors"),
             therapeutic_area=t.get("therapeutic_area"),
+            therapeutic_areas_detected=t.get("therapeutic_areas_detected") or [],
             is_drug_trial=t.get("is_drug_trial"),
             modality=t.get("modality"),
             info_flags=t.get("info_flags") or [],
+            study_intent=t.get("study_intent"),
+            study_category=t.get("study_category"),
+            study_category_evidence=t.get("study_category_evidence") or [],
+            mesh_missing_condition=t.get("mesh_missing_condition") or False,
         )
         trials.append(trial)
     return trials
@@ -279,6 +284,13 @@ def classify_in_chunks(
     classified_remaining = []
     chunk_index = start_chunk
     BATCH_SIZE = 10  # Match original: small batches for smooth progress bar
+
+    # Pre-load MeSH descriptors before forking the pool.
+    # Workers inherit parent memory at fork time — guarantees mesh is loaded
+    # in every worker without re-reading the 13MB file N times.
+    from classifiers.therapeutic_area import _load_mesh
+    _load_mesh()
+    print(f"  MeSH descriptors pre-loaded for workers.")
 
     # Keep pool open across all chunks — fork-based, no module reload overhead
     with Pool(num_workers) as pool:

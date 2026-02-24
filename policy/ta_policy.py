@@ -44,6 +44,11 @@ ONCOLOGY_KW = [
     "tnbc", "triple negative breast",
     "aml", "cml", "cll", "mds", "myelodysplastic",
     "dlbcl", "follicular lymphoma", "hodgkin", "non-hodgkin",
+    # Cluster 3 additions
+    "hemangioendothelioma", "kaposiform",
+    "squamous intraepithelial lesion", "hsil", "lsil",
+    # Neuropathy / mesothelioma — safer here than in Neuro/Respiratory
+    "mesothelioma", "chemotherapy-induced",
 ]
 
 PSYCHIATRY_KW = [
@@ -60,6 +65,10 @@ PSYCHIATRY_KW = [
     "anorexia nervosa", "bulimia", "binge eating",
     "obsessive-compulsive", "ocd", "ptsd", "post-traumatic stress",
     "borderline personality", "attention deficit",
+    # Title-signal additions
+    "psychosis", "psychotic", "vaping cessation",
+    "nicotine pouch", "nicotine use",
+    "thc", "methamphetamine", "amphetamine", "benzodiazepine",
 ]
 
 INFECTIOUS_KW = [
@@ -67,12 +76,19 @@ INFECTIOUS_KW = [
     "fungal", "fungus", "hiv", "covid", "sars-cov-2", "influenza", "flu",
     "hepatitis", "tuberculosis", "tuberculous", "malaria", "antiviral",
     "antimicrobial", "antibiotic", "sepsis", "pneumonia", "vaccine", "vaccination",
+    # Title-signal additions
+    "herpes zoster", "zoster", "herpes simplex",
+    "hpv", "hbv", "hcv", "rsv", "dengue",
+    "clostridium", "clostridioides", "candida", "aspergillus",
 ]
 IMMUNO_KW = [
     "autoimmune", "inflammation", "inflammatory", "immune", "immuno",
     "lupus", "sle", "rheumatoid", "arthritis", "psoriasis",
     "eczema", "atopic dermatitis", "atopic hand", "atopic foot", "atopic eczema", "crohn", "crohn's", "ulcerative colitis",
     "ibd", "asthma", "multiple sclerosis", "ms ", "myasthenia gravis", "ocular myasthenia gravis", "gmg",
+    # Allergy / anaphylaxis
+    "allerg", "anaphylaxis", "anaphylactic",
+    "food allergy", "drug allergy", "cow milk",
 ]
 NEURO_KW = [
     "neurology", "neurologic", "neurological", "cns", "brain", "spinal",
@@ -80,6 +96,9 @@ NEURO_KW = [
     "migraine", "depression", "schizophrenia", "bipolar", "psychiatric", "autism", "adhd",
     "aphasia", "hemiparesis", "motor recovery", "cognitive impairment", "rehabilitation", "palliative care", "palliative sedation", "end of life care",
     "psychological distress palliative",
+    # Title-signal additions
+    "acoustic reflex", "tinnitus", "vestibular", "cochlear",
+    "peripheral neuropathy", "neuropathic",
 ]
 CARDIO_KW = [
     "cardiovascular", "cardiac", "heart", "myocardial", "coronary",
@@ -125,6 +144,23 @@ RARE_KW = [
     "sanfilippo",
     "mucopolysaccharidosis", "mps ",
     "transthyretin", "ttr amyloid",
+    # Cluster 3 additions
+    "primary hyperoxaluria", "hyperoxaluria",
+    "hypochondroplasia",
+    "primary cutaneous amyloidosis",
+    "cutaneous amyloidosis",
+    # Title-signal additions
+    "erythropoietic protoporphyria", "porphyria",
+    "x-linked protoporphyria",
+    # Cluster 4 additions
+    "spastic paraplegia", "hereditary spastic paraplegia", "hsp",
+    "mecp2",
+    "congenital central hypoventilation syndrome", "cchs", "ondine syndrome",
+    "gne myopathy",
+    "rvcl", "retinal vasculopathy cerebral leukoencephalopathy",
+    "congenital melanocytic nevus",
+    "runx1 familial platelet disorder",
+    "spastic paraplegia type",
 ]
 MSK_KW = [
     "osteoarthritis", "musculoskeletal", "low back pain", "back pain",
@@ -146,11 +182,40 @@ MSK_KW = [
     "intervertebral disc", "disc herniation",
     "osteonecrosis", "avascular necrosis",
     "osteoporosis", "bone density",
+    # Title-signal additions
+    "spine surgery", "spinal surgery", "lumbosacral",
+    "articular cartilage", "rhizarthrosis",
+    "synovitis", "intra-articular",
+    "meniscus", "meniscal",
+    "tendinopathy", "tendinitis", "bursitis",
+    "spondylosis", "spondylolisthesis", "facet joint",
+    # Cluster 4 additions
+    "sacroiliac joint", "sacroiliac",
+    "compartment syndrome",
+    "supracondylar", "humerus fracture",
+    "trigger finger", "dupuytren", "carpal tunnel",
+    "shoulder arthroplasty", "shoulder replacement",
+    "periprosthetic", "prosthetic joint",
 ]
 GI_KW = [
-    "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis", # NEW: Additional GI conditions
+    "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis",
     "gastrectomy", "pancreatic insufficiency", "pancreatic enzyme", "esophageal", "hemorrhoid", "hemorrhoids", "colorectal adenoma",
     "colorectal neoplasia","esophagogastric junction", "achalasia", "bloody diarrhea", "radiation esophagitis",
+    # Title-signal additions (endoscopy/gastroscopy excluded — too many FPs on sedation trials)
+    "hepatotoxicity", "drug-induced liver", "dili",
+    "pancreatitis", "cholangitis", "biliary", "cholelithiasis",
+    "bowel prep", "colonoscopy prep",
+    # Nutrition / TPN
+    "parenteral nutrition", "enteral nutrition", "tpn",
+    "malnutrition", "nutritional deficiency",
+    # Cluster 4 additions
+    "irritable bowel syndrome", "ibs-c", "ibs-d", "ibs-m",
+    "functional dyspepsia", "postprandial distress syndrome",
+    "liver regeneration",
+    "gastric intestinal metaplasia", "intestinal metaplasia",
+    "chronic idiopathic constipation", "functional constipation",
+    "gastroparesis",
+    "fecal microbiota", "gut microbiome", "gut microbiota",
 ]
 UROLOGY_KW = [
     "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1",
@@ -164,11 +229,48 @@ UROLOGY_KW = [
     "vulvodynia", "vaginismus",
     "benign prostatic hyperplasia", "bph", "lower urinary tract",
     "renal colic", "nephrolithiasis", "kidney stone",
+    # Cluster 3 additions — contraception was missing
+    "contraception", "contraceptive",
+    # Title-signal additions
+    "cystoplasty", "bladder augmentation",
+    "vaginal aplasia", "vaginal construct",
+    "hysterectomy", "myomectomy",
+    "cystectomy", "prostatectomy",
+    "nephrectomy", "ureteroscopy",
+    # Pregnancy / obstetrics
+    "pregnant", "pregnancy", "gestational", "obstetric",
+    "postpartum", "maternal", "fetal", "foetal",
+    "lactation", "breastfeed", "cesarean", "caesarean",
+    "eclampsia", "preeclampsia", "labor induction", "labour induction",
+    "neonatal", "neonat",
+    # Sexual / reproductive health
+    "erectile", "menopause", "menopausal",
+    "dyspareunia", "vaginal atrophy", "genitourinary syndrome",
+    # Cluster 4 additions
+    "hemodialysis", "peritoneal dialysis", "end stage renal disease", "esrd",
+    "ovarian stimulation", "oocyte retrieval", "follicle stimulation",
+    "gnrh agonist trigger", "dual trigger",
+    "renal amyloidosis", "al amyloidosis",
+    "renal anemia", "anemia of chronic kidney",
+    "iron deficiency dialysis", "iron isomaltoside",
 ]
 
 OPHTHALMOLOGY_KW = [
     "macular degeneration","retinopathy","diabetic eye", "retinal detachment",
     "rhegmatogenous retinal", "macular telangiectasia", "vitreoretinal",
+    # Cluster 3 additions
+    "cataract", "age-related cataract", "age related cataract",
+    "glaucoma", "intraocular pressure",
+    # Title-signal additions
+    "myopia", "myopic", "staphyloma",
+    "keratoconus", "corneal",
+    "conjunctivitis", "blepharitis", "eyelid",
+    "vitreous", "macular hole",
+    # Cluster 4 additions
+    "retinitis pigmentosa", "x-linked retinitis pigmentosa",
+    "stargardt", "stargardt disease",
+    "optic neuritis", "optic neuropathy",
+    "neuromyelitis optica", "nmosd",
 ]
 
 DENTAL_KW = [
@@ -177,6 +279,18 @@ DENTAL_KW = [
     "pulpotomy", "extraction socket", "gingivitis", "periodontitis",
     "bleaching sensitivity", "tooth sensitivity", "dental sensitivity",
     "oral care", "endodontic", "root canal",
+    # Title-signal additions
+    "tmj", "temporomandibular",
+    "aphthous", "oral ulcer", "aphthous ulcer",
+    "interdental", "xerostomia", "dry mouth", "salivary",
+    "malocclusion",
+    # Cluster 4 additions
+    "dental caries", "caries",
+    "luting cement", "dental cement", "resin cement",
+    "vital pulp therapy", "pulp capping",
+    "dental anxiety",
+    "tooth extraction", "alveolar",
+    "fissure sealant", "pit and fissure",
 ]
 
 DERMATOLOGY_KW = [
@@ -201,7 +315,18 @@ HEMATOLOGY_KW = [
     "thrombocytopenia", "anemia non-malignant",
     "g-csf", "filgrastim", "plerixafor", "thalassemia", "alpha-thalassemia", "beta-thalassemia",
     "monoclonal gammopathy",
-    "neuroblastoma",  
+    "neuroblastoma",
+    # Cluster 4 additions
+    "hemophilia", "haemophilia",
+    "hemophilia a", "hemophilia b",
+    "platelet disorder", "familial platelet disorder",
+    "platelet transfusion refractoriness",
+    "runx1",
+    "sickle cell disease", "sickle cell",
+    "aplastic anemia", "aplastic anaemia",
+    "paroxysmal nocturnal hemoglobinuria", "pnh",
+    "immune thrombocytopenia", "itp",
+    "von willebrand", "factor viii", "factor ix",
 ]
 
 RESPIRATORY_KW = [
@@ -210,6 +335,23 @@ RESPIRATORY_KW = [
     "pulmonary fibrosis", "interstitial lung disease",
     "fibrosing interstitial lung", "lung disease",
     "respiratory infection", "otitis media",
+    # Cluster 3 additions
+    "chronic rhinosinusitis", "rhinosinusitis", "sinusitis",
+    "nasal polyp", "nasal polyps",
+    # Title-signal additions
+    "pleurodesis", "pleural effusion", "pleural empyema", "empyema",
+    "pneumothorax", "air leak",
+    "bronchiectasis", "sleep apnea", "obstructive sleep",
+    # ENT
+    "otitis", "rhinitis", "tonsil", "adenoid",
+    "laryngeal", "pharyngeal", "larynx", "pharynx",
+    "snoring", "nasal obstruction", "nasal congestion",
+    # Cluster 4 additions
+    "ards", "acute respiratory distress syndrome",
+    "mycobacterium avium complex", "mac pulmonary", "mac lung",
+    "chronic pulmonary aspergillosis",
+    "lung microbiome", "respiratory microbiome",
+    "neuromuscular blockade ventilation", "lung protective ventilation",
 ]
 
 # Pain patterns
