@@ -58,6 +58,29 @@ ALL_COMPARE_FIELDS = TIER1_FIELDS + TIER2_FIELDS + TIER3_FIELDS
 
 # ── Comparison helpers ──────────────────────────────────────────────────────
 
+# Date fields that need precision-aware comparison
+_DATE_FIELDS = {
+    "start_date", "completion_date", "primary_completion_date",
+    "first_posted_date", "last_update_posted_date",
+}
+
+
+def _dates_equivalent(a: Any, b: Any) -> bool:
+    """
+    Precision-aware date comparison.
+    '2029-07-31' and '2029-07' are equivalent (year-month match).
+    '2029-07-31' and '2029' are equivalent (year match).
+    """
+    if a == b:
+        return True
+    if not isinstance(a, str) or not isinstance(b, str):
+        return False
+    sa, sb = a.strip(), b.strip()
+    # Compare at the shorter precision
+    min_len = min(len(sa), len(sb))
+    return sa[:min_len] == sb[:min_len]
+
+
 def _normalize_for_compare(val: Any) -> Any:
     """Normalize values for comparison (handle None vs [] vs 0 edge cases)."""
     if val is None:
@@ -75,8 +98,9 @@ def _is_meaningful_change(field: str, old: Any, new: Any) -> bool:
     new_n = _normalize_for_compare(new)
     if old_n == new_n:
         return False
-    # If master had no data (pre-patch field was missing) and snapshot has data,
-    # that's a "populated" not a real "change" — still worth reporting but flagged
+    # Date precision check: '2029-07-31' vs '2029-07' is not a real change
+    if field in _DATE_FIELDS and _dates_equivalent(old, new):
+        return False
     return True
 
 
