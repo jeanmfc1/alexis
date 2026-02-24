@@ -21,6 +21,71 @@ NormalizedTime = str
 
 
 @dataclass
+class DesignOutcomeV2:
+    """
+    A primary or secondary outcome measure from the study protocol.
+    Maps to CT.gov outcomesModule / AACT design_outcomes table.
+    """
+    type: str                        # PRIMARY, SECONDARY, OTHER
+    measure: str                     # e.g. "Overall Survival"
+    time_frame: Optional[str] = None # e.g. "From randomization to 24 months"
+    description: Optional[str] = None
+
+
+@dataclass
+class FacilityV2:
+    """
+    A study site / facility.
+    Maps to CT.gov locationsModule / AACT facilities table.
+    """
+    name: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    status: Optional[str] = None     # RECRUITING, COMPLETED, etc.
+
+
+@dataclass
+class UpdateCategoryV2:
+    """
+    A single categorized change detected by the update categorizer.
+    One trial can have multiple UpdateCategoryV2 entries.
+    """
+    category: str                           # e.g. "status_to_recruiting", "enrollment_change"
+    tier: int                               # 1 = high impact, 2 = medium, 3 = system
+    direction: Optional[str] = None         # e.g. "enrollment_up", "from_not_yet"
+    field_name: Optional[str] = None        # CT.gov field that changed
+    old_value: Optional[object] = None
+    new_value: Optional[object] = None
+    delta: Optional[object] = None          # numeric delta if applicable
+    delta_pct: Optional[str] = None         # e.g. "+133%"
+    note: Optional[str] = None              # human-readable annotation
+
+
+@dataclass
+class LinkedTrialV2:
+    """
+    A linked trial detected by the phase linkage engine.
+    Represents a probable phase advance across NCT IDs.
+    """
+    nct_id: str                             # the other NCT ID in the pair
+    phase: Optional[str] = None             # phase of the linked trial
+    link_confidence: Optional[float] = None # 0.0–1.0
+    link_type: Optional[str] = None         # "phase_advance", "reformulation", etc.
+
+
+@dataclass
+class OutcomeAssessmentV2:
+    """
+    Pass/fail assessment for a completed trial.
+    """
+    assessment: str                         # "passed", "failed", "unknown"
+    confidence: Optional[str] = None        # "high", "medium", "low"
+    signals: List[str] = field(default_factory=list)  # evidence strings
+    assessed_at: Optional[str] = None       # ISO date of assessment
+
+
+@dataclass
 class MeshTermV2:
     """
     Controlled vocabulary term from a browse module.
@@ -65,7 +130,38 @@ class ClinicalTrialSignalV2:
     phase: Optional[str] = None
     sponsor_class: Optional[str] = None
 
-    # Dates
+    # ── NEW: Status & enrollment ──────────────────────────
+    # Maps to CT.gov statusModule.overallStatus / AACT studies.overall_status
+    overall_status: Optional[str] = None  # RECRUITING, COMPLETED, TERMINATED, etc.
+
+    # Maps to CT.gov designModule.enrollmentInfo / AACT studies.enrollment
+    enrollment: Optional[int] = None
+    enrollment_type: Optional[str] = None  # ACTUAL or ESTIMATED
+
+    # Maps to CT.gov statusModule.whyStopped / AACT studies.why_stopped
+    why_stopped: Optional[str] = None
+
+    # ── NEW: Sponsor identity ─────────────────────────────
+    # Maps to CT.gov sponsorCollaboratorsModule.leadSponsor.name / AACT sponsors.name
+    sponsor_name: Optional[str] = None
+
+    # ── NEW: Outcomes ─────────────────────────────────────
+    # Maps to CT.gov outcomesModule / AACT design_outcomes table
+    primary_outcomes: List[DesignOutcomeV2] = field(default_factory=list)
+    secondary_outcomes: List[DesignOutcomeV2] = field(default_factory=list)
+
+    # ── NEW: Facilities / study sites ─────────────────────
+    # Maps to CT.gov locationsModule / AACT facilities table
+    facilities: List[FacilityV2] = field(default_factory=list)
+    facility_count: Optional[int] = None  # convenience: len(facilities)
+
+    # ── NEW: Key protocol dates ───────────────────────────
+    # Maps to CT.gov statusModule / AACT studies table
+    start_date: Optional[PartialDate] = None
+    completion_date: Optional[PartialDate] = None
+    primary_completion_date: Optional[PartialDate] = None
+
+    # Dates (posting dates — already existed)
     first_posted_date: Union[date, str, None] = None
     last_update_posted_date: Union[date, str, None] = None
 
@@ -113,5 +209,20 @@ class ClinicalTrialSignalV2:
     # NEW: non-disease study categorization (computed in pipeline)
     study_category: Optional[str] = None
     study_category_evidence: List[str] = field(default_factory=list)
+
+    # ── NEW: Update categorization outputs ────────────────
+    # Populated by analytics/update_categorizer.py when diffing pulse vs. master
+
+    # "new" if first seen in this pulse, "existing" if in master DB, None if not yet categorized
+    update_type: Optional[str] = None
+
+    # All detected changes, multiple allowed per trial
+    update_categories: List[UpdateCategoryV2] = field(default_factory=list)
+
+    # Phase linkage: link to related trial at different phase (cross-NCT)
+    linked_from: Optional[LinkedTrialV2] = None
+
+    # Outcome assessment for completed trials
+    outcome: Optional[OutcomeAssessmentV2] = None
 
 
