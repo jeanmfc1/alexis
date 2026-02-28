@@ -69,50 +69,41 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
 
     # --- 2) Always try MeSH tree refinement (highest quality) ---
 
-    # Build set of drug intervention names for filtering (lowercased for comparison).
-    # intervention_meshes contains meshes for ALL intervention types in the trial —
-    # we only want meshes that correspond to DRUG interventions.
-    drug_intervention_names: set[str] = {
-        iv.name.lower()
-        for iv in (getattr(trial, "interventions_all", []) or [])
-        if iv.type == "DRUG" and iv.name
-    }
-
     # Pre-computed ancestor chain, available for fallback when direct ID lookup fails.
     all_ancestors: list["MeshTermV2"] = getattr(trial, "intervention_mesh_ancestors", []) or []
 
     # collect all candidate MeSH submodalities
     mesh_submods: list[str] = []
     mesh_used = False
-    mesh_drug_names_matched = 0   # mesh terms that passed the drug-name filter
-    mesh_tree_misses = 0          # passed filter but no tree lookup hit
+    mesh_tree_hits = 0
+    mesh_tree_misses = 0
 
+    # ── FIX: removed the drug-name filter entirely ───────────────
+    # The old filter (m.term.lower() not in drug_intervention_names)
+    # was intended to skip non-drug MeSH terms like "Specimen Handling".
+    # But it rejected 83% of actual drug MeSH terms because:
+    #   (a) CT.gov types mAbs/vaccines as BIOLOGICAL, not DRUG
+    #   (b) MeSH terms differ from intervention names (salt forms, etc.)
+    #   (c) MeSH includes drugs from comparator arms not in interventions_all
+    #
+    # mesh_tree_to_submodality() already handles this: procedure MeSH IDs
+    # (Specimen Handling, Biopsy, etc.) don't match any modality tree rule
+    # and return nothing, so they're harmlessly skipped. The tree lookup
+    # IS the filter — no name-matching needed.
     for m in getattr(trial, "intervention_meshes", []) or []:
-        # Bug 2 fix: skip meshes that don't correspond to a DRUG intervention.
-        # Prevents "Specimen Handling", "Nephrectomy", etc. from polluting candidates.
-        if m.term.lower() not in drug_intervention_names:
-            continue
-
-        mesh_drug_names_matched += 1
-
-        # Try direct lookup (works when mesh_tree has this specific ID)
         mesh_result = mesh_tree_to_submodality(m.id)
         if mesh_result.modality:
             mesh_used = True
             mesh_submods.append(mesh_result.modality)
+            mesh_tree_hits += 1
         else:
             mesh_tree_misses += 1
 
-    # Bug 1 fix: if direct lookups produced nothing, fall back to the pre-computed
-    # ancestor chain. We scan once (not per-mesh) because intervention_mesh_ancestors
-    # is a flat union — scanning it multiple times would just duplicate results.
-    #
-    # We use a restricted signal set intentionally: broad ancestor terms like
-    # "Organic Chemicals" or "Proteins" are excluded because the flat list mixes
-    # ancestors from drug and non-drug interventions alike. The curated set
-    # (_DRUG_ANCESTOR_SIGNALS) contains only unambiguous modality signals.
-    # This means the ancestor walk is an upgrade-only path: it can resolve
-    # monoclonal_antibody, vaccine, oligonucleotide, or radiopharmaceutical,
+    # Ancestor fallback: if direct lookups produced nothing, scan the
+    # pre-computed ancestor chain. We use a restricted signal set
+    # (_DRUG_ANCESTOR_SIGNALS) containing only unambiguous modality
+    # signals. This means the ancestor walk is an upgrade-only path:
+    # it can resolve mAb, vaccine, oligonucleotide, or radiopharmaceutical,
     # but not small_molecule (which comes from direct lookup or text fallback).
     if not mesh_submods and all_ancestors:
         for ancestor in all_ancestors:
@@ -123,20 +114,17 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
                 # Collect all — priority resolution picks the winner below
 
     if mesh_submods:
-        # resolve priority — most specific modality wins (see bug 3 fix below)
+        # resolve priority — most specific modality wins
         return _resolve_modality_priority(mesh_submods, base_modality)
 
     if mesh_available and not mesh_used:
         trial.info_flags.append("mesh_available_but_not_used")
-        # Subflags explaining WHY mesh wasn't used:
-        if mesh_drug_names_matched == 0:
-            # No mesh term matched any drug intervention name —
-            # mesh terms are procedures, comparators, or non-drug co-interventions
-            trial.info_flags.append("mesh_reason:no_drug_name_match")
-        else:
-            # Mesh terms matched drug names but the drug isn't in the modality tree —
-            # investigational agent is too novel to have a MeSH tree entry yet
-            trial.info_flags.append("mesh_reason:drug_not_in_tree")
+        if mesh_tree_hits == 0 and mesh_tree_misses > 0:
+            # MeSH terms exist but none resolved to a modality in the tree —
+            # either all are non-drug (procedures, diagnostics) or novel agents
+            trial.info_flags.append("mesh_reason:no_tree_match")
+        elif mesh_tree_misses == 0:
+            trial.info_flags.append("mesh_reason:no_mesh_ids")
 
     # --- 3) Fallback: use legacy text matcher from ALEXIS V1 ---
 

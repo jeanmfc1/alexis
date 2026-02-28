@@ -254,8 +254,14 @@ def drug_modality_provenance_summary(
             else:
                 counts["base_only"] += 1
         else:
-            # no mesh at all → base or text
-            counts["base_only"] += 1
+            # no mesh at all → check if text fallback assigned the modality
+            text_blob = " ".join((t.interventions_text or []) + [t.title or ""])
+            text_hit = text_modality_from_text(text_blob, t.modality)
+
+            if text_hit:
+                counts["text_fallback"] += 1
+            else:
+                counts["base_only"] += 1
 
     return counts
 

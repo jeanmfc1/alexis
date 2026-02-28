@@ -49,6 +49,12 @@ ONCOLOGY_KW = [
     "squamous intraepithelial lesion", "hsil", "lsil",
     # Neuropathy / mesothelioma — safer here than in Neuro/Respiratory
     "mesothelioma", "chemotherapy-induced",
+    # Cluster 5 additions (unassigned sweep)
+    "richter syndrome", "richter transformation",
+    "plasmacytoma", "castleman disease", "multicentric castleman",
+    "meningioma", "thymoma", "chordoma",
+    "lymphoproliferative", "ebv-associated",
+    "indolent nhl",
 ]
 
 PSYCHIATRY_KW = [
@@ -69,6 +75,13 @@ PSYCHIATRY_KW = [
     "psychosis", "psychotic", "vaping cessation",
     "nicotine pouch", "nicotine use",
     "thc", "methamphetamine", "amphetamine", "benzodiazepine",
+    # Cluster 5 additions (unassigned sweep)
+    "opiate withdrawal", "opioid withdrawal",
+    "stimulant use disorder", "demoralization",
+    "narcissism", "nonsuicidal self-injury", "nssi",
+    "smoking reduction", "tobacco cessation",
+    "alcohol misuse", "alcohol drinking",
+    "major depressive episode", "major depressive disorder",
 ]
 
 INFECTIOUS_KW = [
@@ -80,6 +93,13 @@ INFECTIOUS_KW = [
     "herpes zoster", "zoster", "herpes simplex",
     "hpv", "hbv", "hcv", "rsv", "dengue",
     "clostridium", "clostridioides", "candida", "aspergillus",
+    # Cluster 5 additions (unassigned sweep)
+    "candidemia", "candidiasis", "invasive candidiasis",
+    "staphylococcus", "enterococcal",
+    "trypanosomiasis", "babesiosis", "leishmaniasis",
+    "mucormycosis", "helminth", "helminthiasis",
+    "hand foot mouth", "hfmd",
+    "endocarditis",
 ]
 IMMUNO_KW = [
     "autoimmune", "inflammation", "inflammatory", "immune", "immuno",
@@ -89,6 +109,11 @@ IMMUNO_KW = [
     # Allergy / anaphylaxis
     "allerg", "anaphylaxis", "anaphylactic",
     "food allergy", "drug allergy", "cow milk",
+    # Cluster 5 additions (unassigned sweep)
+    "vasculitis", "anca-associated vasculitis",
+    "behcet", "behçet",
+    "gvhd", "graft-versus-host",
+    "primary sjögren", "primary sjogren",
 ]
 NEURO_KW = [
     "neurology", "neurologic", "neurological", "cns", "brain", "spinal",
@@ -99,6 +124,17 @@ NEURO_KW = [
     # Title-signal additions
     "acoustic reflex", "tinnitus", "vestibular", "cochlear",
     "peripheral neuropathy", "neuropathic",
+    # Cluster 5 additions (unassigned sweep)
+    "narcolepsy", "dystonia", "focal dystonia",
+    "stuttering", "frontotemporal",
+    "spasticity", "upper limb spasticity",
+    "meniere", "menière",
+    "alternating hemiplegia",
+    "neurodegeneration",
+    "amyotrophic lateral sclerosis",
+    "multifocal motor neuropathy", "anti-mag neuropathy",
+    "radiation encephalopathy",
+    "spinocerebellar ataxia", "sca7",
 ]
 CARDIO_KW = [
     "cardiovascular", "cardiac", "heart", "myocardial", "coronary",
@@ -114,6 +150,14 @@ CARDIO_KW = [
     "vasospasm", "pulmonary hypertension", "pulmonary artery hypertension",
     "ptca", "balloon catheter", "drug-coated balloon", "dcb",
     "aneurysm", "preeclampsia", "postpartum hypertension", "pregnancy-induced hypertension",
+    # Cluster 5 additions (unassigned sweep)
+    "cardiomyopathy", "hypertrophic cardiomyopathy",
+    "myocarditis", "fontan",
+    "venous insufficiency", "chronic venous",
+    "stent restenosis", "in-stent restenosis",
+    "basilar artery", "intracranial atherosclerotic",
+    "pelvic congestion syndrome", "pelvic venous",
+    "venous malformation",
 ]
 METABOLIC_KW = [
     "metabolic", "endocrine", "diabetes", "diabetic", "obesity", "insulin",
@@ -125,6 +169,12 @@ METABOLIC_KW = [
     # Other metabolic
     "hyperuricemia", "gout", "phenylketonuria", "pku",
     "gaucher", "fabry", "pompe",
+    # Cluster 5 additions (unassigned sweep)
+    "idiopathic short stature", "growth disorder",
+    "hypogonadism", "hypogonadotropic",
+    "hyperlipoprotenemia", "hypertriglyceridemia",
+    "glycogen storage disease",
+    "bariatric", "postbariatric",
 ]
 RARE_KW = [
     "rare disease", "orphan", "genetic", "inherited", "deficiency",
@@ -161,6 +211,24 @@ RARE_KW = [
     "congenital melanocytic nevus",
     "runx1 familial platelet disorder",
     "spastic paraplegia type",
+    # Cluster 5 additions (unassigned sweep)
+    "blau syndrome",
+    "bainbridge-ropers", "bainbridge ropers",
+    "jordan syndrome", "jordan's syndrome",
+    "ppp2r5d",
+    "16p11.2 deletion",
+    "whim syndrome",
+    "cd40l", "hyper-igm", "hyperigm",
+    "slc13a5", "slc35a2",
+    "glutaric acidemia", "glutaric aciduria",
+    "combined d,l-2-hydroxyglutaric",
+    "adrenomyeloneuropathy",
+    "pik3ca", "pros ",
+    "long-chain fatty acid oxidation", "lc-faod",
+    "congenital disorder of glycosylation", "cdg",
+    "telomere biology disorder",
+    "apds",
+    "congenital melanocytic",
 ]
 MSK_KW = [
     "osteoarthritis", "musculoskeletal", "low back pain", "back pain",
@@ -196,6 +264,16 @@ MSK_KW = [
     "trigger finger", "dupuytren", "carpal tunnel",
     "shoulder arthroplasty", "shoulder replacement",
     "periprosthetic", "prosthetic joint",
+    # Cluster 5 additions (unassigned sweep)
+    "ankylosing spondylitis",
+    "cervical disc degeneration", "disc disease",
+    "lumbar disc", "lumbar stenosis",
+    "stress fracture",
+    "hamstring injury", "muscle injury",
+    "shoulder injury", "upper extremity injury",
+    "polytrauma", "orthopaedic polytrauma",
+    "coccyx", "coccygeal",
+    "connective tissue disease",
 ]
 GI_KW = [
     "cirrhosis", "steatohepatitis", "hepatic", "cholestasis", "inflammatory bowel", "crohn", "ulcerative colitis",
@@ -216,6 +294,23 @@ GI_KW = [
     "chronic idiopathic constipation", "functional constipation",
     "gastroparesis",
     "fecal microbiota", "gut microbiome", "gut microbiota",
+    # Cluster 5 additions (unassigned sweep)
+    "gastritis", "collagenous gastritis",
+    "proctitis", "radiation proctitis", "radiation-induced proctitis",
+    "enteritis", "radiation enteritis",
+    "ascites", "cirrhotic ascites", "refractory ascites",
+    "anal fissure", "chronic anal fissure",
+    "ileostomy", "loop ileostomy",
+    "bowel obstruction", "small bowel obstruction",
+    "erosive esophagitis",
+    "bile acid diarrhea", "bile acid malabsorption",
+    "masld",
+    "radiation-induced intestinal",
+    "obstructed defaecation", "obstructed defecation",
+    "colorectal polyp", "colorectal polyps",
+    "mesenteric ischemia",
+    "pilonidal sinus",
+    "breast abscess",
 ]
 UROLOGY_KW = [
     "chronic kidney disease","ckd","glomerular","proteinuria","nephropathy","apol1",
@@ -253,6 +348,23 @@ UROLOGY_KW = [
     "renal amyloidosis", "al amyloidosis",
     "renal anemia", "anemia of chronic kidney",
     "iron deficiency dialysis", "iron isomaltoside",
+    # Cluster 5 additions (unassigned sweep)
+    "ovarian aging", "premature ovarian",
+    "amenorrhea", "hypothalamic amenorrhea",
+    "luteal phase", "luteal support",
+    "embryo transfer", "frozen embryo",
+    "cervical ripening",
+    "endometrial polyp",
+    "intrauterine adhesion",
+    "chronic endometritis",
+    "posterior urethral valve",
+    "radiation cystitis",
+    "interstitial cystitis", "hunner",
+    "chronic prostatitis",
+    "nephrotic syndrome",
+    "glomerulonephritis", "fibrillary glomerulonephritis",
+    "acute tubulo-interstitial nephritis",
+    "acute kidney injury", "aki",
 ]
 
 OPHTHALMOLOGY_KW = [
@@ -271,6 +383,13 @@ OPHTHALMOLOGY_KW = [
     "stargardt", "stargardt disease",
     "optic neuritis", "optic neuropathy",
     "neuromyelitis optica", "nmosd",
+    # Cluster 5 additions (unassigned sweep)
+    "neurotrophic keratitis",
+    "amaurosis", "leber congenital amaurosis",
+    "blepharophimosis", "acquired blepharophimosis",
+    "macular degenerative", "macular degeneration",
+    "accommodative insufficiency",
+    "fuchs", "fuchs dystrophy",
 ]
 
 DENTAL_KW = [
@@ -291,6 +410,14 @@ DENTAL_KW = [
     "dental anxiety",
     "tooth extraction", "alveolar",
     "fissure sealant", "pit and fissure",
+    # Cluster 5 additions (unassigned sweep)
+    "dentinal hypersensitivity",
+    "oral lichen planus", "erosive oral lichen",
+    "socket preservation",
+    "mandibular abscess",
+    "root perforation",
+    "composite resin", "composite resins",
+    "gingival pigmentation",
 ]
 
 DERMATOLOGY_KW = [
@@ -306,6 +433,19 @@ DERMATOLOGY_KW = [
     "pemphigus", "pemphigoid", "epidermolysis bullosa",
     "ichthyosis", "psoriatic skin",
     "urticaria", "chronic urticaria", "chronic spontaneous urticaria",
+    # Cluster 5 additions (unassigned sweep)
+    "wart", "plantar wart", "cutaneous wart", "verruca",
+    "solar lentigo", "lentigo",
+    "hyperhidrosis", "palmar hyperhidrosis",
+    "lichen planus pigmentosus",
+    "dermatosis", "dermatosis papulosa nigra",
+    "dermatoporosis", "solar purpura",
+    "skin tear", "skin wound",
+    "sebaceous hyperplasia",
+    "head lice",
+    "sun damaged skin",
+    "hemangioma",
+    "canities", "grey hair", "gray hair",
 ]
 
 HEMATOLOGY_KW = [
@@ -327,6 +467,15 @@ HEMATOLOGY_KW = [
     "paroxysmal nocturnal hemoglobinuria", "pnh",
     "immune thrombocytopenia", "itp",
     "von willebrand", "factor viii", "factor ix",
+    # Cluster 5 additions (unassigned sweep)
+    "myelofibrosis", "polycythemia", "polycythaemia",
+    "xerocytosis",
+    "hemolytic", "haemolytic",
+    "red cell aplasia", "pure red cell aplasia",
+    "high altitude polycythemia",
+    "monoclonal gammopathy of undetermined",
+    "primary light-chain amyloidosis",
+    "transthyretin amyloidosis",
 ]
 
 RESPIRATORY_KW = [
@@ -352,6 +501,12 @@ RESPIRATORY_KW = [
     "chronic pulmonary aspergillosis",
     "lung microbiome", "respiratory microbiome",
     "neuromuscular blockade ventilation", "lung protective ventilation",
+    # Cluster 5 additions (unassigned sweep)
+    "bronchiolitis", "acute bronchiolitis",
+    "wheezing", "recurrent wheezing",
+    "chronic cough", "refractory cough",
+    "radiation-induced lung", "radiation lung injury",
+    "barotrauma",
 ]
 
 # Pain patterns

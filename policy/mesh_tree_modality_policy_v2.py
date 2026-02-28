@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 from classifiers.modality_result import ModalityResult
 
@@ -11,6 +13,11 @@ MeSH tree prefix -> drug submodality mapping.
 
 This module performs MeSH-only inference using MeSH treeNumber prefixes.
 It does NOT do text inference.
+
+Call warm_cache() once before forking parallel workers.
+It builds a flat {mesh_id: [tree_numbers]} dict covering both
+D-prefix descriptors and C-prefix supplementary concepts.
+Workers inherit it via fork. API fallback for cache misses only.
 """
 
 MESH_REQUEST_HEADERS = {
@@ -46,6 +53,59 @@ MESH_PREFIX_TO_SUBMODALITY: list[tuple[str, str]] = [
 ]
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# DISK CACHE — built by warm_cache(), inherited by forked workers
+# ═══════════════════════════════════════════════════════════════════════════
+
+_MESH_DIR = Path("storage/mesh")
+
+# mesh_id → [tree_numbers]  (both D-prefix and C-prefix)
+_cache: dict[str, list[str]] = {}
+_warmed: bool = False
+
+
+def warm_cache() -> None:
+    """
+    Build flat {mesh_id: [tree_numbers]} from disk files.
+    Call once in parent process before forking workers.
+    Exact same logic as the ipython test:
+      1. D-prefix: descriptors → tree_numbers directly
+      2. C-prefix: supplementary → mapped_to (strip *) → D tree_numbers
+    """
+    global _cache, _warmed
+    if _warmed:
+        return
+    _warmed = True
+
+    desc_path = _MESH_DIR / "mesh_descriptors.json"
+    if not desc_path.exists():
+        print(f"    ⚠ {desc_path} not found — using API only")
+        return
+
+    desc = json.loads(desc_path.read_text(encoding="utf-8"))
+    for did, entry in desc.items():
+        tn = entry.get("tree_numbers", [])
+        if tn:
+            _cache[did] = tn
+
+    supp_path = _MESH_DIR / "mesh_supplementary.json"
+    if supp_path.exists():
+        supp = json.loads(supp_path.read_text(encoding="utf-8"))
+        for cid, entry in supp.items():
+            mapped = entry.get("mapped_to", [])
+            nums = []
+            for d in mapped:
+                d_clean = d.lstrip("*")
+                if d_clean in _cache:
+                    nums.extend(_cache[d_clean])
+            if nums:
+                _cache[cid] = nums
+        del supp
+
+    del desc
+    print(f"    MeSH cache: {len(_cache):,} entries (disk)")
+
+
 def mesh_tree_to_submodality(mesh_id: str | None) -> ModalityResult:
     """
     Return a ModalityResult inferred strictly from MeSH tree numbers.
@@ -77,14 +137,19 @@ def mesh_tree_to_submodality(mesh_id: str | None) -> ModalityResult:
 @lru_cache(maxsize=10000)
 def _get_tree_numbers(mesh_id: str) -> list[str]:
     """
-    Retrieve tree numbers for a descriptor or its mapped descriptors.
-    - D...: descriptor -> tree numbers directly
-    - C...: supplementary concept -> map to descriptors -> tree numbers
+    Retrieve tree numbers. Disk cache first, API fallback.
+    Same logic as ipython test: cache.get(mesh_id) || API.
     """
     mesh_id = mesh_id.strip()
     if not mesh_id:
         return []
 
+    # Disk cache (covers both D and C prefix)
+    hit = _cache.get(mesh_id)
+    if hit:
+        return hit
+
+    # API fallback for cache misses
     if mesh_id.startswith("D"):
         return _fetch_tree_nums_descriptor(mesh_id)
 
@@ -92,7 +157,11 @@ def _get_tree_numbers(mesh_id: str) -> list[str]:
         mapped = _fetch_mapped_descriptors(mesh_id)
         nums: list[str] = []
         for d_id in mapped:
-            nums.extend(_fetch_tree_nums_descriptor(d_id))
+            cached = _cache.get(d_id)
+            if cached:
+                nums.extend(cached)
+            else:
+                nums.extend(_fetch_tree_nums_descriptor(d_id))
         return _dedup_preserve_order(nums)
 
     return []
@@ -100,7 +169,7 @@ def _get_tree_numbers(mesh_id: str) -> list[str]:
 
 def _fetch_tree_nums_descriptor(descr_id: str) -> list[str]:
     """
-    Fetch tree numbers for a MeSH descriptor using NLM’s MeSH REST API.
+    Fetch tree numbers for a MeSH descriptor using NLM's MeSH REST API.
     """
     descr_id = descr_id.strip()
     if not descr_id:

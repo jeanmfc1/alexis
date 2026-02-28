@@ -12,7 +12,8 @@ TEXT_PATTERN_TO_SUBMODALITY = [
     (re.compile(r"\bantibody\b", re.IGNORECASE), "monoclonal_antibody"),
     (re.compile(r"\bbispecific\b", re.IGNORECASE), "monoclonal_antibody"),
     (re.compile(r"\bbite\b", re.IGNORECASE), "monoclonal_antibody"),
-    (re.compile(r"\bmab\b", re.IGNORECASE), "monoclonal_antibody"),
+    (re.compile(r"\w{3,}mab\b", re.IGNORECASE), "monoclonal_antibody"),  # INN stems: pembrolizu-mab, tisleli-zu-mab
+    (re.compile(r"\bmab\b", re.IGNORECASE), "monoclonal_antibody"),      # standalone "mAb" mentions
 
     # Fusion proteins
     (re.compile(r"\bfusion protein\b", re.IGNORECASE), "fusion_protein"),

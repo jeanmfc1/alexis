@@ -51,6 +51,7 @@ TIER3_FIELDS = [
     "interventions_text", "arm_group_map",
     "therapeutic_area", "is_drug_trial", "modality",
     "study_intent", "study_category",
+    "last_update_posted_date",
 ]
 
 ALL_COMPARE_FIELDS = TIER1_FIELDS + TIER2_FIELDS + TIER3_FIELDS
