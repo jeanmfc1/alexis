@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALEXIS — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #07090F;
+      --surf:    #0C1118;
+      --surf2:   #111926;
+      --surf3:   #0F1620;
+      --border:  #1A2840;
+      --border2: #243350;
+      --text:    #C8D8EE;
+      --muted:   #4A5E78;
+      --dim:     #253040;
+      --cyan:    #00CFFF;
+      --blue:    #3B82F6;
+      --green:   #22C55E;
+      --amber:   #F59E0B;
+      --red:     #EF4444;
+      --purple:  #A78BFA;
+      --fh:      'Barlow Condensed', sans-serif;
+      --fb:      'Barlow', sans-serif;
+      --fm:      'JetBrains Mono', monospace;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: var(--fb); font-size: 14px; min-height: 100vh; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!--
+    DATA injected by generate_weekly_viz.py
+    To migrate to an app: replace ALEXIS_DATA with a fetch('/api/weekly-viz') call.
+  -->
+  <script>
+    const ALEXIS_DATA = /* __ALEXIS_DATA_PLACEHOLDER__ */;
+  </script>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Constants
+    // ─────────────────────────────────────────────────────────────────────
+
+    const TEAM_CFG = {
+      BD:          { accent: "#3B82F6", mid: "#93C5FD" },
+      Marketing:   { accent: "#8B5CF6", mid: "#C4B5FD" },
+      Scientific:  { accent: "#10B981", mid: "#6EE7B7" },
+      Operations:  { accent: "#F59E0B", mid: "#FCD34D" },
+    };
+
+    const MODALITY_COLORS = {
+      small_molecule:          "#3B82F6",
+      biologic:                "#8B5CF6",
+      mab:                     "#6366F1",
+      monoclonal_antibody:     "#6366F1",
+      antibody_drug_conjugate: "#EC4899",
+      adc:                     "#EC4899",
+      gene_therapy:            "#22C55E",
+      cell_therapy:            "#14B8A6",
+      radiopharmaceutical:     "#F59E0B",
+      oligonucleotide:         "#EF4444",
+      peptide:                 "#A78BFA",
+      vaccine:                 "#34D399",
+    };
+
+    const PRIORITY_CFG = {
+      HIGH: { color: "#EF4444", bg: "rgba(239,68,68,0.10)",   border: "#EF444430" },
+      MED:  { color: "#F59E0B", bg: "rgba(245,158,11,0.10)",  border: "#F59E0B30" },
+      LOW:  { color: "#4A5E78", bg: "rgba(74,94,120,0.08)",   border: "#4A5E7830" },
+    };
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    const fmt      = n  => n != null ? Number(n).toLocaleString() : "—";
+    const modColor = k  => MODALITY_COLORS[k] || MODALITY_COLORS[(k||"").toLowerCase()] || "#475569";
+    const humanMod = s  => (s||"Unknown").replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
+
+    function exportCSV(rows) {
+      const headers = ["sponsor_name","new_trial_count","modalities","top_phase","priority_score","priority_label"];
+      const lines = [
+        headers.join(","),
+        ...rows.map(r => [
+          `"${r.sponsor_name}"`,
+          r.new_trial_count,
+          `"${(r.modalities||[]).join("; ")}"`,
+          r.top_phase || "",
+          r.priority_score,
+          r.priority_label,
+        ].join(","))
+      ];
+      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "wq1_sponsor_action_table.csv";
+      a.click();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Primitives
+    // ─────────────────────────────────────────────────────────────────────
+
+    const MonoLabel = ({ children, color = "var(--muted)", style = {} }) => (
+      <div style={{ fontFamily:"var(--fm)", fontSize:10, letterSpacing:"0.14em",
+        color, textTransform:"uppercase", marginBottom:14, ...style }}>
+        {children}
+      </div>
+    );
+
+    const Badge = ({ label, color }) => (
+      <span style={{ fontFamily:"var(--fm)", fontSize:10, padding:"2px 8px",
+        borderRadius:10, color, background:color+"18",
+        border:`1px solid ${color}30`, whiteSpace:"nowrap" }}>
+        {label}
+      </span>
+    );
+
+    // Card wrapper — collapsible, matches spec behaviour
+    function Card({ id, question, vizType, color, children, defaultOpen = false }) {
+      const [open, setOpen] = useState(defaultOpen);
+      return (
+        <div style={{ borderRadius:10, border:`1px solid ${open ? color.accent+"40" : "var(--border)"}`,
+          background:"var(--surf)", overflow:"hidden", transition:"border-color 0.2s" }}>
+          <div onClick={() => setOpen(o => !o)}
+            style={{ padding:"16px 20px", cursor:"pointer",
+              display:"flex", alignItems:"flex-start", gap:12 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontFamily:"var(--fm)", fontSize:10, color:color.mid,
+                letterSpacing:"0.12em", marginBottom:6 }}>
+                {id.toUpperCase()}
+              </div>
+              <div style={{ fontSize:14, fontWeight:500, color:"var(--text)", lineHeight:1.45 }}>
+                {question}
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+              <Badge label={vizType} color={color.accent} />
+              <span style={{ color:"var(--muted)", fontSize:14, display:"inline-block",
+                transition:"transform 0.2s",
+                transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+            </div>
+          </div>
+          {open && (
+            <div style={{ padding:"0 20px 20px",
+              borderTop:`1px solid ${color.accent}20` }}>
+              {children}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Placeholder for questions not yet implemented
+    function Placeholder({ id, question, vizType, color }) {
+      return (
+        <div style={{ borderRadius:10, border:"1px solid var(--border)",
+          background:"var(--surf)", padding:"16px 20px", opacity:0.45 }}>
+          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
+            <div>
+              <div style={{ fontFamily:"var(--fm)", fontSize:10, color:color.mid,
+                letterSpacing:"0.12em", marginBottom:6 }}>
+                {id.toUpperCase()}
+              </div>
+              <div style={{ fontSize:14, fontWeight:500, color:"var(--text)", lineHeight:1.45 }}>
+                {question}
+              </div>
+            </div>
+            <Badge label={vizType} color={color.accent} />
+          </div>
+          <div style={{ marginTop:14, fontFamily:"var(--fm)", fontSize:10,
+            color:"var(--dim)", letterSpacing:"0.1em" }}>
+            — PENDING IMPLEMENTATION —
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // wq1 — BD — Action Table with Priority Score
+    // Data source: ALEXIS_DATA.wq1
+    // Each row = one INDUSTRY sponsor with new drug trial registrations this week
+    // ─────────────────────────────────────────────────────────────────────
+
+    function WQ1ActionTable({ data, color }) {
+      const [expanded, setExpanded] = useState({});
+      const [sortCol, setSortCol]   = useState("priority_score");
+      const [sortDir, setSortDir]   = useState(-1);  // -1 desc, +1 asc
+
+      const rows = useMemo(() => {
+        if (!data?.length) return [];
+        return [...data].sort((a, b) => {
+          const av = a[sortCol] ?? 0;
+          const bv = b[sortCol] ?? 0;
+          if (typeof av === "string") return sortDir * av.localeCompare(bv);
+          return sortDir * (av - bv);
+        });
+      }, [data, sortCol, sortDir]);
+
+      if (!data?.length) return (
+        <div style={{ fontFamily:"var(--fm)", fontSize:12, color:"var(--muted)", padding:"20px 0" }}>
+          No INDUSTRY drug trial new registrations found in this window.<br />
+          <span style={{ color:"var(--dim)", fontSize:11 }}>
+            Verify that the enriched file was loaded and matches this snapshot window.
+          </span>
+        </div>
+      );
+
+      const toggleSort = col => {
+        if (sortCol === col) setSortDir(d => d * -1);
+        else { setSortCol(col); setSortDir(-1); }
+      };
+
+      const TH = ({ col, label, align = "left", width }) => {
+        const active = sortCol === col;
+        return (
+          <th onClick={() => toggleSort(col)}
+            style={{ padding:"8px 12px", textAlign:align,
+              fontFamily:"var(--fm)", fontSize:10, letterSpacing:"0.12em",
+              color: active ? color.mid : "var(--muted)",
+              cursor:"pointer", whiteSpace:"nowrap", userSelect:"none",
+              width: width || "auto",
+              borderBottom:`2px solid ${active ? color.accent : "var(--border)"}` }}>
+            {label}{active ? (sortDir === -1 ? " ↓" : " ↑") : ""}
+          </th>
+        );
+      };
+
+      const totalNew = rows.reduce((s, r) => s + r.new_trial_count, 0);
+
+      return (
+        <div>
+          {/* Summary line + export */}
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+            <MonoLabel style={{ marginBottom:0 }}>
+              {rows.length} sponsors · {totalNew} new trials this window
+            </MonoLabel>
+            <div style={{ flex:1 }} />
+            <button onClick={() => exportCSV(rows)}
+              style={{ fontFamily:"var(--fm)", fontSize:10, padding:"4px 12px",
+                background:"transparent", border:"1px solid var(--border2)",
+                borderRadius:4, color:"var(--muted)", cursor:"pointer",
+                letterSpacing:"0.1em" }}>
+              EXPORT CSV
+            </button>
+          </div>
+
+          {/* Priority legend */}
+          <div style={{ display:"flex", gap:14, marginBottom:14, alignItems:"center" }}>
+            {Object.entries(PRIORITY_CFG).map(([lbl, cfg]) => (
+              <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                <div style={{ width:8, height:8, borderRadius:2,
+                  background:cfg.color, opacity:0.8 }} />
+                <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                  color:cfg.color, letterSpacing:"0.08em" }}>
+                  {lbl}
+                </span>
+              </div>
+            ))}
+            <span style={{ fontFamily:"var(--fm)", fontSize:10, color:"var(--dim)" }}>
+              score = Σ modality_weight × phase_weight per trial
+            </span>
+          </div>
+
+          {/* Table */}
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse" }}>
+              <thead>
+                <tr style={{ background:"var(--surf2)" }}>
+                  <TH col="sponsor_name"    label="SPONSOR" />
+                  <TH col="new_trial_count" label="NEW"    align="right" width={56} />
+                  <th style={{ padding:"8px 12px", fontFamily:"var(--fm)", fontSize:10,
+                    letterSpacing:"0.12em", color:"var(--muted)", textAlign:"left",
+                    borderBottom:"2px solid var(--border)" }}>
+                    MODALITY MIX
+                  </th>
+                  <TH col="top_phase"      label="TOP PHASE" width={100} />
+                  <TH col="priority_score" label="SCORE"   align="right" width={72} />
+                  <th style={{ padding:"8px 12px", fontFamily:"var(--fm)", fontSize:10,
+                    letterSpacing:"0.12em", color:"var(--muted)",
+                    borderBottom:"2px solid var(--border)", width:90 }}>
+                    PRIORITY
+                  </th>
+                  <th style={{ width:28, borderBottom:"2px solid var(--border)" }} />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => {
+                  const isOpen = !!expanded[row.sponsor_name];
+                  const pri    = PRIORITY_CFG[row.priority_label] || PRIORITY_CFG.LOW;
+                  return (
+                    <React.Fragment key={row.sponsor_name}>
+
+                      {/* Main row */}
+                      <tr onClick={() => setExpanded(e => ({
+                            ...e, [row.sponsor_name]: !isOpen }))}
+                        style={{ cursor:"pointer",
+                          background: isOpen ? "var(--surf3)"
+                            : i % 2 === 0 ? "var(--surf)" : "transparent",
+                          borderTop:"1px solid var(--border)" }}>
+
+                        <td style={{ padding:"10px 12px", fontFamily:"var(--fm)",
+                          fontSize:12, color:"var(--text)",
+                          maxWidth:260, overflow:"hidden",
+                          textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                          {row.sponsor_name}
+                        </td>
+
+                        <td style={{ padding:"10px 12px", textAlign:"right",
+                          fontFamily:"var(--fm)", fontSize:15, fontWeight:600,
+                          color:color.mid }}>
+                          {row.new_trial_count}
+                        </td>
+
+                        <td style={{ padding:"10px 12px" }}>
+                          <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+                            {(row.modalities||[]).slice(0,3).map(mod => (
+                              <span key={mod} style={{ fontFamily:"var(--fm)", fontSize:10,
+                                padding:"2px 6px", borderRadius:8,
+                                background:modColor(mod)+"20", color:modColor(mod),
+                                border:`1px solid ${modColor(mod)}30` }}>
+                                {humanMod(mod)}
+                              </span>
+                            ))}
+                            {(row.modalities||[]).length > 3 && (
+                              <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                                color:"var(--muted)" }}>
+                                +{row.modalities.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td style={{ padding:"10px 12px", fontFamily:"var(--fm)",
+                          fontSize:12, color:"var(--muted)" }}>
+                          {row.top_phase || "—"}
+                        </td>
+
+                        <td style={{ padding:"10px 12px", textAlign:"right",
+                          fontFamily:"var(--fm)", fontSize:12, color:"var(--text)" }}>
+                          {row.priority_score}
+                        </td>
+
+                        <td style={{ padding:"10px 12px" }}>
+                          <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                            fontWeight:600, padding:"3px 10px", borderRadius:10,
+                            color:pri.color, background:pri.bg,
+                            border:`1px solid ${pri.border}` }}>
+                            {row.priority_label}
+                          </span>
+                        </td>
+
+                        <td style={{ padding:"10px 8px", color:"var(--muted)",
+                          fontSize:12, textAlign:"center",
+                          transition:"transform 0.15s",
+                          transform: isOpen ? "rotate(180deg)" : "none" }}>
+                          ▾
+                        </td>
+                      </tr>
+
+                      {/* Expanded trial list */}
+                      {isOpen && (
+                        <tr style={{ background:"var(--surf3)" }}>
+                          <td colSpan={7} style={{ padding:"0 12px 14px 36px" }}>
+                            <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                              <thead>
+                                <tr>
+                                  {["NCT ID","TITLE","MODALITY","PHASE"].map(h => (
+                                    <th key={h} style={{ padding:"6px 8px", textAlign:"left",
+                                      fontFamily:"var(--fm)", fontSize:9,
+                                      color:"var(--dim)", letterSpacing:"0.12em",
+                                      borderBottom:"1px solid var(--border)" }}>
+                                      {h}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(row.trials||[]).map((t, ti) => (
+                                  <tr key={t.nct_id || ti}
+                                    style={{ borderTop:"1px solid var(--border)" }}>
+                                    <td style={{ padding:"5px 8px",
+                                      fontFamily:"var(--fm)", fontSize:11,
+                                      color:"var(--cyan)", whiteSpace:"nowrap" }}>
+                                      <a href={`https://clinicaltrials.gov/expert-search?term=${t.nct_id}`}
+                                         target="_blank" rel="noopener noreferrer"
+                                         style={{ color:"var(--cyan)", textDecoration:"none" }}
+                                         onMouseOver={e => e.target.style.textDecoration="underline"}
+                                         onMouseOut={e  => e.target.style.textDecoration="none"}>
+                                        {t.nct_id}
+                                      </a>
+                                    </td>
+                                    <td style={{ padding:"5px 8px", fontSize:12,
+                                      color:"var(--text)", maxWidth:420,
+                                      overflowX:"auto", whiteSpace:"nowrap" }}>
+                                      {t.title}
+                                    </td>
+                                    <td style={{ padding:"5px 8px" }}>
+                                      <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                                        padding:"2px 6px", borderRadius:8,
+                                        background:modColor(t.modality)+"20",
+                                        color:modColor(t.modality) }}>
+                                        {humanMod(t.modality)}
+                                      </span>
+                                    </td>
+                                    <td style={{ padding:"5px 8px",
+                                      fontFamily:"var(--fm)", fontSize:11,
+                                      color:"var(--muted)" }}>
+                                      {t.phase || "—"}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      )}
+
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Weekly BD cards
+    // ─────────────────────────────────────────────────────────────────────
+
+    function WeeklyBD({ data, color }) {
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <Card id="wq1" color={color} defaultOpen
+            question="Which sponsors filed new trials this week that we should contact?"
+            vizType="Action Table with Priority Score">
+            <WQ1ActionTable data={data?.wq1} color={color} />
+          </Card>
+
+          <Placeholder id="wq2" color={color}
+            question="Are any of our existing clients filing new trials we should know about?"
+            vizType="Client Alert Cards" />
+
+          <Placeholder id="wq3" color={color}
+            question="What's the competitive landscape signal this week?"
+            vizType="Deviation Bars (this week vs. 4-week average)" />
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // wq4 — Marketing — Social Stat Cards
+    // Data source: ALEXIS_DATA.wq4  (list of 4 card objects)
+    // Each card has: id, title, value, sub, detail[{label,value,pct?}], note
+    // Designed to be screenshot-ready — large value, clean breakdown rows
+    // ─────────────────────────────────────────────────────────────────────
+
+    function WQ4StatCards({ data, color }) {
+      if (!data?.length) return (
+        <div style={{ fontFamily:"var(--fm)", fontSize:12, color:"var(--muted)",
+          padding:"20px 0" }}>
+          No summary data available. Verify snapshot was built with summary_v2.py.
+        </div>
+      );
+
+      // Card 2 (Top TA) has a long string value — shrink font for it
+      const valueFontSize = c => c.id === "wq4_c2" ? 18 : 32;
+
+      return (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:14 }}>
+          {data.map(card => (
+            <div key={card.id}
+              style={{ background:"var(--surf2)", borderRadius:10,
+                border:`1px solid ${color.accent}22`,
+                padding:"20px 22px", display:"flex", flexDirection:"column", gap:12 }}>
+
+              {/* Card header */}
+              <div>
+                <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                  color:color.mid, letterSpacing:"0.16em",
+                  textTransform:"uppercase", marginBottom:6 }}>
+                  {card.title}
+                </div>
+                <div style={{ fontFamily:"var(--fh)", fontSize:valueFontSize(card),
+                  fontWeight:700, color:"var(--text)", lineHeight:1.1,
+                  letterSpacing:"0.01em" }}>
+                  {card.value}
+                </div>
+                <div style={{ fontFamily:"var(--fm)", fontSize:11,
+                  color:"var(--muted)", marginTop:4 }}>
+                  {card.sub}
+                </div>
+              </div>
+
+              {/* Detail rows */}
+              {card.detail?.length > 0 && (
+                <div style={{ borderTop:`1px solid ${color.accent}18`,
+                  paddingTop:10, display:"flex", flexDirection:"column", gap:6 }}>
+                  {card.detail.map((row, i) => {
+                    const maxVal = Math.max(...card.detail.map(r => r.value));
+                    const barPct = maxVal > 0 ? (row.value / maxVal) * 100 : 0;
+                    return (
+                      <div key={i}>
+                        <div style={{ display:"flex", justifyContent:"space-between",
+                          marginBottom:3 }}>
+                          <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                            color:"var(--text)" }}>
+                            {humanMod(row.label)}
+                          </span>
+                          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                            <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                              fontWeight:600, color:"var(--text)" }}>
+                              {fmt(row.value)}
+                            </span>
+                            {row.pct != null && (
+                              <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                                color:"var(--muted)", minWidth:36, textAlign:"right" }}>
+                                {row.pct}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Mini bar */}
+                        <div style={{ height:3, background:"var(--border)",
+                          borderRadius:2 }}>
+                          <div style={{ width:`${barPct}%`, height:"100%",
+                            background:color.accent, borderRadius:2,
+                            opacity:0.6 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Note */}
+              <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                color:"var(--dim)", marginTop:"auto", letterSpacing:"0.06em" }}>
+                {card.note}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function WeeklyMarketing({ data, color }) {
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <Card id="wq4" color={color} defaultOpen
+            question="What's the headline stat for this week's social/newsletter content?"
+            vizType="Social-Ready Stat Cards">
+            <WQ4StatCards data={data?.wq4} color={color} />
+          </Card>
+
+          <Placeholder id="wq5" color={color}
+            question="Are there trending modalities or TAs we should write about?"
+            vizType="Over/Under Index Chart" />
+
+          <Placeholder id="wq6" color={color}
+            question="Which conference-relevant TAs had notable activity this week?"
+            vizType="Conference Prep Snapshot" />
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // wq7 — Scientific — TA × Modality Bubble Matrix
+    // ─────────────────────────────────────────────────────────────────────
+
+    const MODALITY_ABBR = {
+      small_molecule:"SM", biologic:"Bio", monoclonal_antibody:"mAb",
+      mab:"mAb", antibody_drug_conjugate:"ADC", adc:"ADC",
+      gene_therapy:"GT", cell_therapy:"CT", cell_gene_therapy:"CGT",
+      radiopharmaceutical:"Radio", oligonucleotide:"Oligo", peptide:"Pep",
+      vaccine:"Vax", combination:"Combo", antibody_protein:"Ab/Pr",
+      fusion_protein:"Fusion", other_drug:"Other",
+    };
+
+    // Parse "2025 Q4" or "2025_Q4" from a filename like master_DB_2025_Q4.json
+    function parseMasterDbLabel(filename) {
+      if (!filename) return "master DB";
+      const m = filename.match(/(\d{4})[_\s]?(Q\d)/i);
+      if (m) return `${m[1]} ${m[2].toUpperCase()}`;
+      const m2 = filename.match(/(\d{4})/);
+      return m2 ? m2[1] : filename.replace(/\.json$/,"").replace(/master_DB_?/i,"");
+    }
+
+    function heatToColor(heat) {
+      if (heat === null || heat === undefined) {
+        return { bg:"var(--surf2)", border:"var(--border)", glow:"none" };
+      }
+      if (heat >= 0.15) {
+        const t = Math.min(heat, 1);
+        const a1 = (0.12 + t * 0.40).toFixed(2);
+        const a2 = (0.40 + t * 0.45).toFixed(2);
+        return { bg:`rgba(239,68,68,${a1})`, border:`rgba(239,68,68,${a2})`,
+                 glow:`0 0 10px rgba(239,68,68,${(t*0.5).toFixed(2)})` };
+      }
+      if (heat <= -0.15) {
+        const t = Math.min(Math.abs(heat), 1);
+        const a1 = (0.08 + t * 0.22).toFixed(2);
+        const a2 = (0.25 + t * 0.35).toFixed(2);
+        return { bg:`rgba(59,130,246,${a1})`, border:`rgba(59,130,246,${a2})`,
+                 glow:`0 0 8px rgba(59,130,246,${(t*0.4).toFixed(2)})` };
+      }
+      return { bg:"rgba(200,216,238,0.07)", border:"rgba(200,216,238,0.18)", glow:"none" };
+    }
+
+    const PHASE_ORDER = {
+      "PHASE3":1,"PHASE2/PHASE3":2,"PHASE2":3,"PHASE1/PHASE2":4,
+      "PHASE1":5,"EARLY_PHASE1":6,"PHASE4":7,"NA":8,"—":9,
+    };
+    function phaseSort(a, b) {
+      return (PHASE_ORDER[a.phase]||99) - (PHASE_ORDER[b.phase]||99);
+    }
+
+    const PHASE_COLORS = {
+      "PHASE3":"#22C55E","PHASE2/PHASE3":"#86EFAC","PHASE2":"#38BDF8",
+      "PHASE1/PHASE2":"#7DD3FC","PHASE1":"#A78BFA","EARLY_PHASE1":"#C4B5FD",
+      "PHASE4":"#FB923C","NA":"#6B7280","—":"#4B5563",
+    };
+
+    function WQ7BubbleMatrix({ data, color }) {
+      const [openCell, setOpenCell] = useState(null);
+      const [tooltip,  setTooltip]  = useState(null);
+
+      if (!data?.available) return (
+        <div style={{ fontFamily:"var(--fm)", fontSize:12, color:"var(--muted)", padding:"20px 0" }}>
+          No data — enriched file not loaded or no new drug registrations this window.
+        </div>
+      );
+
+      const { rows, columns, cells, row_totals, col_totals, grand_total,
+              has_heat, heat_mode, prior_weeks_used, prior_window_labels,
+              week_total, db_total } = data;
+
+      const masterLabel   = parseMasterDbLabel(ALEXIS_DATA?.master_db_meta?.filename);
+      const maxCount      = Math.max(...Object.values(cells).map(c => c.count), 1);
+      const bubbleSize    = n => n === 0 ? 0 : Math.max(8, Math.sqrt(n / maxCount) * 40);
+
+      const COL_W   = 66;
+      const ROW_H   = 52;
+      const LABEL_W = 194;
+
+      // Heat badge label
+      const heatBadge = heat_mode === "rolling_avg"
+        ? `✓ heat vs ${prior_weeks_used}-week rolling avg`
+        : heat_mode === "master_db"
+        ? `✓ heat vs ${masterLabel} baseline`
+        : null;
+
+      return (
+        <div>
+          {/* Summary strip */}
+          <div style={{ display:"flex", gap:14, marginBottom:16,
+            alignItems:"center", flexWrap:"wrap" }}>
+            <div style={{ fontFamily:"var(--fm)", fontSize:12 }}>
+              <span style={{ color:color.mid, fontWeight:600 }}>{fmt(grand_total)}</span>
+              <span style={{ color:"var(--muted)" }}> new drug registrations this window</span>
+            </div>
+            {heatBadge && (
+              <div style={{ fontFamily:"var(--fm)", fontSize:10,
+                color:"var(--green)", background:"rgba(34,197,94,0.08)",
+                border:"1px solid rgba(34,197,94,0.3)", borderRadius:4, padding:"3px 8px" }}>
+                {heatBadge}
+              </div>
+            )}
+            {has_heat && (
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:"auto" }}>
+                <span style={{ fontFamily:"var(--fm)", fontSize:9,
+                  color:"var(--dim)", letterSpacing:"0.1em" }}>HEAT</span>
+                {[
+                  { label:"cooler",   bg:"rgba(59,130,246,0.22)",  border:"rgba(59,130,246,0.5)" },
+                  { label:"baseline", bg:"rgba(200,216,238,0.07)", border:"rgba(200,216,238,0.18)" },
+                  { label:"hotter",   bg:"rgba(239,68,68,0.38)",   border:"rgba(239,68,68,0.7)" },
+                ].map(s => (
+                  <div key={s.label} style={{ display:"flex", alignItems:"center", gap:4 }}>
+                    <div style={{ width:12, height:12, borderRadius:3,
+                      background:s.bg, border:`1px solid ${s.border}` }} />
+                    <span style={{ fontFamily:"var(--fm)", fontSize:9, color:"var(--muted)" }}>
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Prior week labels */}
+          {prior_window_labels?.length > 0 && (
+            <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
+              <span style={{ fontFamily:"var(--fm)", fontSize:9,
+                color:"var(--dim)", letterSpacing:"0.1em", alignSelf:"center" }}>
+                AVG OVER:
+              </span>
+              {prior_window_labels.map((lbl, i) => (
+                <span key={i} style={{ fontFamily:"var(--fm)", fontSize:9,
+                  color:"var(--muted)", background:"var(--surf2)",
+                  border:"1px solid var(--border)", borderRadius:4,
+                  padding:"2px 7px" }}>
+                  {lbl}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Matrix */}
+          <div style={{ overflowX:"auto" }}>
+            <div style={{ display:"inline-block",
+              minWidth: LABEL_W + columns.length * COL_W + 56 }}>
+
+              {/* Column headers */}
+              <div style={{ display:"flex", marginLeft:LABEL_W }}>
+                {columns.map(mod => (
+                  <div key={mod} style={{ width:COL_W, flexShrink:0,
+                    textAlign:"center", paddingBottom:8 }}>
+                    <div style={{ fontFamily:"var(--fm)", fontSize:10,
+                      color:modColor(mod), letterSpacing:"0.06em", fontWeight:600 }}>
+                      {MODALITY_ABBR[mod] || mod.slice(0,6)}
+                    </div>
+                    <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                      color:"var(--muted)", marginTop:1 }}>
+                      {fmt(col_totals[mod])}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ width:56, flexShrink:0, textAlign:"right",
+                  fontFamily:"var(--fm)", fontSize:9, color:"var(--dim)",
+                  paddingBottom:8, paddingRight:4, alignSelf:"flex-end" }}>
+                  TOTAL
+                </div>
+              </div>
+
+              {/* Rows + inline expanded panel */}
+              {rows.map((ta, ri) => (
+                <div key={ta}>
+                  <div style={{ display:"flex", alignItems:"center",
+                    borderTop:"1px solid var(--border)",
+                    background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}>
+
+                    <div title={ta} style={{ width:LABEL_W, flexShrink:0,
+                      padding:"0 10px 0 0", fontFamily:"var(--fb)", fontSize:11,
+                      color:"var(--text)", overflow:"hidden", textOverflow:"ellipsis",
+                      whiteSpace:"nowrap", height:ROW_H,
+                      display:"flex", alignItems:"center" }}>
+                      {ta}
+                    </div>
+
+                    {columns.map(mod => {
+                      const key  = `${ta}||${mod}`;
+                      const cell = cells[key] || { count:0, heat:null, trials:[] };
+                      const sz   = bubbleSize(cell.count);
+                      const hc   = heatToColor(cell.heat);
+                      const isActive = openCell === key;
+                      return (
+                        <div key={mod}
+                          style={{ width:COL_W, height:ROW_H, flexShrink:0,
+                            display:"flex", alignItems:"center", justifyContent:"center",
+                            cursor: cell.count > 0 ? "pointer" : "default" }}
+                          onMouseEnter={e => {
+                            if (cell.count > 0) {
+                              const r = e.currentTarget.getBoundingClientRect();
+                              setTooltip({ cell, ta, mod, x:r.left, y:r.top });
+                            }
+                          }}
+                          onMouseLeave={() => setTooltip(null)}
+                          onClick={() => cell.count > 0 &&
+                            setOpenCell(prev => prev === key ? null : key)}>
+                          {cell.count > 0 && (
+                            <div style={{
+                              width:sz, height:sz, borderRadius:"50%",
+                              background:hc.bg, border:`1.5px solid ${hc.border}`,
+                              display:"flex", alignItems:"center", justifyContent:"center",
+                              transition:"all 0.15s",
+                              transform: isActive ? "scale(1.2)" : "scale(1)",
+                              boxShadow: isActive ? hc.glow : "none",
+                              outline: isActive ? `2px solid ${hc.border}` : "none",
+                              outlineOffset: 3,
+                            }}>
+                              {sz >= 22 && (
+                                <span style={{ fontFamily:"var(--fm)",
+                                  fontSize: sz >= 30 ? 11 : 9, fontWeight:600,
+                                  color:"var(--text)", userSelect:"none" }}>
+                                  {cell.count}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    <div style={{ width:56, flexShrink:0, textAlign:"right",
+                      paddingRight:4, fontFamily:"var(--fm)", fontSize:11,
+                      fontWeight:600, color:color.mid }}>
+                      {fmt(row_totals[ta])}
+                    </div>
+                  </div>
+
+                  {/* Inline expanded panel */}
+                  {columns.some(mod => openCell === `${ta}||${mod}`) && (() => {
+                    const activeKey  = columns.map(m => `${ta}||${m}`).find(k => openCell === k);
+                    const activeCell = cells[activeKey] || {};
+                    const activeMod  = activeKey ? activeKey.split("||")[1] : "";
+                    const sorted     = [...(activeCell.trials || [])].sort(phaseSort);
+                    return (
+                      <div style={{ borderTop:"1px solid var(--border2)",
+                        background:"var(--surf2)", padding:"12px 16px 16px",
+                        marginLeft: LABEL_W }}>
+
+                        {/* Panel header */}
+                        <div style={{ display:"flex", alignItems:"center",
+                          gap:10, marginBottom:10, flexWrap:"wrap" }}>
+                          <div style={{ width:10, height:10, borderRadius:"50%",
+                            background:modColor(activeMod), flexShrink:0 }} />
+                          <span style={{ fontFamily:"var(--fb)", fontSize:12,
+                            color:"var(--text)" }}>
+                            {ta} — {humanMod(activeMod)}
+                          </span>
+                          <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                            color:color.mid }}>
+                            {activeCell.count} trial{activeCell.count !== 1 ? "s" : ""} this week
+                          </span>
+                          {activeCell.prior_avg_count != null && (
+                            <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                              color:"var(--muted)" }}>
+                              · {prior_weeks_used}-week avg: {activeCell.prior_avg_count.toFixed(1)}
+                            </span>
+                          )}
+                          {activeCell.baseline_n != null && (
+                            <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                              color:"var(--dim)" }}>
+                              · {masterLabel} total: {fmt(activeCell.baseline_n)}
+                            </span>
+                          )}
+                          {activeCell.heat_label && (
+                            <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                              fontWeight:600,
+                              color: activeCell.heat >= 0.15 ? "#EF4444"
+                                   : activeCell.heat <= -0.15 ? "#60A5FA"
+                                   : "var(--muted)" }}>
+                              {activeCell.heat_label}
+                            </span>
+                          )}
+                          <button onClick={() => setOpenCell(null)}
+                            style={{ marginLeft:"auto", fontFamily:"var(--fm)",
+                              fontSize:10, color:"var(--muted)", background:"transparent",
+                              border:"none", cursor:"pointer", padding:"2px 6px" }}>
+                            ✕ close
+                          </button>
+                        </div>
+
+                        {/* Scrollable trial table */}
+                        <div style={{ maxHeight:260, overflowY:"auto",
+                          border:"1px solid var(--border)", borderRadius:6 }}>
+                          <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                            <thead style={{ position:"sticky", top:0,
+                              background:"var(--surf3)", zIndex:1 }}>
+                              <tr>
+                                {["NCT ID","TITLE","PHASE"].map(h => (
+                                  <th key={h} style={{ padding:"6px 10px",
+                                    fontFamily:"var(--fm)", fontSize:9,
+                                    color:"var(--dim)", letterSpacing:"0.12em",
+                                    textAlign:"left", fontWeight:500,
+                                    borderBottom:"1px solid var(--border)" }}>
+                                    {h}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sorted.map((t, ti) => {
+                                const pc = PHASE_COLORS[t.phase] || "#6B7280";
+                                return (
+                                  <tr key={t.nct_id || ti}
+                                    style={{ borderTop: ti > 0 ? "1px solid var(--border)" : "none",
+                                      background: ti % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                                    <td style={{ padding:"5px 10px", whiteSpace:"nowrap" }}>
+                                      <a href={`https://clinicaltrials.gov/expert-search?term=${t.nct_id}`}
+                                         target="_blank" rel="noopener noreferrer"
+                                         style={{ fontFamily:"var(--fm)", fontSize:11,
+                                           color:"var(--cyan)", textDecoration:"none" }}
+                                         onMouseOver={e => e.target.style.textDecoration="underline"}
+                                         onMouseOut={e  => e.target.style.textDecoration="none"}>
+                                        {t.nct_id}
+                                      </a>
+                                    </td>
+                                    <td style={{ padding:"5px 10px", fontSize:11,
+                                      color:"var(--text)", maxWidth:480,
+                                      overflowX:"auto", whiteSpace:"nowrap" }}>
+                                      {t.title}
+                                    </td>
+                                    <td style={{ padding:"5px 10px", whiteSpace:"nowrap" }}>
+                                      <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                                        padding:"2px 7px", borderRadius:8,
+                                        background:(PHASE_COLORS[t.phase]||"#6B7280")+"18",
+                                        color:pc, border:`1px solid ${pc}30` }}>
+                                        {t.phase}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ))}
+
+              {/* Column totals footer */}
+              <div style={{ display:"flex", borderTop:"1px solid var(--border2)", marginTop:2 }}>
+                <div style={{ width:LABEL_W, flexShrink:0, fontFamily:"var(--fm)",
+                  fontSize:9, color:"var(--dim)", padding:"6px 10px 0 0",
+                  textAlign:"right", letterSpacing:"0.1em" }}>
+                  TOTAL
+                </div>
+                {columns.map(mod => (
+                  <div key={mod} style={{ width:COL_W, flexShrink:0, textAlign:"center",
+                    fontFamily:"var(--fm)", fontSize:11, fontWeight:600,
+                    color:modColor(mod), paddingTop:6 }}>
+                    {fmt(col_totals[mod])}
+                  </div>
+                ))}
+                <div style={{ width:56, flexShrink:0, textAlign:"right",
+                  paddingRight:4, fontFamily:"var(--fm)", fontSize:12,
+                  fontWeight:700, color:"var(--cyan)", paddingTop:6 }}>
+                  {fmt(grand_total)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Modality key */}
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginTop:14 }}>
+            {columns.map(mod => (
+              <div key={mod} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:modColor(mod) }} />
+                <span style={{ fontFamily:"var(--fm)", fontSize:9, color:"var(--muted)" }}>
+                  {MODALITY_ABBR[mod] || mod} = {humanMod(mod)}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Hover tooltip */}
+          {tooltip && (
+            <div style={{ position:"fixed",
+              left: Math.min(tooltip.x + 18, window.innerWidth - 260),
+              top:  tooltip.y - 14, zIndex:999,
+              background:"var(--surf2)",
+              border:`1px solid ${heatToColor(tooltip.cell.heat).border}`,
+              borderRadius:8, padding:"10px 14px", minWidth:220,
+              pointerEvents:"none", boxShadow:"0 4px 24px rgba(0,0,0,0.55)" }}>
+              <div style={{ fontFamily:"var(--fm)", fontSize:10,
+                color:modColor(tooltip.mod), marginBottom:3, letterSpacing:"0.1em" }}>
+                {humanMod(tooltip.mod)}
+              </div>
+              <div style={{ fontSize:12, color:"var(--text)", fontWeight:500, marginBottom:6 }}>
+                {tooltip.ta}
+              </div>
+              <div style={{ fontFamily:"var(--fm)", fontSize:14,
+                color:"var(--cyan)", fontWeight:700, marginBottom:5 }}>
+                {tooltip.cell.count} new trial{tooltip.cell.count !== 1 ? "s" : ""}
+              </div>
+              {tooltip.cell.prior_avg_count != null && (
+                <div style={{ fontFamily:"var(--fm)", fontSize:10,
+                  color:"var(--muted)", marginBottom:2 }}>
+                  {prior_weeks_used}-week avg: {tooltip.cell.prior_avg_count.toFixed(1)} trials/week
+                </div>
+              )}
+              {tooltip.cell.baseline_n != null && (
+                <div style={{ fontFamily:"var(--fm)", fontSize:10,
+                  color:"var(--dim)", marginBottom:3 }}>
+                  {masterLabel} total: {fmt(tooltip.cell.baseline_n)}
+                </div>
+              )}
+              {tooltip.cell.heat_label && (
+                <div style={{ fontFamily:"var(--fm)", fontSize:11, fontWeight:600,
+                  color: tooltip.cell.heat >= 0.15 ? "#EF4444"
+                       : tooltip.cell.heat <= -0.15 ? "#60A5FA"
+                       : "var(--muted)" }}>
+                  {tooltip.cell.heat_label}
+                </div>
+              )}
+              <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                color:"var(--dim)", marginTop:6 }}>
+                click to view trials
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    function WeeklyScientific({ data, color }) {
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <Card id="wq7" color={color} defaultOpen
+            question="Where is new drug trial activity clustering this week, and how does it compare to our baseline?"
+            vizType="TA × Modality Bubble Matrix">
+            <WQ7BubbleMatrix data={data?.wq7} color={color} />
+          </Card>
+
+          <Placeholder id="wq8" color={color}
+            question="How many trials landed in base_only this week, and why?"
+            vizType="Classification Gap Report (table + word cloud)" />
+
+          <Placeholder id="wq9" color={color}
+            question="What's the MeSH coverage quality for this week's trials?"
+            vizType="MeSH Quality Waterfall" />
+        </div>
+      );
+    }
+    // ─────────────────────────────────────────────────────────────────────
+    // wq10 — Operations — Velocity Dashboard (4 tiles)
+    // ─────────────────────────────────────────────────────────────────────
+
+    // ── Shared mini-sparkline SVG (drug_new over N weeks) ────────────────
+    function MiniSparkline({ points, accentColor, width=220, height=64, showArea=true }) {
+      if (!points || points.length < 2) return null;
+      const vals = points.map(p => p.drug_new ?? p.pct ?? 0);
+      const maxV = Math.max(...vals, 1);
+      const minV = Math.min(...vals, 0);
+      const range = maxV - minV || 1;
+      const pad = { l:6, r:6, t:8, b:20 };
+      const W = width - pad.l - pad.r;
+      const H = height - pad.t - pad.b;
+      const x = i => pad.l + (i / (points.length - 1)) * W;
+      const y = v => pad.t + H - ((v - minV) / range) * H;
+
+      const ptCoords = points.map((p, i) => [x(i), y(p.drug_new ?? p.pct ?? 0)]);
+      const lineD    = ptCoords.map(([px,py], i) => `${i===0?'M':'L'}${px.toFixed(1)},${py.toFixed(1)}`).join(' ');
+      const areaD    = lineD + ` L${ptCoords[ptCoords.length-1][0].toFixed(1)},${(pad.t+H).toFixed(1)}`
+                             + ` L${ptCoords[0][0].toFixed(1)},${(pad.t+H).toFixed(1)} Z`;
+
+      return (
+        <svg width={width} height={height} style={{ overflow:"visible", display:"block" }}>
+          <defs>
+            <linearGradient id={`sg-${accentColor.replace(/[^a-z0-9]/gi,'')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor={accentColor} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={accentColor} stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          {showArea && (
+            <path d={areaD} fill={`url(#sg-${accentColor.replace(/[^a-z0-9]/gi,'')})`} />
+          )}
+          <path d={lineD} fill="none" stroke={accentColor} strokeWidth="1.8"
+                strokeLinejoin="round" strokeLinecap="round" />
+          {ptCoords.map(([px,py], i) => {
+            const isCur = points[i].is_current;
+            return (
+              <g key={i}>
+                <circle cx={px} cy={py} r={isCur ? 5 : 3}
+                  fill={isCur ? accentColor : "var(--bg)"}
+                  stroke={accentColor} strokeWidth={isCur ? 0 : 1.5} />
+                {isCur && <circle cx={px} cy={py} r={8} fill={accentColor} opacity="0.18" />}
+              </g>
+            );
+          })}
+          {/* x-axis labels */}
+          {points.map((p, i) => (
+            <text key={i} x={x(i)} y={pad.t + H + 14}
+              textAnchor="middle" fontSize="8"
+              fill={p.is_current ? accentColor : "var(--dim)"}
+              fontFamily="var(--fm)"
+              fontWeight={p.is_current ? "600" : "400"}>
+              {p.short_label}
+            </text>
+          ))}
+        </svg>
+      );
+    }
+
+    // ── Diverging bar row ─────────────────────────────────────────────────
+    function DivergingBars({ bars, accentColor, labelFn }) {
+      if (!bars || bars.length === 0) return (
+        <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)",
+          padding:"12px 0" }}>No prior week data available.</div>
+      );
+      const gainers  = bars.filter(b => b.delta_pct >= 0).sort((a,b) => b.delta_pct - a.delta_pct).slice(0,3);
+      const decliners = bars.filter(b => b.delta_pct < 0).sort((a,b) => a.delta_pct - b.delta_pct).slice(0,3);
+      const combined = [...gainers, ...decliners];
+      if (combined.length === 0) return null;
+      const maxAbs = Math.max(...combined.map(b => Math.abs(b.delta_pct)), 1);
+
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+          {combined.map((b, i) => {
+            const isGain = b.delta_pct >= 0;
+            const barW   = Math.abs(b.delta_pct) / maxAbs * 100;
+            const barColor = isGain
+              ? (accentColor || "rgba(239,68,68,0.8)")
+              : "rgba(59,130,246,0.75)";
+            const sep = i === gainers.length - 1 && decliners.length > 0;
+            return (
+              <div key={b.label}>
+                {sep && <div style={{ height:1, background:"var(--border2)",
+                  margin:"3px 0", opacity:0.5 }} />}
+                <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  {/* Label left-aligned */}
+                  <div title={b.label}
+                    style={{ width:108, flexShrink:0, fontFamily:"var(--fb)", fontSize:10,
+                      color:"var(--text)", overflow:"hidden", textOverflow:"ellipsis",
+                      whiteSpace:"nowrap", textAlign:"right" }}>
+                    {labelFn ? labelFn(b.label) : b.label}
+                  </div>
+                  {/* Bar track */}
+                  <div style={{ flex:1, position:"relative", height:16,
+                    display:"flex", alignItems:"center" }}>
+                    {/* Zero line */}
+                    <div style={{ position:"absolute", left:0, top:0, bottom:0,
+                      width:1, background:"var(--border2)" }} />
+                    {/* Bar */}
+                    <div style={{
+                      position:"absolute", left:0,
+                      height:10, borderRadius:"0 3px 3px 0",
+                      width:`${barW}%`,
+                      background: barColor,
+                      transition:"width 0.3s ease",
+                    }} />
+                  </div>
+                  {/* Value */}
+                  <div style={{ width:52, flexShrink:0, fontFamily:"var(--fm)",
+                    fontSize:10, fontWeight:600, textAlign:"right",
+                    color: isGain ? "#EF4444" : "#60A5FA" }}>
+                    {isGain ? "+" : ""}{b.delta_pct.toFixed(1)}%
+                  </div>
+                  <div style={{ width:28, flexShrink:0, fontFamily:"var(--fm)",
+                    fontSize:9, color:"var(--dim)", textAlign:"right" }}>
+                    n={b.current_n}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ fontFamily:"var(--fm)", fontSize:8, color:"var(--dim)",
+            marginTop:3 }}>
+            % above/below {bars[0]?.avg_pct !== undefined ? "prior avg" : "—"}
+            · positive = more than avg · negative = less than avg
+          </div>
+        </div>
+      );
+    }
+
+    // ── Phase 1 intake gauge ──────────────────────────────────────────────
+    function Phase1Gauge({ data, accentColor }) {
+      if (!data) return null;
+      const { cur_pct, avg_pct, delta_pct, cur_count, sparkline, has_prior } = data;
+
+      // Arc SVG — cur_pct fills the arc
+      const R = 38, CX = 52, CY = 52;
+      const toRad = deg => deg * Math.PI / 180;
+      const arcPath = (pct, r) => {
+        const startAngle = -210;
+        const sweep = 240 * Math.min(pct / 100, 1);
+        const endAngle = startAngle + sweep;
+        const x1 = CX + r * Math.cos(toRad(startAngle));
+        const y1 = CY + r * Math.sin(toRad(startAngle));
+        const x2 = CX + r * Math.cos(toRad(endAngle));
+        const y2 = CY + r * Math.sin(toRad(endAngle));
+        const large = sweep > 180 ? 1 : 0;
+        return sweep > 0
+          ? `M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)}`
+          : '';
+      };
+
+      // avg marker position
+      const avgAngle = -210 + 240 * Math.min((avg_pct || 0) / 100, 1);
+      const avgX = CX + R * Math.cos(toRad(avgAngle));
+      const avgY = CY + R * Math.sin(toRad(avgAngle));
+
+      return (
+        <div style={{ display:"flex", gap:16, alignItems:"center" }}>
+          {/* Arc gauge */}
+          <div style={{ flexShrink:0 }}>
+            <svg width={104} height={72} style={{ overflow:"visible" }}>
+              {/* Track */}
+              <path d={arcPath(100, R)} fill="none"
+                stroke="var(--border2)" strokeWidth="6" strokeLinecap="round" />
+              {/* Fill */}
+              <path d={arcPath(cur_pct, R)} fill="none"
+                stroke={accentColor} strokeWidth="6" strokeLinecap="round" />
+              {/* Avg marker */}
+              {has_prior && avg_pct != null && (
+                <circle cx={avgX.toFixed(1)} cy={avgY.toFixed(1)} r="4"
+                  fill="var(--bg)" stroke="#F59E0B" strokeWidth="2" />
+              )}
+              {/* Center text */}
+              <text x={CX} y={CY - 2} textAnchor="middle"
+                fontSize="16" fontWeight="700" fill={accentColor}
+                fontFamily="var(--fm)">
+                {cur_pct.toFixed(1)}%
+              </text>
+              <text x={CX} y={CY + 13} textAnchor="middle"
+                fontSize="7.5" fill="var(--muted)" fontFamily="var(--fm)">
+                Phase 1
+              </text>
+            </svg>
+          </div>
+          {/* Stats + sparkline */}
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ display:"flex", alignItems:"baseline", gap:6,
+              marginBottom:4 }}>
+              <span style={{ fontFamily:"var(--fm)", fontSize:13,
+                fontWeight:700, color:accentColor }}>
+                {cur_count} trials
+              </span>
+              {has_prior && delta_pct != null && (
+                <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                  fontWeight:600,
+                  color: delta_pct > 1 ? "#EF4444" : delta_pct < -1 ? "#60A5FA" : "var(--muted)" }}>
+                  {delta_pct > 0 ? "+" : ""}{delta_pct.toFixed(1)}pp vs avg
+                </span>
+              )}
+            </div>
+            {has_prior && avg_pct != null && (
+              <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                color:"var(--dim)", marginBottom:6 }}>
+                ● avg {avg_pct.toFixed(1)}%
+                <span style={{ marginLeft:8, color:"#F59E0B" }}>○ avg marker on gauge</span>
+              </div>
+            )}
+            {sparkline && (
+              <MiniSparkline
+                points={sparkline.map(p => ({ ...p, drug_new: p.pct }))}
+                accentColor={accentColor}
+                width={160} height={52}
+                showArea={false} />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Main wq10 component ───────────────────────────────────────────────
+    function WQ10VelocityDashboard({ data, color }) {
+      if (!data?.available) return (
+        <div style={{ fontFamily:"var(--fm)", fontSize:12, color:"var(--muted)",
+          padding:"20px 0" }}>
+          No data — enriched file not loaded or no new drug registrations this window.
+        </div>
+      );
+
+      const { sparkline, cur_drug_new, prior_avg_drug, pace_delta_pct,
+              ta_bars, mod_bars, phase1, has_prior, n_prior_weeks } = data;
+
+      const ac = color.mid;   // accent colour from team theme
+
+      // Pace indicator copy
+      let paceCopy = null;
+      if (has_prior && pace_delta_pct != null) {
+        const abs = Math.abs(pace_delta_pct);
+        const dir = pace_delta_pct >= 0 ? "above" : "below";
+        const col = pace_delta_pct >= 5  ? "#EF4444"
+                  : pace_delta_pct <= -5 ? "#60A5FA"
+                  : "var(--muted)";
+        paceCopy = (
+          <span style={{ fontFamily:"var(--fm)", fontSize:11,
+            fontWeight:600, color:col }}>
+            {pace_delta_pct >= 0 ? "▲" : "▼"} {abs.toFixed(1)}% {dir} {n_prior_weeks}-week avg
+          </span>
+        );
+      }
+
+      const tileStyle = {
+        background:"var(--surf2)", border:"1px solid var(--border)",
+        borderRadius:10, padding:"16px 18px",
+      };
+      const tileTitle = (txt) => (
+        <div style={{ fontFamily:"var(--fm)", fontSize:9, letterSpacing:"0.12em",
+          color:"var(--dim)", marginBottom:10, textTransform:"uppercase" }}>
+          {txt}
+        </div>
+      );
+
+      return (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr",
+          gap:14 }}>
+
+          {/* ── Tile 1: Sparkline ── */}
+          <div style={tileStyle}>
+            {tileTitle("New Drug Registrations")}
+            <div style={{ display:"flex", alignItems:"baseline", gap:8,
+              marginBottom:6 }}>
+              <span style={{ fontFamily:"var(--fm)", fontSize:28,
+                fontWeight:700, color:ac, lineHeight:1 }}>
+                {fmt(cur_drug_new)}
+              </span>
+              {has_prior && prior_avg_drug != null && (
+                <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                  color:"var(--muted)" }}>
+                  avg {prior_avg_drug.toFixed(1)}
+                </span>
+              )}
+            </div>
+            {paceCopy}
+            {sparkline && (
+              <div style={{ marginTop:10 }}>
+                <MiniSparkline points={sparkline} accentColor={ac}
+                  width={230} height={68} />
+              </div>
+            )}
+          </div>
+
+          {/* ── Tile 2: TA % change ── */}
+          <div style={tileStyle}>
+            {tileTitle("Top / Bottom TA vs Avg")}
+            {has_prior ? (
+              <DivergingBars bars={ta_bars} accentColor={ac}
+                labelFn={l => l} />
+            ) : (
+              <div style={{ fontFamily:"var(--fm)", fontSize:11,
+                color:"var(--muted)" }}>
+                Load prior weeks to enable comparison.
+              </div>
+            )}
+          </div>
+
+          {/* ── Tile 3: Modality % change ── */}
+          <div style={tileStyle}>
+            {tileTitle("Top / Bottom Modality vs Avg")}
+            {has_prior ? (
+              <DivergingBars bars={mod_bars} accentColor={ac}
+                labelFn={l => humanMod(l)} />
+            ) : (
+              <div style={{ fontFamily:"var(--fm)", fontSize:11,
+                color:"var(--muted)" }}>
+                Load prior weeks to enable comparison.
+              </div>
+            )}
+          </div>
+
+          {/* ── Tile 4: Phase 1 intake ── */}
+          <div style={tileStyle}>
+            {tileTitle("Phase 1 Intake Rate")}
+            <Phase1Gauge data={phase1} accentColor={ac} />
+            {!phase1?.has_prior && (
+              <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                color:"var(--dim)", marginTop:6 }}>
+                Avg comparison requires enriched files for prior weeks.
+              </div>
+            )}
+          </div>
+
+        </div>
+      );
+    }
+
+    function WeeklyOperations({ data, color }) {
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <Card id="wq10" color={color} defaultOpen
+            question="What is the new drug trial velocity this week vs. recent weeks?"
+            vizType="Velocity Dashboard (4 tiles)">
+            <WQ10VelocityDashboard data={data?.wq10} color={color} />
+          </Card>
+
+          <Placeholder id="wq11" color={color}
+            question="What complexity mix is arriving this week?"
+            vizType="Waffle Chart (complexity-weighted)" />
+
+          <Placeholder id="wq12" color={color}
+            question="Which Phase 1 trials arrived this week? (earliest capacity signal)"
+            vizType="Phase 1 Intake List" />
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Quarterly view — all placeholders until quarterly functions are built
+    // ─────────────────────────────────────────────────────────────────────
+
+    const QUARTERLY_CARDS = {
+      BD: [
+        { id:"sq1", question:"How large is our total addressable market by modality and phase?",       vizType:"Bubble Matrix" },
+        { id:"sq2", question:"Who are the top 25 sponsors and what do they run?",                      vizType:"Ranked Bar + Stacked Modality" },
+        { id:"sq3", question:"Which therapeutic areas are growing or shrinking year-over-year?",       vizType:"Area Chart" },
+      ],
+      Marketing: [
+        { id:"sq4", question:"What is the current modality landscape for thought leadership content?", vizType:"Donut Chart with Callout Cards" },
+        { id:"sq5", question:"What TA-specific narratives can we build for targeted campaigns?",       vizType:"TA Fact Sheet Grid" },
+        { id:"sq6", question:"How does our capability map align with market demand?",                  vizType:"Gap Analysis Side-by-Side Bars" },
+      ],
+      Scientific: [
+        { id:"sq7", question:"What assay platforms should we invest in for the next 12–24 months?",   vizType:"Pipeline Horizon Chart" },
+        { id:"sq8", question:"Which TA × modality intersections drive the most bioanalytical complexity?", vizType:"Heatmap Matrix" },
+        { id:"sq9", question:"How reliable is our classification, and where should we improve?",       vizType:"Confidence Dashboard" },
+      ],
+      Operations: [
+        { id:"sq10", question:"What is the total workload forecast by complexity tier?",               vizType:"Dual-Axis Volume vs. Weighted Workload" },
+        { id:"sq11", question:"How should we allocate analysts across TAs and platforms?",             vizType:"Sunburst Diagram" },
+        { id:"sq12", question:"What is the phase transition pipeline — what's coming in 1, 2, 3 years?", vizType:"Demand Wave / Sankey" },
+      ],
+    };
+
+    function QuarterlyView({ team, color }) {
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {(QUARTERLY_CARDS[team]||[]).map(c => (
+            <Placeholder key={c.id} color={color} {...c} />
+          ))}
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Layout components
+    // ─────────────────────────────────────────────────────────────────────
+
+    function Header({ meta, isReclassified, generatedAt }) {
+      return (
+        <div style={{ borderBottom:"1px solid var(--border)", background:"var(--surf)",
+          position:"sticky", top:0, zIndex:100, padding:"0 32px" }}>
+          <div style={{ maxWidth:1100, margin:"0 auto", display:"flex",
+            alignItems:"center", gap:20, height:52 }}>
+            <span style={{ fontFamily:"var(--fh)", fontSize:20, fontWeight:700,
+              letterSpacing:"0.08em", color:"var(--cyan)" }}>
+              ALEXIS
+            </span>
+            <span style={{ fontFamily:"var(--fm)", fontSize:10, color:"var(--muted)",
+              letterSpacing:"0.14em" }}>
+              BUSINESS INTELLIGENCE
+            </span>
+            {meta?.window_start && (
+              <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--dim)" }}>
+                {meta.window_start} → {meta.window_end}
+              </div>
+            )}
+            <div style={{ flex:1 }} />
+            <div style={{ fontFamily:"var(--fm)", fontSize:10,
+              color: isReclassified ? "var(--green)" : "var(--amber)",
+              background: isReclassified ? "rgba(34,197,94,0.08)" : "rgba(245,158,11,0.08)",
+              border:`1px solid ${isReclassified ? "#22C55E" : "#F59E0B"}30`,
+              borderRadius:4, padding:"3px 8px" }}>
+              {isReclassified ? "RECLASSIFIED" : "RAW"}
+            </div>
+            {generatedAt && (
+              <div style={{ fontFamily:"var(--fm)", fontSize:10, color:"var(--dim)" }}>
+                {generatedAt.slice(0,10)}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function ViewToggle({ view, setView }) {
+      const opts = [
+        { key:"quarterly", icon:"📊", tag:"STRATEGIC", tagColor:"#3B82F6",
+          label:"Quarterly / Yearly",
+          purpose:"Where is the market? How big is it? Where should we invest?" },
+        { key:"weekly", icon:"⚡", tag:"TACTICAL", tagColor:"#F59E0B",
+          label:"Weekly Pulse",
+          purpose:"What happened THIS WEEK? What should we act on NOW?" },
+      ];
+      return (
+        <div style={{ display:"flex", gap:10, marginBottom:22 }}>
+          {opts.map(o => (
+            <div key={o.key} onClick={() => setView(o.key)}
+              style={{ flex:1, borderRadius:8, padding:"14px 18px", cursor:"pointer",
+                border:`1px solid ${view===o.key ? o.tagColor+"50" : "var(--border)"}`,
+                background: view===o.key ? "var(--surf2)" : "transparent",
+                transition:"all 0.15s" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                <span style={{ fontSize:16 }}>{o.icon}</span>
+                <span style={{ fontFamily:"var(--fm)", fontSize:9, padding:"1px 6px",
+                  borderRadius:3, background:o.tagColor+"20", color:o.tagColor,
+                  letterSpacing:"0.12em" }}>
+                  {o.tag}
+                </span>
+              </div>
+              <div style={{ fontSize:13, fontWeight:600, color:"var(--text)", marginBottom:2 }}>
+                {o.label}
+              </div>
+              <div style={{ fontFamily:"var(--fm)", fontSize:10, color:"var(--muted)",
+                lineHeight:1.5 }}>
+                {o.purpose}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function TeamTabs({ team, setTeam }) {
+      return (
+        <div style={{ display:"flex", gap:4, background:"var(--surf2)",
+          borderRadius:8, padding:4, marginBottom:20 }}>
+          {Object.entries(TEAM_CFG).map(([key, cfg]) => {
+            const active = team === key;
+            return (
+              <button key={key} onClick={() => setTeam(key)}
+                style={{ flex:1, padding:"8px 12px", borderRadius:5, border:"none",
+                  cursor:"pointer", fontFamily:"var(--fb)", fontSize:13, fontWeight:600,
+                  transition:"all 0.15s",
+                  background: active ? cfg.accent+"20" : "transparent",
+                  color: active ? cfg.mid : "var(--muted)",
+                  borderBottom:`2px solid ${active ? cfg.accent : "transparent"}` }}>
+                {key}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function SourceBar({ view, snapshotFile, enrichedCounts, changelogAvailable }) {
+      const ec = enrichedCounts || {};
+      return (
+        <div style={{ marginBottom:20, padding:"10px 14px", borderRadius:6,
+          background:"var(--surf2)", border:"1px solid var(--border)",
+          fontFamily:"var(--fm)", fontSize:10, color:"var(--muted)",
+          display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
+          <span>
+            <span style={{ color:"var(--dim)" }}>SOURCE </span>
+            {view==="weekly" ? "Pulse snapshot + enriched changelog" : "Master DB (active universe)"}
+          </span>
+          {snapshotFile && (
+            <span>
+              <span style={{ color:"var(--dim)" }}>FILE </span>
+              <code style={{ color:"var(--cyan)" }}>{snapshotFile}</code>
+            </span>
+          )}
+          {view==="weekly" && ec.available && (
+            <span style={{ color:"var(--green)" }}>
+              ✓ enriched: {fmt(ec.new)} new · {fmt(ec.existing)} updated
+            </span>
+          )}
+          {view==="weekly" && !ec.available && (
+            <span style={{ color:"var(--amber)" }}>⚠ enriched file not loaded</span>
+          )}
+          {view==="weekly" && (
+            <span style={{ color: changelogAvailable ? "var(--green)" : "var(--amber)" }}>
+              {changelogAvailable ? "✓ changelog loaded" : "⚠ no changelog"}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // App root
+    // ─────────────────────────────────────────────────────────────────────
+
+    function App() {
+      const [view, setView] = useState("weekly");
+      const [team, setTeam] = useState("BD");
+
+      if (!ALEXIS_DATA || typeof ALEXIS_DATA !== "object") {
+        return (
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
+            minHeight:"100vh", flexDirection:"column", gap:16 }}>
+            <div style={{ fontFamily:"var(--fm)", fontSize:14, color:"var(--amber)" }}>
+              ⚠ No data injected
+            </div>
+            <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)",
+              maxWidth:440, textAlign:"center", lineHeight:1.8 }}>
+              Run{" "}
+              <code style={{ color:"var(--cyan)" }}>
+                python analytics/generate_weekly_viz.py
+              </code>
+              {" "}from the ALEXIS project root to generate{" "}
+              <code style={{ color:"var(--cyan)" }}>
+                alexis_weekly_dashboard_live.html
+              </code>.
+            </div>
+          </div>
+        );
+      }
+
+      const { metadata, changelog, enriched_counts,
+              is_reclassified, generated_at, snapshot_file } = ALEXIS_DATA;
+      const color = TEAM_CFG[team];
+
+      function renderCards() {
+        if (view === "quarterly") return <QuarterlyView team={team} color={color} />;
+        if (team === "BD")         return <WeeklyBD data={ALEXIS_DATA} color={color} />;
+        if (team === "Marketing")  return <WeeklyMarketing data={ALEXIS_DATA} color={color} />;
+        if (team === "Scientific") return <WeeklyScientific data={ALEXIS_DATA} color={color} />;
+        if (team === "Operations") return <WeeklyOperations data={ALEXIS_DATA} color={color} />;
+      }
+
+      return (
+        <div style={{ minHeight:"100vh" }}>
+          <Header meta={metadata} isReclassified={is_reclassified}
+            generatedAt={generated_at} />
+
+          <div style={{ maxWidth:1100, margin:"0 auto", padding:"28px 32px 64px" }}>
+
+            {/* Page heading */}
+            <div style={{ marginBottom:24 }}>
+              <div style={{ fontFamily:"var(--fm)", fontSize:9, color:"var(--dim)",
+                letterSpacing:"0.18em", marginBottom:6 }}>
+                ALEXIS → BUSINESS INTELLIGENCE
+              </div>
+              <h1 style={{ fontFamily:"var(--fh)", fontSize:28, fontWeight:700,
+                color:"var(--text)", letterSpacing:"0.02em", marginBottom:4 }}>
+                Dashboard: Two Views
+              </h1>
+              <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)" }}>
+                24 business questions · each mapped to exact data fields and visualizations
+              </div>
+            </div>
+
+            <ViewToggle view={view} setView={setView} />
+
+            <SourceBar view={view} snapshotFile={snapshot_file}
+              enrichedCounts={enriched_counts}
+              changelogAvailable={changelog?.available} />
+
+            <TeamTabs team={team} setTeam={setTeam} />
+
+            {renderCards()}
+
+            {/* Footer */}
+            <div style={{ marginTop:48, paddingTop:20,
+              borderTop:"1px solid var(--border)",
+              display:"flex", gap:24, flexWrap:"wrap",
+              fontFamily:"var(--fm)", fontSize:10, color:"var(--dim)" }}>
+              <span>Source: ClinicalTrials.gov via AACT</span>
+              <span>{snapshot_file}</span>
+              <span style={{ flex:1, textAlign:"right", color:"var(--muted)" }}>
+                Manual inputs needed:{" "}
+                <span style={{ color:"var(--dim)" }}>
+                  capability_score (sq6) · complexity_weight (sq10/wq11) · client_list (wq2)
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
