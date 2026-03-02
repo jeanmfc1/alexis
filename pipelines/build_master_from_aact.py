@@ -759,29 +759,92 @@ def _save_master(trials: list, output_path: Path, aact_dir: Path, W: int = 60):
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════
 
+def _prompt_aact_dir(universe_dir: Path) -> Path:
+    """
+    Scan active_universe for subdirectories and let the user pick one.
+    Only shows directories that contain at least studies.txt (i.e. look like
+    real AACT exports).  Falls back to a free-text entry if nothing is found.
+    """
+    W = 60
+    print(f"\n{'═'*W}")
+    print(f"  SELECT AACT SOURCE FOLDER")
+    print(f"  Scanning: {universe_dir}")
+    print(f"{'─'*W}")
+
+    candidates = []
+    if universe_dir.is_dir():
+        for p in sorted(universe_dir.iterdir()):
+            if p.is_dir() and (p / "studies.txt").exists():
+                candidates.append(p)
+
+    if not candidates:
+        print("  No AACT export folders found (need studies.txt inside).")
+        raw = input("  Enter full path to AACT folder: ").strip()
+        chosen = Path(raw)
+        if not chosen.is_dir():
+            print(f"  ERROR: '{chosen}' is not a directory.")
+            sys.exit(1)
+        return chosen
+
+    for i, p in enumerate(candidates, 1):
+        # Show a quick file count as a sanity hint
+        txt_count = len(list(p.glob("*.txt")))
+        print(f"  [{i}] {p.name}  ({txt_count} .txt files)")
+
+    print(f"{'─'*W}")
+    while True:
+        raw = input(f"  Choose folder [1-{len(candidates)}]: ").strip()
+        if raw.isdigit() and 1 <= int(raw) <= len(candidates):
+            return candidates[int(raw) - 1]
+        print(f"  Please enter a number between 1 and {len(candidates)}.")
+
+
+def _prompt_output_path(universe_dir: Path) -> Path:
+    """Ask the user for the output JSON filename (no path needed)."""
+    W = 60
+    print(f"\n{'─'*W}")
+    print(f"  OUTPUT FILE NAME")
+    print(f"  Output will be saved in: {universe_dir}")
+    print(f"  Tip: use a name like  master_DB_2026_Q1.json")
+    print(f"{'─'*W}")
+
+    while True:
+        raw = input("  File name: ").strip()
+        if not raw:
+            print("  Name cannot be empty.")
+            continue
+        if not raw.endswith(".json"):
+            raw += ".json"
+            print(f"  → Added .json extension: {raw}")
+        return universe_dir / raw
+
+
 def main():
     import gc
 
     # ═══════════════════════════════════════════════════════════════
-    # CONFIGURATION — edit these, then just: python build_master_from_aact.py
+    # FIXED SETTINGS
     # ═══════════════════════════════════════════════════════════════
 
-    AACT_DIR      = Path("storage/snapshots/clinical_trials_v2/active_universe/raw 12-01-25")
-    OUTPUT_PATH   = Path("storage/snapshots/clinical_trials_v2/active_universe/master_DB_2025_Q4.json")
-
+    UNIVERSE_DIR  = Path("storage/snapshots/clinical_trials_v2/active_universe")
+    FRESH_START   = False    # True = ignore checkpoints, start over
     BATCH_SIZE    = 1000     # process this many trials at a time
     NUM_WORKERS   = None     # None = auto-detect (cpu_count - 1)
 
     # ═══════════════════════════════════════════════════════════════
+    # INTERACTIVE SELECTION
+    # ═══════════════════════════════════════════════════════════════
 
-    aact_dir = AACT_DIR
-    output_path = OUTPUT_PATH
+    aact_dir    = _prompt_aact_dir(UNIVERSE_DIR)
+    output_path = _prompt_output_path(UNIVERSE_DIR)
+
     W = 60
 
-    print(f"{'='*W}")
+    print(f"\n{'='*W}")
     print(f"  BUILD MASTER DB FROM AACT (batched)")
-    print(f"  Source: {aact_dir}")
-    print(f"  Batch size: {BATCH_SIZE:,}")
+    print(f"  Source : {aact_dir}")
+    print(f"  Output : {output_path}")
+    print(f"  Batches: {BATCH_SIZE:,} trials each")
     print(f"{'='*W}")
 
     # ── Verify required files ───────────────────────────────────────
