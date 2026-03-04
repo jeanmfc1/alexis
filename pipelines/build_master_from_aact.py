@@ -44,7 +44,7 @@ from utils.parallel_processor import process_trials_parallel
 # AACT PARSING
 # ═══════════════════════════════════════════════════════════════════════════
 
-csv.field_size_limit(sys.maxsize)  # AACT has large description fields
+csv.field_size_limit(2147483647)  # AACT has large description fields
 
 
 def _read_aact(path: Path) -> List[Dict[str, str]]:

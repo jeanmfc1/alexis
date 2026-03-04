@@ -776,15 +776,14 @@
                           style={{ width:COL_W, height:ROW_H, flexShrink:0,
                             display:"flex", alignItems:"center", justifyContent:"center",
                             cursor: cell.count > 0 ? "pointer" : "default" }}
-                          onMouseEnter={e => {
+                          onClick={() => {
                             if (cell.count > 0) {
-                              const r = e.currentTarget.getBoundingClientRect();
-                              setTooltip({ cell, ta, mod, x:r.left, y:r.top });
+                              setOpenCell(prev => prev === key ? null : key);
+                              setTooltip(prev =>
+                                (prev?.key === key) ? null : { cell, ta, mod, key }
+                              );
                             }
-                          }}
-                          onMouseLeave={() => setTooltip(null)}
-                          onClick={() => cell.count > 0 &&
-                            setOpenCell(prev => prev === key ? null : key)}>
+                          }}>
                           {cell.count > 0 && (
                             <div style={{
                               width:sz, height:sz, borderRadius:"50%",
@@ -964,50 +963,144 @@
             ))}
           </div>
 
-          {/* Hover tooltip */}
+          {/* Click-triggered sidebar panel */}
           {tooltip && (
-            <div style={{ position:"fixed",
-              left: Math.min(tooltip.x + 18, window.innerWidth - 260),
-              top:  tooltip.y - 14, zIndex:999,
-              background:"var(--surf2)",
-              border:`1px solid ${heatToColor(tooltip.cell.heat).border}`,
-              borderRadius:8, padding:"10px 14px", minWidth:220,
-              pointerEvents:"none", boxShadow:"0 4px 24px rgba(0,0,0,0.55)" }}>
-              <div style={{ fontFamily:"var(--fm)", fontSize:10,
-                color:modColor(tooltip.mod), marginBottom:3, letterSpacing:"0.1em" }}>
-                {humanMod(tooltip.mod)}
+            <div style={{ marginTop:14, borderRadius:10,
+              background:"var(--surf2)", border:`1px solid ${heatToColor(tooltip.cell.heat).border}`,
+              padding:"14px 16px" }}>
+              <div style={{ display:"flex", alignItems:"center",
+                gap:8, marginBottom:10 }}>
+                <div style={{ width:9, height:9, borderRadius:"50%",
+                  background:modColor(tooltip.mod), flexShrink:0 }} />
+                <span style={{ fontFamily:"var(--fb)", fontSize:12, color:"var(--text)" }}>
+                  {humanMod(tooltip.mod)}
+                </span>
+                <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                  color:"var(--muted)" }}>·</span>
+                <span style={{ fontFamily:"var(--fm)", fontSize:11,
+                  color:"var(--muted)", overflow:"hidden", textOverflow:"ellipsis",
+                  whiteSpace:"nowrap" }}>
+                  {tooltip.ta}
+                </span>
+                <button onClick={() => { setTooltip(null); setOpenCell(null); }}
+                  style={{ marginLeft:"auto", fontFamily:"var(--fm)", fontSize:10,
+                    color:"var(--muted)", background:"transparent",
+                    border:"none", cursor:"pointer", padding:"2px 6px",
+                    flexShrink:0 }}>
+                  ✕
+                </button>
               </div>
-              <div style={{ fontSize:12, color:"var(--text)", fontWeight:500, marginBottom:6 }}>
-                {tooltip.ta}
-              </div>
-              <div style={{ fontFamily:"var(--fm)", fontSize:14,
-                color:"var(--cyan)", fontWeight:700, marginBottom:5 }}>
-                {tooltip.cell.count} new trial{tooltip.cell.count !== 1 ? "s" : ""}
-              </div>
-              {tooltip.cell.prior_avg_count != null && (
-                <div style={{ fontFamily:"var(--fm)", fontSize:10,
-                  color:"var(--muted)", marginBottom:2 }}>
-                  {prior_weeks_used}-week avg: {tooltip.cell.prior_avg_count.toFixed(1)} trials/week
+              <div style={{ display:"flex", gap:20, flexWrap:"wrap", marginBottom:10 }}>
+                <div>
+                  <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                    color:"var(--dim)", letterSpacing:"0.1em", marginBottom:2 }}>
+                    THIS WEEK
+                  </div>
+                  <div style={{ fontFamily:"var(--fm)", fontSize:22,
+                    fontWeight:700, color:"var(--cyan)", lineHeight:1 }}>
+                    {tooltip.cell.count}
+                  </div>
+                  <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                    color:"var(--muted)" }}>new trials</div>
                 </div>
-              )}
-              {tooltip.cell.baseline_n != null && (
-                <div style={{ fontFamily:"var(--fm)", fontSize:10,
-                  color:"var(--dim)", marginBottom:3 }}>
-                  {masterLabel} total: {fmt(tooltip.cell.baseline_n)}
-                </div>
-              )}
+                {tooltip.cell.prior_avg_count != null && (
+                  <div>
+                    <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                      color:"var(--dim)", letterSpacing:"0.1em", marginBottom:2 }}>
+                      {prior_weeks_used}-WK AVG
+                    </div>
+                    <div style={{ fontFamily:"var(--fm)", fontSize:22,
+                      fontWeight:700, color:"var(--muted)", lineHeight:1 }}>
+                      {tooltip.cell.prior_avg_count.toFixed(1)}
+                    </div>
+                  </div>
+                )}
+                {tooltip.cell.baseline_n != null && (
+                  <div>
+                    <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                      color:"var(--dim)", letterSpacing:"0.1em", marginBottom:2 }}>
+                      {masterLabel}
+                    </div>
+                    <div style={{ fontFamily:"var(--fm)", fontSize:22,
+                      fontWeight:700, color:"var(--muted)", lineHeight:1 }}>
+                      {fmt(tooltip.cell.baseline_n)}
+                    </div>
+                  </div>
+                )}
+              </div>
               {tooltip.cell.heat_label && (
                 <div style={{ fontFamily:"var(--fm)", fontSize:11, fontWeight:600,
+                  marginBottom:10,
                   color: tooltip.cell.heat >= 0.15 ? "#EF4444"
                        : tooltip.cell.heat <= -0.15 ? "#60A5FA"
                        : "var(--muted)" }}>
                   {tooltip.cell.heat_label}
                 </div>
               )}
-              <div style={{ fontFamily:"var(--fm)", fontSize:9,
-                color:"var(--dim)", marginTop:6 }}>
-                click to view trials
-              </div>
+              {/* Trial list */}
+              {openCell === tooltip.key && (() => {
+                const sorted = [...(tooltip.cell.trials || [])].sort(phaseSort);
+                return (
+                  <div style={{ maxHeight:220, overflowY:"auto",
+                    border:"1px solid var(--border)", borderRadius:6 }}>
+                    <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                      <thead style={{ position:"sticky", top:0,
+                        background:"var(--surf3)", zIndex:1 }}>
+                        <tr>
+                          {["NCT ID","TITLE","PHASE"].map(h => (
+                            <th key={h} style={{ padding:"5px 8px",
+                              fontFamily:"var(--fm)", fontSize:9, color:"var(--dim)",
+                              letterSpacing:"0.1em", textAlign:"left", fontWeight:500,
+                              borderBottom:"1px solid var(--border)" }}>
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sorted.map((t, ti) => {
+                          const pc = PHASE_COLORS[t.phase] || "#6B7280";
+                          return (
+                            <tr key={t.nct_id || ti}
+                              style={{ borderTop: ti > 0 ? "1px solid var(--border)" : "none",
+                                background: ti%2===0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                              <td style={{ padding:"4px 8px", whiteSpace:"nowrap" }}>
+                                <a href={`https://clinicaltrials.gov/expert-search?term=${t.nct_id}`}
+                                   target="_blank" rel="noopener noreferrer"
+                                   style={{ fontFamily:"var(--fm)", fontSize:10,
+                                     color:"var(--cyan)", textDecoration:"none" }}
+                                   onMouseOver={e => e.target.style.textDecoration="underline"}
+                                   onMouseOut={e  => e.target.style.textDecoration="none"}>
+                                  {t.nct_id}
+                                </a>
+                              </td>
+                              <td style={{ padding:"4px 8px", fontSize:10,
+                                color:"var(--text)", maxWidth:380,
+                                overflowX:"auto", whiteSpace:"nowrap" }}>
+                                {t.title}
+                              </td>
+                              <td style={{ padding:"4px 8px", whiteSpace:"nowrap" }}>
+                                <span style={{ fontFamily:"var(--fm)", fontSize:9,
+                                  padding:"2px 6px", borderRadius:6,
+                                  background:pc+"18", color:pc,
+                                  border:`1px solid ${pc}30` }}>
+                                  {t.phase}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+              {openCell !== tooltip.key && tooltip.cell.count > 0 && (
+                <div style={{ fontFamily:"var(--fm)", fontSize:9,
+                  color:"var(--dim)", marginTop:4 }}>
+                  click the bubble again to show trials ↑
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1094,6 +1187,98 @@
 
     // ── Diverging bar row ─────────────────────────────────────────────────
     function DivergingBars({ bars, accentColor, labelFn }) {
+      if (!bars || bars.length === 0) return (
+        <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)",
+          padding:"12px 0" }}>No prior week data available.</div>
+      );
+
+      // Separate gainers and decliners — never mix them
+      const gainers   = bars.filter(b => b.delta_pct >= 0)
+                            .sort((a,b) => b.delta_pct - a.delta_pct)
+                            .slice(0, 3);
+      const decliners = bars.filter(b => b.delta_pct < 0)
+                            .sort((a,b) => a.delta_pct - b.delta_pct)
+                            .slice(0, 3);
+      if (gainers.length + decliners.length === 0) return null;
+
+      const maxAbs = Math.max(
+        ...gainers.map(b => b.delta_pct),
+        ...decliners.map(b => Math.abs(b.delta_pct)),
+        1
+      );
+
+      const LABEL_W = 110;
+
+      // Render a single row: bar grows away from center in the correct direction
+      const Row = ({ b }) => {
+        const isGain = b.delta_pct >= 0;
+        const pct    = Math.abs(b.delta_pct) / maxAbs * 100; // 0–100% of half-track
+        const barCol = isGain ? (accentColor || "#F59E0B") : "rgba(59,130,246,0.8)";
+        const valCol = isGain ? "#F87171" : "#60A5FA";
+        return (
+          <div style={{ display:"flex", alignItems:"center", gap:0, height:24 }}>
+            {/* Label */}
+            <div title={b.label}
+              style={{ width:LABEL_W, flexShrink:0, fontFamily:"var(--fb)", fontSize:10,
+                color:"var(--text)", overflow:"hidden", textOverflow:"ellipsis",
+                whiteSpace:"nowrap", textAlign:"right", paddingRight:8 }}>
+              {labelFn ? labelFn(b.label) : b.label}
+            </div>
+
+            {/* Left half-track (decliners grow leftward from center) */}
+            <div style={{ flex:1, display:"flex", justifyContent:"flex-end",
+              alignItems:"center", position:"relative", height:"100%" }}>
+              {!isGain && (
+                <div style={{ width:`${pct}%`, height:10,
+                  background:barCol, borderRadius:"3px 0 0 3px",
+                  transition:"width 0.3s ease" }} />
+              )}
+            </div>
+
+            {/* Zero line */}
+            <div style={{ width:2, flexShrink:0, alignSelf:"stretch",
+              background:"rgba(255,255,255,0.15)" }} />
+
+            {/* Right half-track (gainers grow rightward from center) */}
+            <div style={{ flex:1, display:"flex", justifyContent:"flex-start",
+              alignItems:"center", position:"relative", height:"100%" }}>
+              {isGain && (
+                <div style={{ width:`${pct}%`, height:10,
+                  background:barCol, borderRadius:"0 3px 3px 0",
+                  transition:"width 0.3s ease" }} />
+              )}
+            </div>
+
+            {/* Value + count */}
+            <div style={{ width:58, flexShrink:0, textAlign:"right",
+              fontFamily:"var(--fm)", fontSize:10, fontWeight:600, color:valCol }}>
+              {isGain ? "+" : ""}{b.delta_pct.toFixed(1)}%
+            </div>
+            <div style={{ width:32, flexShrink:0, fontFamily:"var(--fm)",
+              fontSize:9, color:"var(--dim)", textAlign:"right" }}>
+              n={b.current_n}
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+          {gainers.map(b => <Row key={b.label} b={b} />)}
+          {gainers.length > 0 && decliners.length > 0 && (
+            <div style={{ height:1, background:"var(--border2)",
+              margin:"4px 0", opacity:0.4 }} />
+          )}
+          {decliners.map(b => <Row key={b.label} b={b} />)}
+          <div style={{ fontFamily:"var(--fm)", fontSize:8, color:"var(--dim)",
+            marginTop:4, paddingLeft:LABEL_W + 8 }}>
+            bars grow from center · red = above avg · blue = below avg
+          </div>
+        </div>
+      );
+    }
+
+) {
       if (!bars || bars.length === 0) return (
         <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)",
           padding:"12px 0" }}>No prior week data available.</div>
@@ -1467,12 +1652,12 @@
 
     function ViewToggle({ view, setView }) {
       const opts = [
-        { key:"quarterly", icon:"📊", tag:"STRATEGIC", tagColor:"#3B82F6",
-          label:"Quarterly / Yearly",
-          purpose:"Where is the market? How big is it? Where should we invest?" },
         { key:"weekly", icon:"⚡", tag:"TACTICAL", tagColor:"#F59E0B",
           label:"Weekly Pulse",
           purpose:"What happened THIS WEEK? What should we act on NOW?" },
+        { key:"quarterly", icon:"📊", tag:"STRATEGIC", tagColor:"#3B82F6",
+          label:"Quarterly / Yearly",
+          purpose:"Where is the market? How big is it? Where should we invest?" },
       ];
       return (
         <div style={{ display:"flex", gap:10, marginBottom:22 }}>

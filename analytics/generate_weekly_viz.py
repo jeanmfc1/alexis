@@ -922,7 +922,7 @@ def wq4_social_stat_cards(summary: dict, enriched_counts: dict) -> list:
     top_mods = sorted(mod_totals.items(), key=lambda x: x[1], reverse=True)[:4]
     detail_c3 = [
         {
-            "label": mod,
+            "label": mod.replace("_", " ").title(),
             "value": count,
             "pct":   round(count / drug_total * 100, 1) if drug_total else 0.0,
         }
@@ -932,7 +932,7 @@ def wq4_social_stat_cards(summary: dict, enriched_counts: dict) -> list:
     card3 = {
         "id":     "wq4_c3",
         "title":  "Modality Spotlight",
-        "value":  top_mods[0][0] if top_mods else "—",
+        "value":  top_mods[0][0].replace("_", " ").title() if top_mods else "—",
         "sub":    f"leads with {top_mods[0][1]:,} trials" if top_mods else "",
         "detail": detail_c3,
         "note":   "% of drug trials in this window",
@@ -1277,6 +1277,12 @@ def wq10_velocity_dashboard(
 
         bars = []
         for key in all_keys:
+            # Skip unassigned / non-disease TAs — not meaningful for ops comparison
+            if key.lower() in {
+                "unassigned drug study", "unassigned", "unknown",
+                "non-disease", "non_disease", "other",
+            }:
+                continue
             c_pct = cur_counts.get(key, 0) / cur_total
             pw_pcts = []
             for pw in prior_weeks:
