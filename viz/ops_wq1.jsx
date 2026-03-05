@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 // ── Shared mini-sparkline SVG ─────────────────────────────────────────────
-function MiniSparkline({ points, accentColor, width=220, height=64, showArea=true }) {
+function MiniSparkline({ points, accentColor, width=220, height=64, showArea=true, fluid=false }) {
   if (!points || points.length < 2) return null;
   const vals  = points.map(p => p.drug_new ?? p.pct ?? 0);
   const maxV  = Math.max(...vals, 1);
@@ -27,8 +27,13 @@ function MiniSparkline({ points, accentColor, width=220, height=64, showArea=tru
 
   const gradId = `sg-${accentColor.replace(/[^a-z0-9]/gi,'')}`;
 
+  const svgProps = fluid
+    ? { viewBox:`0 0 ${width} ${height}`, preserveAspectRatio:"none",
+        style:{ overflow:"visible", display:"block", width:"100%", height:"100%" } }
+    : { width, height, style:{ overflow:"visible", display:"block" } };
+
   return (
-    <svg width={width} height={height} style={{ overflow:"visible", display:"block" }}>
+    <svg {...svgProps}>
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stopColor={accentColor} stopOpacity="0.25" />
@@ -236,6 +241,9 @@ function Phase1Gauge({ data, accentColor }) {
   );
 }
 
+// ── Phase 1 key set (shared between gauge + breakdown highlight) ─────────
+const PHASE1_KEYS_SET = new Set(["PHASE1", "EARLY_PHASE1", "PHASE1/PHASE2"]);
+
 // ── Main wq10 component ────────────────────────────────────────────────────
 function WQ10VelocityDashboard({ data, color }) {
   if (!data?.available) return (
@@ -246,7 +254,7 @@ function WQ10VelocityDashboard({ data, color }) {
   );
 
   const { sparkline, cur_drug_new, prior_avg_drug, pace_delta_pct,
-          ta_bars, mod_bars, phase1, has_prior, n_prior_weeks } = data;
+          ta_bars, mod_bars, phase1, phase_breakdown, has_prior, n_prior_weeks } = data;
 
   const ac = color.mid;
 
@@ -267,6 +275,7 @@ function WQ10VelocityDashboard({ data, color }) {
   const tileStyle = {
     background:"var(--surf2)", border:"1px solid var(--border)",
     borderRadius:10, padding:"16px 18px",
+    display:"flex", flexDirection:"column",
   };
   const tileTitle = txt => (
     <div style={{ fontFamily:"var(--fm)", fontSize:9, letterSpacing:"0.12em",
@@ -276,7 +285,7 @@ function WQ10VelocityDashboard({ data, color }) {
   );
 
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, alignItems:"start" }}>
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gridAutoRows:"1fr", gap:14 }}>
 
       {/* Tile 1: Sparkline */}
       <div style={tileStyle}>
@@ -294,8 +303,22 @@ function WQ10VelocityDashboard({ data, color }) {
         </div>
         {paceCopy}
         {sparkline && (
-          <div style={{ marginTop:10 }}>
-            <MiniSparkline points={sparkline} accentColor={ac} width={230} height={68} />
+          <div style={{ flex:1, minHeight:60, marginTop:10 }}>
+            <MiniSparkline points={sparkline} accentColor={ac}
+              width={230} height={68} fluid />
+          </div>
+        )}
+        {/* Top TAs this week */}
+        {ta_bars?.length > 0 && (
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:10,
+            borderTop:"1px solid var(--border)", paddingTop:10 }}>
+            {ta_bars.filter(b => b.current_n > 0).slice(0, 4).map(b => (
+              <span key={b.label} style={{ fontFamily:"var(--fm)", fontSize:9,
+                color:"var(--muted)", background:"var(--surf3)",
+                border:"1px solid var(--border)", borderRadius:4, padding:"2px 7px" }}>
+                {b.label} <span style={{ color:ac, fontWeight:600 }}>{b.current_n}</span>
+              </span>
+            ))}
           </div>
         )}
       </div>
@@ -303,36 +326,79 @@ function WQ10VelocityDashboard({ data, color }) {
       {/* Tile 2: TA % change */}
       <div style={tileStyle}>
         {tileTitle("Top / Bottom TA vs Avg")}
-        {has_prior ? (
-          <DivergingBars bars={ta_bars} accentColor={ac} labelFn={l => l} />
-        ) : (
-          <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)" }}>
-            Load prior weeks to enable comparison.
-          </div>
-        )}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center" }}>
+          {has_prior ? (
+            <DivergingBars bars={ta_bars} accentColor={ac} labelFn={l => l} />
+          ) : (
+            <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)" }}>
+              Load prior weeks to enable comparison.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tile 3: Modality % change */}
       <div style={tileStyle}>
         {tileTitle("Top / Bottom Modality vs Avg")}
-        {has_prior ? (
-          <DivergingBars bars={mod_bars} accentColor={ac} labelFn={l => humanMod(l)} />
-        ) : (
-          <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)" }}>
-            Load prior weeks to enable comparison.
-          </div>
-        )}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center" }}>
+          {has_prior ? (
+            <DivergingBars bars={mod_bars} accentColor={ac} labelFn={l => humanMod(l)} />
+          ) : (
+            <div style={{ fontFamily:"var(--fm)", fontSize:11, color:"var(--muted)" }}>
+              Load prior weeks to enable comparison.
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Tile 4: Phase 1 intake */}
+      {/* Tile 4: Phase 1 intake + phase breakdown */}
       <div style={tileStyle}>
         {tileTitle("Phase 1 Intake Rate")}
-        <Phase1Gauge data={phase1} accentColor={ac} />
-        {!phase1?.has_prior && (
-          <div style={{ fontFamily:"var(--fm)", fontSize:9, color:"var(--dim)", marginTop:6 }}>
-            Avg comparison requires enriched files for prior weeks.
-          </div>
-        )}
+        <div style={{ flex:1 }}>
+          <Phase1Gauge data={phase1} accentColor={ac} />
+          {!phase1?.has_prior && (
+            <div style={{ fontFamily:"var(--fm)", fontSize:9, color:"var(--dim)", marginTop:6 }}>
+              Avg comparison requires enriched files for prior weeks.
+            </div>
+          )}
+        </div>
+        {/* Phase breakdown mini bars */}
+        {phase_breakdown?.length > 0 && (() => {
+          const maxN = Math.max(...phase_breakdown.map(p => p.count), 1);
+          return (
+            <div style={{ borderTop:"1px solid var(--border)", paddingTop:10, marginTop:10 }}>
+              <div style={{ fontFamily:"var(--fm)", fontSize:8, color:"var(--dim)",
+                letterSpacing:"0.12em", marginBottom:6, textTransform:"uppercase" }}>
+                All Phases This Week
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                {phase_breakdown.map(p => (
+                  <div key={p.phase} style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <div style={{ width:72, flexShrink:0, fontFamily:"var(--fm)", fontSize:9,
+                      color: PHASE1_KEYS_SET.has(p.phase) ? ac : "var(--muted)",
+                      fontWeight: PHASE1_KEYS_SET.has(p.phase) ? 600 : 400,
+                      textAlign:"right" }}>
+                      {p.phase.replace(/_/g," ").replace(/\//g," / ")}
+                    </div>
+                    <div style={{ flex:1, height:6, background:"var(--border)", borderRadius:3 }}>
+                      <div style={{ width:`${(p.count / maxN * 100)}%`, height:"100%",
+                        background: PHASE1_KEYS_SET.has(p.phase) ? ac : "var(--muted)",
+                        borderRadius:3, opacity:0.7, transition:"width 0.3s" }} />
+                    </div>
+                    <div style={{ width:30, flexShrink:0, fontFamily:"var(--fm)", fontSize:9,
+                      color:"var(--text)", fontWeight:600, textAlign:"right" }}>
+                      {p.count}
+                    </div>
+                    <div style={{ width:32, flexShrink:0, fontFamily:"var(--fm)", fontSize:8,
+                      color:"var(--dim)", textAlign:"right" }}>
+                      {p.pct}%
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
     </div>
