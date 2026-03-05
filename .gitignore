@@ -15,6 +15,7 @@ __pycache__/
 # Security zone identifier (Windows)
 # ---------------------------
 *:Zone.Identifier
+*Zone.Identifier
 
 # ---------------------------
 # Virtual environments
