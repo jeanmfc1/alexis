@@ -27,9 +27,10 @@ function exportCSV(rows) {
 }
 
 function WQ1ActionTable({ data, color }) {
-  const [expanded, setExpanded] = useState({});
-  const [sortCol, setSortCol]   = useState("priority_score");
-  const [sortDir, setSortDir]   = useState(-1);  // -1 desc, +1 asc
+  const [expanded, setExpanded]   = useState({});
+  const [sortCol, setSortCol]     = useState("priority_score");
+  const [sortDir, setSortDir]     = useState(-1);  // -1 desc, +1 asc
+  const [subSort, setSubSort]     = useState({});  // { sponsorName: {col,dir} }
 
   const rows = useMemo(() => {
     if (!data?.length) return [];
@@ -203,24 +204,63 @@ function WQ1ActionTable({ data, color }) {
                   </tr>
 
                   {/* Expanded trial list */}
-                  {isOpen && (
+                  {isOpen && (() => {
+                    const ss = subSort[row.sponsor_name] || { col:"nct_id", dir:1 };
+                    const toggleSubSort = col => {
+                      setSubSort(prev => {
+                        const cur = prev[row.sponsor_name] || { col:"nct_id", dir:1 };
+                        return { ...prev, [row.sponsor_name]:
+                          cur.col === col ? { col, dir: cur.dir * -1 } : { col, dir: -1 }
+                        };
+                      });
+                    };
+                    const sortedTrials = [...(row.trials||[])].sort((a, b) => {
+                      let av = a[ss.col] ?? "";
+                      let bv = b[ss.col] ?? "";
+                      if (typeof av === "object") av = JSON.stringify(av);
+                      if (typeof bv === "object") bv = JSON.stringify(bv);
+                      if (typeof av === "string") return ss.dir * av.localeCompare(bv);
+                      return ss.dir * (av - bv);
+                    });
+
+                    const SUB_COLS = [
+                      { col:"nct_id",           label:"NCT ID",       width:120 },
+                      { col:"title",            label:"TITLE",        width:340 },
+                      { col:"overall_status",   label:"STATUS",       width:110 },
+                      { col:"modality",         label:"MODALITY",     width:120 },
+                      { col:"modality_source",  label:"MOD. EVIDENCE",width:140 },
+                      { col:"therapeutic_area", label:"TA",           width:160 },
+                      { col:"ta_evidence",      label:"TA EVIDENCE",  width:200 },
+                      { col:"phase",            label:"PHASE",        width:90  },
+                      { col:"first_posted_date",label:"1ST POSTED",   width:100 },
+                    ];
+
+                    return (
                     <tr style={{ background:"var(--surf3)" }}>
                       <td colSpan={7} style={{ padding:"0 12px 14px 36px" }}>
-                        <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                        <div style={{ overflowX:"auto", maxWidth:"100%" }}>
+                        <table style={{ minWidth:1400, borderCollapse:"collapse" }}>
                           <thead>
                             <tr>
-                              {["NCT ID","TITLE","MODALITY","PHASE"].map(h => (
-                                <th key={h} style={{ padding:"6px 8px", textAlign:"left",
-                                  fontFamily:"var(--fm)", fontSize:9,
-                                  color:"var(--dim)", letterSpacing:"0.12em",
-                                  borderBottom:"1px solid var(--border)" }}>
-                                  {h}
-                                </th>
-                              ))}
+                              {SUB_COLS.map(h => {
+                                const active = ss.col === h.col;
+                                return (
+                                  <th key={h.col} onClick={() => toggleSubSort(h.col)}
+                                    style={{ padding:"6px 8px", textAlign:"left",
+                                      fontFamily:"var(--fm)", fontSize:9,
+                                      color: active ? color.mid : "var(--dim)",
+                                      letterSpacing:"0.12em", cursor:"pointer",
+                                      userSelect:"none", whiteSpace:"nowrap",
+                                      width: h.width,
+                                      borderBottom:`1px solid ${active ? color.accent : "var(--border)"}` }}>
+                                    {h.label}{active ? (ss.dir === -1 ? " ↓" : " ↑") : ""}
+                                  </th>
+                                );
+                              })}
                             </tr>
                           </thead>
                           <tbody>
-                            {(row.trials||[]).map((t, ti) => (
+                            {sortedTrials.map((t, ti) => (
                               <tr key={t.nct_id || ti}
                                 style={{ borderTop:"1px solid var(--border)" }}>
                                 <td style={{ padding:"5px 8px",
@@ -235,9 +275,16 @@ function WQ1ActionTable({ data, color }) {
                                   </a>
                                 </td>
                                 <td style={{ padding:"5px 8px", fontSize:12,
-                                  color:"var(--text)", maxWidth:420,
-                                  overflowX:"auto", whiteSpace:"nowrap" }}>
+                                  color:"var(--text)", maxWidth:340,
+                                  overflow:"hidden", textOverflow:"ellipsis",
+                                  whiteSpace:"nowrap" }}
+                                  title={t.title}>
                                   {t.title}
+                                </td>
+                                <td style={{ padding:"5px 8px",
+                                  fontFamily:"var(--fm)", fontSize:11,
+                                  color:"var(--muted)", whiteSpace:"nowrap" }}>
+                                  {t.overall_status || "—"}
                                 </td>
                                 <td style={{ padding:"5px 8px" }}>
                                   <span style={{ fontFamily:"var(--fm)", fontSize:10,
@@ -248,17 +295,42 @@ function WQ1ActionTable({ data, color }) {
                                   </span>
                                 </td>
                                 <td style={{ padding:"5px 8px",
+                                  fontFamily:"var(--fm)", fontSize:10,
+                                  color:"var(--dim)", whiteSpace:"nowrap" }}>
+                                  {t.modality_source || "—"}
+                                </td>
+                                <td style={{ padding:"5px 8px",
+                                  fontFamily:"var(--fm)", fontSize:11,
+                                  color:"var(--muted)", whiteSpace:"nowrap" }}>
+                                  {t.therapeutic_area || "—"}
+                                </td>
+                                <td style={{ padding:"5px 8px",
+                                  fontFamily:"var(--fm)", fontSize:10,
+                                  color:"var(--dim)", maxWidth:200,
+                                  overflow:"hidden", textOverflow:"ellipsis",
+                                  whiteSpace:"nowrap" }}
+                                  title={Array.isArray(t.ta_evidence) ? t.ta_evidence.join("; ") : (t.ta_evidence || "")}>
+                                  {Array.isArray(t.ta_evidence) ? t.ta_evidence.join("; ") : (t.ta_evidence || "—")}
+                                </td>
+                                <td style={{ padding:"5px 8px",
                                   fontFamily:"var(--fm)", fontSize:11,
                                   color:"var(--muted)" }}>
                                   {t.phase || "—"}
+                                </td>
+                                <td style={{ padding:"5px 8px",
+                                  fontFamily:"var(--fm)", fontSize:11,
+                                  color:"var(--muted)", whiteSpace:"nowrap" }}>
+                                  {t.first_posted_date || "—"}
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       </td>
                     </tr>
-                  )}
+                    );
+                  })()}
 
                 </React.Fragment>
               );
