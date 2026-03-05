@@ -159,6 +159,13 @@ def wq10_velocity_dashboard(
     ta_bars  = _pct_change_bars(cur_ta,  cur_drug_new, "ta_totals",  max_bars=3) if has_prior else []
     mod_bars = _pct_change_bars(cur_mod, cur_drug_new, "mod_totals", max_bars=3) if has_prior else []
 
+    # Top TAs by absolute count (for tile 1 badges — NOT deviation)
+    ta_top = sorted(
+        [{"label": k, "count": v, "pct": round(v / cur_drug_new * 100, 1)}
+         for k, v in cur_ta.items() if k.lower() not in SKIP_LABELS],
+        key=lambda x: -x["count"]
+    )
+
     # ── Tile 4: Phase 1 intake ─────────────────────────────────────────────
     PHASE1_KEYS = {"PHASE1", "EARLY_PHASE1", "PHASE1/PHASE2"}
 
@@ -227,6 +234,8 @@ def wq10_velocity_dashboard(
         "cur_drug_new":     cur_drug_new,
         "prior_avg_drug":   round(prior_avg_drug, 1) if prior_avg_drug else None,
         "pace_delta_pct":   pace_delta_pct,
+        # Tile 1 badges (top TAs by count)
+        "ta_top":           ta_top,
         # Tile 2
         "ta_bars":          ta_bars,
         # Tile 3

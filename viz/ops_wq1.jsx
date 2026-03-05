@@ -164,7 +164,7 @@ function Phase1Gauge({ data, accentColor }) {
   if (!data) return null;
   const { cur_pct, avg_pct, delta_pct, cur_count, sparkline, has_prior } = data;
 
-  const R = 38, CX = 52, CY = 52;
+  const R = 50, CX = 64, CY = 64;
   const toRad = deg => deg * Math.PI / 180;
   const arcPath = (pct, r) => {
     const startAngle = -210;
@@ -185,33 +185,33 @@ function Phase1Gauge({ data, accentColor }) {
   const avgY = CY + R * Math.sin(toRad(avgAngle));
 
   return (
-    <div style={{ display:"flex", gap:16, alignItems:"center" }}>
+    <div style={{ display:"flex", gap:16, alignItems:"flex-start" }}>
       {/* Arc gauge */}
       <div style={{ flexShrink:0 }}>
-        <svg width={104} height={72} style={{ overflow:"visible" }}>
+        <svg width={128} height={92} style={{ overflow:"visible" }}>
           <path d={arcPath(100, R)} fill="none"
-            stroke="var(--border2)" strokeWidth="6" strokeLinecap="round" />
+            stroke="var(--border2)" strokeWidth="7" strokeLinecap="round" />
           <path d={arcPath(cur_pct, R)} fill="none"
-            stroke={accentColor} strokeWidth="6" strokeLinecap="round" />
+            stroke={accentColor} strokeWidth="7" strokeLinecap="round" />
           {has_prior && avg_pct != null && (
-            <circle cx={avgX.toFixed(1)} cy={avgY.toFixed(1)} r="4"
+            <circle cx={avgX.toFixed(1)} cy={avgY.toFixed(1)} r="5"
               fill="var(--bg)" stroke="#F59E0B" strokeWidth="2" />
           )}
-          <text x={CX} y={CY - 2} textAnchor="middle"
-            fontSize="16" fontWeight="700" fill={accentColor}
+          <text x={CX} y={CY - 4} textAnchor="middle"
+            fontSize="20" fontWeight="700" fill={accentColor}
             fontFamily="var(--fm)">
             {cur_pct.toFixed(1)}%
           </text>
-          <text x={CX} y={CY + 13} textAnchor="middle"
-            fontSize="7.5" fill="var(--muted)" fontFamily="var(--fm)">
+          <text x={CX} y={CY + 14} textAnchor="middle"
+            fontSize="8" fill="var(--muted)" fontFamily="var(--fm)">
             Phase 1
           </text>
         </svg>
       </div>
       {/* Stats + sparkline */}
       <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:4 }}>
-          <span style={{ fontFamily:"var(--fm)", fontSize:13,
+        <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:6 }}>
+          <span style={{ fontFamily:"var(--fm)", fontSize:18,
             fontWeight:700, color:accentColor }}>
             {cur_count} trials
           </span>
@@ -224,17 +224,19 @@ function Phase1Gauge({ data, accentColor }) {
         </div>
         {has_prior && avg_pct != null && (
           <div style={{ fontFamily:"var(--fm)", fontSize:9,
-            color:"var(--dim)", marginBottom:6 }}>
+            color:"var(--dim)", marginBottom:8 }}>
             ● avg {avg_pct.toFixed(1)}%
             <span style={{ marginLeft:8, color:"#F59E0B" }}>○ avg marker on gauge</span>
           </div>
         )}
         {sparkline && (
-          <MiniSparkline
-            points={sparkline.map(p => ({ ...p, drug_new: p.pct }))}
-            accentColor={accentColor}
-            width={160} height={52}
-            showArea={false} />
+          <div style={{ marginTop:4 }}>
+            <MiniSparkline
+              points={sparkline.map(p => ({ ...p, drug_new: p.pct }))}
+              accentColor={accentColor}
+              width={180} height={58}
+              showArea={false} />
+          </div>
         )}
       </div>
     </div>
@@ -254,7 +256,7 @@ function WQ10VelocityDashboard({ data, color }) {
   );
 
   const { sparkline, cur_drug_new, prior_avg_drug, pace_delta_pct,
-          ta_bars, mod_bars, phase1, phase_breakdown, has_prior, n_prior_weeks } = data;
+          ta_top, ta_bars, mod_bars, phase1, phase_breakdown, has_prior, n_prior_weeks } = data;
 
   const ac = color.mid;
 
@@ -308,15 +310,15 @@ function WQ10VelocityDashboard({ data, color }) {
               width={230} height={68} fluid />
           </div>
         )}
-        {/* Top TAs this week */}
-        {ta_bars?.length > 0 && (
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:10,
+        {/* Top TAs this week (by absolute count, not deviation) */}
+        {ta_top?.length > 0 && (
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10,
             borderTop:"1px solid var(--border)", paddingTop:10 }}>
-            {ta_bars.filter(b => b.current_n > 0).slice(0, 4).map(b => (
-              <span key={b.label} style={{ fontFamily:"var(--fm)", fontSize:9,
+            {ta_top.slice(0, 6).map(t => (
+              <span key={t.label} style={{ fontFamily:"var(--fm)", fontSize:9,
                 color:"var(--muted)", background:"var(--surf3)",
                 border:"1px solid var(--border)", borderRadius:4, padding:"2px 7px" }}>
-                {b.label} <span style={{ color:ac, fontWeight:600 }}>{b.current_n}</span>
+                {t.label} <span style={{ color:ac, fontWeight:600 }}>{t.count}</span>
               </span>
             ))}
           </div>
