@@ -96,20 +96,33 @@ def wq1_sponsor_action_table(enriched_trials: list) -> list:
             priority_label = "LOW"
 
         # Individual trial records for the expandable row
-        trial_rows = [
-            {
+        trial_rows = []
+        for t in sponsor_trials:
+            # Derive modality_source from info_flags if not set
+            # (backward compat for data generated before the classifier fix)
+            mod_src = t.get("modality_source")
+            if not mod_src:
+                flags = t.get("info_flags") or []
+                if "base_reason:no_mesh" in flags:
+                    mod_src = "intervention_type"
+                elif "mesh_available_but_not_used" in flags:
+                    mod_src = "text"
+                elif t.get("intervention_meshes"):
+                    mod_src = "mesh_tree"
+                else:
+                    mod_src = "intervention_type"
+
+            trial_rows.append({
                 "nct_id":            t.get("nct_id"),
                 "title":             t.get("title"),
                 "modality":          t.get("modality"),
                 "phase":             t.get("phase"),
                 "overall_status":    t.get("overall_status"),
-                "modality_source":   t.get("modality_source"),
+                "modality_source":   mod_src,
                 "therapeutic_area":  t.get("therapeutic_area"),
                 "ta_evidence":       t.get("therapeutic_areas_detected"),
                 "first_posted_date": t.get("first_posted_date"),
-            }
-            for t in sponsor_trials
-        ]
+            })
 
         rows.append({
             "sponsor_name":    sponsor_name,

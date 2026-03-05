@@ -226,7 +226,7 @@ function WQ1ActionTable({ data, color }) {
                     const SUB_COLS = [
                       { col:"nct_id",           label:"NCT ID",       width:120 },
                       { col:"title",            label:"TITLE",        width:340 },
-                      { col:"overall_status",   label:"STATUS",       width:110 },
+                      { col:"overall_status",   label:"STATUS",       width:130 },
                       { col:"modality",         label:"MODALITY",     width:120 },
                       { col:"modality_source",  label:"MOD. EVIDENCE",width:140 },
                       { col:"therapeutic_area", label:"TA",           width:160 },
@@ -235,10 +235,26 @@ function WQ1ActionTable({ data, color }) {
                       { col:"first_posted_date",label:"1ST POSTED",   width:100 },
                     ];
 
+                    // Status color coding — active statuses are normal,
+                    // inactive ones are flagged so BD team knows not to pursue
+                    const STATUS_COLORS = {
+                      RECRUITING:               "var(--green)",
+                      ENROLLING_BY_INVITATION:   "var(--green)",
+                      ACTIVE_NOT_RECRUITING:     "var(--amber)",
+                      NOT_YET_RECRUITING:        "var(--muted)",
+                      COMPLETED:                 "var(--red)",
+                      TERMINATED:                "var(--red)",
+                      WITHDRAWN:                 "var(--red)",
+                      SUSPENDED:                 "var(--red)",
+                    };
+                    const statusColor = s => STATUS_COLORS[s] || "var(--muted)";
+                    const humanStatus = s => (s||"—").replace(/_/g," ").toLowerCase()
+                      .replace(/\b\w/g, c => c.toUpperCase());
+
                     return (
                     <tr style={{ background:"var(--surf3)" }}>
-                      <td colSpan={7} style={{ padding:"0 12px 14px 36px" }}>
-                        <div style={{ overflowX:"auto", maxWidth:"100%" }}>
+                      <td colSpan={7} style={{ padding:"0 12px 14px 36px", maxWidth:0 }}>
+                        <div style={{ overflowX:"auto" }}>
                         <table style={{ minWidth:1400, borderCollapse:"collapse" }}>
                           <thead>
                             <tr>
@@ -260,9 +276,13 @@ function WQ1ActionTable({ data, color }) {
                             </tr>
                           </thead>
                           <tbody>
-                            {sortedTrials.map((t, ti) => (
+                            {sortedTrials.map((t, ti) => {
+                              const dead = ["COMPLETED","TERMINATED","WITHDRAWN","SUSPENDED"]
+                                .includes(t.overall_status);
+                              return (
                               <tr key={t.nct_id || ti}
-                                style={{ borderTop:"1px solid var(--border)" }}>
+                                style={{ borderTop:"1px solid var(--border)",
+                                  opacity: dead ? 0.55 : 1 }}>
                                 <td style={{ padding:"5px 8px",
                                   fontFamily:"var(--fm)", fontSize:11,
                                   color:"var(--cyan)", whiteSpace:"nowrap" }}>
@@ -281,10 +301,15 @@ function WQ1ActionTable({ data, color }) {
                                   title={t.title}>
                                   {t.title}
                                 </td>
-                                <td style={{ padding:"5px 8px",
-                                  fontFamily:"var(--fm)", fontSize:11,
-                                  color:"var(--muted)", whiteSpace:"nowrap" }}>
-                                  {t.overall_status || "—"}
+                                <td style={{ padding:"5px 8px" }}>
+                                  <span style={{ fontFamily:"var(--fm)", fontSize:10,
+                                    padding:"2px 6px", borderRadius:8,
+                                    color: statusColor(t.overall_status),
+                                    background: statusColor(t.overall_status) + "18",
+                                    border: `1px solid ${statusColor(t.overall_status)}30`,
+                                    whiteSpace:"nowrap" }}>
+                                    {humanStatus(t.overall_status)}
+                                  </span>
                                 </td>
                                 <td style={{ padding:"5px 8px" }}>
                                   <span style={{ fontFamily:"var(--fm)", fontSize:10,
@@ -297,7 +322,7 @@ function WQ1ActionTable({ data, color }) {
                                 <td style={{ padding:"5px 8px",
                                   fontFamily:"var(--fm)", fontSize:10,
                                   color:"var(--dim)", whiteSpace:"nowrap" }}>
-                                  {t.modality_source || "—"}
+                                  {(t.modality_source || "—").replace(/_/g," ")}
                                 </td>
                                 <td style={{ padding:"5px 8px",
                                   fontFamily:"var(--fm)", fontSize:11,
@@ -323,7 +348,8 @@ function WQ1ActionTable({ data, color }) {
                                   {t.first_posted_date || "—"}
                                 </td>
                               </tr>
-                            ))}
+                              );
+                            })}
                           </tbody>
                         </table>
                         </div>

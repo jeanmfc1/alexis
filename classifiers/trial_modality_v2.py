@@ -115,6 +115,7 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
 
     if mesh_submods:
         # resolve priority — most specific modality wins
+        trial.modality_source = "mesh_tree"
         return _resolve_modality_priority(mesh_submods, base_modality)
 
     if mesh_available and not mesh_used:
@@ -131,6 +132,7 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
     text_blob = " ".join((trial.interventions_text or []) + [trial.title or ""])
     text_submod = text_modality_from_text(text_blob, base_modality)
     if text_submod:
+        trial.modality_source = "text"
         return text_submod
 
 
@@ -141,6 +143,7 @@ def assign_trial_modality_v2(trial: "ClinicalTrialSignalV2") -> str:
     if not mesh_available:
         trial.info_flags.append("base_reason:no_mesh")
 
+    trial.modality_source = "intervention_type"
     return base_modality
 
 
