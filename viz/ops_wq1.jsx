@@ -243,8 +243,7 @@ function Phase1Gauge({ data, accentColor }) {
   );
 }
 
-// ── Phase 1 key set (shared between gauge + breakdown highlight) ─────────
-const PHASE1_KEYS_SET = new Set(["PHASE1", "EARLY_PHASE1", "PHASE1/PHASE2"]);
+// (Phase 1 highlight now comes from is_p1 flag in phase_breakdown data)
 
 // ── Main wq10 component ────────────────────────────────────────────────────
 function WQ10VelocityDashboard({ data, color }) {
@@ -377,14 +376,14 @@ function WQ10VelocityDashboard({ data, color }) {
                 {phase_breakdown.map(p => (
                   <div key={p.phase} style={{ display:"flex", alignItems:"center", gap:6 }}>
                     <div style={{ width:72, flexShrink:0, fontFamily:"var(--fm)", fontSize:9,
-                      color: PHASE1_KEYS_SET.has(p.phase) ? ac : "var(--muted)",
-                      fontWeight: PHASE1_KEYS_SET.has(p.phase) ? 600 : 400,
+                      color: p.is_p1 ? ac : "var(--muted)",
+                      fontWeight: p.is_p1 ? 600 : 400,
                       textAlign:"right" }}>
-                      {p.phase.replace(/_/g," ").replace(/\//g," / ")}
+                      {p.phase}
                     </div>
                     <div style={{ flex:1, height:6, background:"var(--border)", borderRadius:3 }}>
                       <div style={{ width:`${(p.count / maxN * 100)}%`, height:"100%",
-                        background: PHASE1_KEYS_SET.has(p.phase) ? ac : "var(--muted)",
+                        background: p.is_p1 ? ac : "var(--muted)",
                         borderRadius:3, opacity:0.7, transition:"width 0.3s" }} />
                     </div>
                     <div style={{ width:30, flexShrink:0, fontFamily:"var(--fm)", fontSize:9,

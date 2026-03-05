@@ -201,27 +201,36 @@ def wq10_velocity_dashboard(
         "is_current":  True,
     })
 
-    # ── Phase breakdown (all phases, sorted by count desc) ──────────────────
-    PHASE_DISPLAY_ORDER = [
-        "PHASE1", "EARLY_PHASE1", "PHASE1/PHASE2",
-        "PHASE2", "PHASE2/PHASE3", "PHASE3", "PHASE4", "NA",
+    # ── Phase breakdown (grouped buckets, matching clinical convention) ─────
+    # Group sub-phases into logical buckets so the breakdown sums to cur_drug_new
+    # and the "Phase 1" row matches the gauge above it.
+    PHASE_BUCKETS = [
+        ("Phase 1",   {"PHASE1", "EARLY_PHASE1", "PHASE1/PHASE2"}),
+        ("Phase 2",   {"PHASE2", "PHASE2/PHASE3"}),
+        ("Phase 3",   {"PHASE3"}),
+        ("Phase 4",   {"PHASE4"}),
+        ("NA / Other", {"NA"}),
     ]
+    bucket_keys_used = set()
     phase_breakdown = []
-    for ph in PHASE_DISPLAY_ORDER:
-        count = cur_phase.get(ph, 0)
+    for label, keys in PHASE_BUCKETS:
+        count = sum(cur_phase.get(k, 0) for k in keys)
+        bucket_keys_used |= keys
         if count > 0:
             phase_breakdown.append({
-                "phase": ph,
+                "phase": label,
                 "count": count,
                 "pct":   round(count / cur_drug_new * 100, 1),
+                "is_p1": label == "Phase 1",
             })
-    # Append any phases not in the display order
+    # Catch any phases not in the buckets
     for ph, count in sorted(cur_phase.items(), key=lambda x: -x[1]):
-        if ph not in PHASE_DISPLAY_ORDER and count > 0:
+        if ph not in bucket_keys_used and count > 0:
             phase_breakdown.append({
                 "phase": ph,
                 "count": count,
                 "pct":   round(count / cur_drug_new * 100, 1),
+                "is_p1": False,
             })
 
     return {
