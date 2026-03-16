@@ -147,6 +147,35 @@ def classify_biomarkers(text: str) -> List[str]:
 
     return sorted(matched)
 
+def classify_biomarkers_with_evidence(text: str) -> dict[str, str]:
+    """
+    Classify text into biomarker categories and return the matched evidence.
+
+    Like classify_biomarkers(), but returns a dict mapping each matched
+    category name to the actual text snippet that triggered the match.
+    Only the FIRST matching pattern per category is used.
+
+    Args:
+        text: concatenated trial text (title + outcome measures + descriptions)
+
+    Returns:
+        Dict of {category_name: matched_snippet}.
+        Example: {"PK/PD": "pharmacokinetic", "Safety Biomarker": "liver function test"}
+    """
+    if not text:
+        return {}
+
+    evidence = {}
+    for category, patterns in BIOMARKER_CATEGORIES.items():
+        for pat in patterns:
+            m = pat.search(text)
+            if m:
+                evidence[category] = m.group()
+                break  # first match per category is enough
+
+    return evidence
+
+
 
 def trial_biomarker_text(trial: dict) -> str:
     """

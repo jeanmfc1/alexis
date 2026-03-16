@@ -177,6 +177,12 @@ function SQ8BiomarkerMatrix({ data, color }) {
                                 color:"#fff",
                               }}>{t.phase || "—"}</span>
                             </td>
+                            <td style={{ padding:"3px 0 3px 8px", maxWidth:200,
+                                         overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                                         fontFamily:"monospace", fontSize:9, color:"var(--dim)" }}
+                                title={t.trigger || ""}>
+                              {t.trigger || ""}
+                            </td>
                           </tr>
                         ))}
                       </tbody>

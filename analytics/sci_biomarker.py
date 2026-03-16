@@ -31,7 +31,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-from policy.biomarker_policy import BIOMARKER_CATEGORIES, classify_biomarkers, trial_biomarker_text
+from policy.biomarker_policy import BIOMARKER_CATEGORIES, classify_biomarkers, classify_biomarkers_with_evidence, trial_biomarker_text
 
 
 MAX_TA = 12
@@ -85,22 +85,23 @@ def sq8_biomarker_ta_matrix(master_db_path: str) -> dict:
 
     for t in drug_trials:
         text = trial_biomarker_text(t)
-        categories = classify_biomarkers(text)
-        if not categories:
+        evidence_dict = classify_biomarkers_with_evidence(text)
+        if not evidence_dict:
             continue
 
         ta = t.get("therapeutic_area") or "Unknown"
         total_tagged += 1
 
-        for cat in categories:
+        for cat in evidence_dict:
             bm_ta_count[cat][ta] += 1
             ta_totals_all[ta] += 1
             cell_key = f"{cat}||{ta}"
             if len(cell_trials[cell_key]) < MAX_TRIALS_PER_CELL:
                 cell_trials[cell_key].append({
-                    "nct_id": t.get("nct_id"),
-                    "title":  t.get("title"),
-                    "phase":  t.get("phase") or "NA",
+                    "nct_id":  t.get("nct_id"),
+                    "title":   t.get("title"),
+                    "phase":   t.get("phase") or "NA",
+                    "trigger": evidence_dict[cat],
                 })
 
     if not bm_ta_count:

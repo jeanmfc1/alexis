@@ -27,11 +27,21 @@ function exportSQ2CSV(sponsors) {
 }
 
 
-// ── Sponsor Profile Panel ─────────────────────────────────────────
+// ── Sponsor Profile Panel ─────────────────────────────────────────────────
 function SponsorProfile({ sponsor, color, PHASE_COLORS }) {
   if (!sponsor) return null;
 
   const { sponsor_name, total_trials, phase_breakdown, ta_breakdown, modality_breakdown, trials } = sponsor;
+
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+
+  const toggleSort = (col) => {
+    if (sortCol === col) { setSortDir(d => d === "asc" ? "desc" : "asc"); }
+    else { setSortCol(col); setSortDir("asc"); }
+  };
+
+  const PHASE_RANK = { PHASE3:1, "PHASE2/PHASE3":2, PHASE2:3, "PHASE1/PHASE2":4, PHASE1:5, EARLY_PHASE1:6, PHASE4:7, NA:8 };
 
   const phaseDist = phase_breakdown || {};
   const phaseTotal = Object.values(phaseDist).reduce((s, n) => s + n, 0) || 1;
@@ -73,8 +83,26 @@ function SponsorProfile({ sponsor, color, PHASE_COLORS }) {
   const taMax = taEntries[0]?.[1] || 1;
   const modEntries = Object.entries(modality_breakdown || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const modMax = modEntries[0]?.[1] || 1;
-  const trialList = trials || [];
+  const trialListRaw = trials || [];
+  const trialList = useMemo(() => {
+    if (!sortCol) return trialListRaw;
+    const sorted = [...trialListRaw].sort((a, b) => {
+      if (sortCol === "phase") {
+        return (PHASE_RANK[a.phase] || 99) - (PHASE_RANK[b.phase] || 99);
+      }
+      const av = (a[sortCol] || "").toString().toLowerCase();
+      const bv = (b[sortCol] || "").toString().toLowerCase();
+      return av < bv ? -1 : av > bv ? 1 : 0;
+    });
+    return sortDir === "desc" ? sorted.reverse() : sorted;
+  }, [trialListRaw, sortCol, sortDir]);
   const phaseBadgeColor = (phase) => { if (!phase) return "#475569"; return PHASE_COLORS[phase] || "#475569"; };
+
+  const thStyle = (align) => ({
+    textAlign:align || "left", padding:"6px 8px", color:"var(--muted)", fontSize:9,
+    letterSpacing:"0.06em", fontWeight:500, cursor:"pointer", userSelect:"none"
+  });
+  const sortIcon = (col) => sortCol === col ? (sortDir === "asc" ? " ▲" : " ▼") : "";
 
   return (
     <div style={{ background:"var(--surf2)", borderRadius:10,
@@ -135,11 +163,12 @@ function SponsorProfile({ sponsor, color, PHASE_COLORS }) {
         <table style={{ width:"100%", borderCollapse:"collapse", fontFamily:"var(--fm)", fontSize:10 }}>
           <thead>
             <tr style={{ borderBottom:"1px solid var(--border)", position:"sticky", top:0, background:"var(--surf3)", zIndex:1 }}>
-              <th style={{ textAlign:"left", padding:"6px 8px", color:"var(--muted)", fontSize:9, letterSpacing:"0.06em", fontWeight:500 }}>NCT ID</th>
-              <th style={{ textAlign:"left", padding:"6px 8px", color:"var(--muted)", fontSize:9, letterSpacing:"0.06em", fontWeight:500 }}>TITLE</th>
-              <th style={{ textAlign:"center", padding:"6px 8px", color:"var(--muted)", fontSize:9, letterSpacing:"0.06em", fontWeight:500 }}>PHASE</th>
-              <th style={{ textAlign:"left", padding:"6px 8px", color:"var(--muted)", fontSize:9, letterSpacing:"0.06em", fontWeight:500 }}>TA</th>
-              <th style={{ textAlign:"left", padding:"6px 8px", color:"var(--muted)", fontSize:9, letterSpacing:"0.06em", fontWeight:500 }}>STATUS</th>
+              <th style={thStyle("left")} onClick={() => toggleSort("nct_id")}>NCT ID{sortIcon("nct_id")}</th>
+              <th style={thStyle("left")} onClick={() => toggleSort("title")}>TITLE{sortIcon("title")}</th>
+              <th style={thStyle("center")} onClick={() => toggleSort("phase")}>PHASE{sortIcon("phase")}</th>
+              <th style={thStyle("left")} onClick={() => toggleSort("therapeutic_area")}>TA{sortIcon("therapeutic_area")}</th>
+              <th style={thStyle("left")} onClick={() => toggleSort("modality")}>MODALITY{sortIcon("modality")}</th>
+              <th style={thStyle("left")} onClick={() => toggleSort("overall_status")}>STATUS{sortIcon("overall_status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -161,6 +190,8 @@ function SponsorProfile({ sponsor, color, PHASE_COLORS }) {
                 </td>
                 <td style={{ padding:"5px 8px", color:"var(--muted)", maxWidth:140, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}
                   title={t.therapeutic_area}>{t.therapeutic_area}</td>
+                <td style={{ padding:"5px 8px", color:"var(--muted)", maxWidth:120, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}
+                  title={t.modality}>{humanMod(t.modality)}</td>
                 <td style={{ padding:"5px 8px", color:"var(--dim)" }}>{t.overall_status}</td>
               </tr>
             ))}
@@ -259,6 +290,64 @@ function SQ2TopSponsors({ data, color }) {
           EXPORT CSV
         </button>
       </div>
+
+      {/* ── Section 4: Sponsor Lookup ─────────────────────────────────────── */}
+      <div style={{ marginTop:28, marginBottom:20 }}>
+        <MonoLabel color={color.mid}>Sponsor Lookup</MonoLabel>
+        <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:8 }}>
+          <div style={{ position:"relative", flex:"0 0 320px" }}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setSelectedSponsor(null); }}
+              placeholder="Search sponsor name…"
+              style={{ width:"100%", fontFamily:"var(--fm)", fontSize:11,
+                padding:"7px 12px", background:"var(--surf3)",
+                border:"1px solid var(--border2)", borderRadius:6,
+                color:"var(--text)", outline:"none", boxSizing:"border-box" }}
+            />
+            {sponsorMatches.length > 0 && !selectedSponsor && (
+              <div style={{ position:"absolute", top:"100%", left:0, right:0,
+                zIndex:50, background:"var(--surf2)", border:"1px solid var(--border2)",
+                borderRadius:6, marginTop:2, maxHeight:220, overflowY:"auto",
+                boxShadow:"0 4px 16px rgba(0,0,0,0.4)" }}>
+                {sponsorMatches.map(s => (
+                  <div key={s.sponsor_name}
+                    onClick={() => { setSelectedSponsor(s); setSearchQuery(s.sponsor_name); }}
+                    style={{ padding:"7px 12px", fontFamily:"var(--fm)", fontSize:11,
+                      color:"var(--text)", cursor:"pointer",
+                      borderBottom:"1px solid var(--border)",
+                      display:"flex", justifyContent:"space-between",
+                      alignItems:"center" }}
+                    onMouseEnter={e => e.currentTarget.style.background="var(--surf3)"}
+                    onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                    <span style={{ overflow:"hidden", textOverflow:"ellipsis",
+                      whiteSpace:"nowrap" }}>{s.sponsor_name}</span>
+                    <span style={{ fontFamily:"var(--fm)", fontSize:9,
+                      color:"var(--dim)", flexShrink:0, marginLeft:8 }}>
+                      {s.total_trials} trials
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {selectedSponsor && (
+            <button onClick={() => { setSelectedSponsor(null); setSearchQuery(""); }}
+              style={{ fontFamily:"var(--fm)", fontSize:9, padding:"6px 12px",
+                background:"transparent", border:"1px solid var(--border2)",
+                borderRadius:4, color:"var(--muted)", cursor:"pointer",
+                letterSpacing:"0.08em" }}>
+              CLEAR
+            </button>
+          )}
+        </div>
+        {selectedSponsor && (
+          <SponsorProfile sponsor={selectedSponsor} color={color}
+            PHASE_COLORS={PHASE_COLORS} />
+        )}
+      </div>
+
 
       {/* ── Section 1: The Big 25 ─────────────────────────────────── */}
       <MonoLabel color={color.mid}>The Big 25</MonoLabel>
@@ -655,63 +744,6 @@ function SQ2TopSponsors({ data, color }) {
         </div>
       )}
 
-
-      {/* ── Section 4: Sponsor Lookup ─────────────────────────────────────── */}
-      <div style={{ marginTop:28, marginBottom:20 }}>
-        <MonoLabel color={color.mid}>Sponsor Lookup</MonoLabel>
-        <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:8 }}>
-          <div style={{ position:"relative", flex:"0 0 320px" }}>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setSelectedSponsor(null); }}
-              placeholder="Search sponsor name…"
-              style={{ width:"100%", fontFamily:"var(--fm)", fontSize:11,
-                padding:"7px 12px", background:"var(--surf3)",
-                border:"1px solid var(--border2)", borderRadius:6,
-                color:"var(--text)", outline:"none", boxSizing:"border-box" }}
-            />
-            {sponsorMatches.length > 0 && !selectedSponsor && (
-              <div style={{ position:"absolute", top:"100%", left:0, right:0,
-                zIndex:50, background:"var(--surf2)", border:"1px solid var(--border2)",
-                borderRadius:6, marginTop:2, maxHeight:220, overflowY:"auto",
-                boxShadow:"0 4px 16px rgba(0,0,0,0.4)" }}>
-                {sponsorMatches.map(s => (
-                  <div key={s.sponsor_name}
-                    onClick={() => { setSelectedSponsor(s); setSearchQuery(s.sponsor_name); }}
-                    style={{ padding:"7px 12px", fontFamily:"var(--fm)", fontSize:11,
-                      color:"var(--text)", cursor:"pointer",
-                      borderBottom:"1px solid var(--border)",
-                      display:"flex", justifyContent:"space-between",
-                      alignItems:"center" }}
-                    onMouseEnter={e => e.currentTarget.style.background="var(--surf3)"}
-                    onMouseLeave={e => e.currentTarget.style.background="transparent"}>
-                    <span style={{ overflow:"hidden", textOverflow:"ellipsis",
-                      whiteSpace:"nowrap" }}>{s.sponsor_name}</span>
-                    <span style={{ fontFamily:"var(--fm)", fontSize:9,
-                      color:"var(--dim)", flexShrink:0, marginLeft:8 }}>
-                      {s.total_trials} trials
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {selectedSponsor && (
-            <button onClick={() => { setSelectedSponsor(null); setSearchQuery(""); }}
-              style={{ fontFamily:"var(--fm)", fontSize:9, padding:"6px 12px",
-                background:"transparent", border:"1px solid var(--border2)",
-                borderRadius:4, color:"var(--muted)", cursor:"pointer",
-                letterSpacing:"0.08em" }}>
-              CLEAR
-            </button>
-          )}
-        </div>
-        {selectedSponsor && (
-          <SponsorProfile sponsor={selectedSponsor} color={color}
-            PHASE_COLORS={PHASE_COLORS} />
-        )}
-      </div>
 
       {/* Footer */}
       <div style={{ fontFamily:"var(--fm)", fontSize:9, color:"var(--dim)",
