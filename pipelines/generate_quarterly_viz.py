@@ -14,7 +14,7 @@ Run from the ALEXIS project root:
 Question IDs and their analytics sources:
     bd_sq2  — top 25 sponsors          → master DB trials[]  (full scan + sidecar cache)
     mk_sq1  — modality landscape        → master DB dir  (full history + sidecar caches)
-    sci_bm  — biomarker × TA matrix    → master DB trials[]  (full scan + sidecar cache)
+    sci_sq8 — biomarker × TA matrix    → master DB trials[]  (full scan + sidecar cache)
 """
 
 import json
@@ -189,7 +189,7 @@ def build_quarterly_payload(db_path, meta) -> dict:
     sq8_data = sq8_biomarker_ta_matrix(str(db_path))
     sq8_tagged = sq8_data.get("meta", {}).get("total_tagged", 0)
     sq8_total = sq8_data.get("grand_total", 0)
-    print(f"  sci_bm  : {sq8_tagged:,} biomarker-tagged trials, "
+    print(f"  sci_sq8 : {sq8_tagged:,} biomarker-tagged trials, "
           f"{sq8_total:,} category×TA hits")
 
     return {

@@ -160,8 +160,8 @@ function SponsorProfile({ sponsor, color, PHASE_COLORS }) {
                   </span>
                 </td>
                 <td style={{ padding:"5px 8px", color:"var(--muted)", maxWidth:140, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}
-                  title={t.ta}>{t.ta}</td>
-                <td style={{ padding:"5px 8px", color:"var(--dim)" }}>{t.status}</td>
+                  title={t.therapeutic_area}>{t.therapeutic_area}</td>
+                <td style={{ padding:"5px 8px", color:"var(--dim)" }}>{t.overall_status}</td>
               </tr>
             ))}
           </tbody>

@@ -6,20 +6,6 @@
 // Injected by : analytics/sci_biomarker.py → sq8_biomarker_ta_matrix()
 // ─────────────────────────────────────────────────────────────────────────
 
-const PHASE_ORDER = {
-  "PHASE3":1, "PHASE2/PHASE3":2, "PHASE2":3, "PHASE1/PHASE2":4,
-  "PHASE1":5, "EARLY_PHASE1":6, "PHASE4":7, "NA":8, "—":9,
-};
-function phaseSort(a, b) {
-  return (PHASE_ORDER[a.phase] || 99) - (PHASE_ORDER[b.phase] || 99);
-}
-
-const PHASE_COLORS = {
-  "PHASE3":"#22C55E", "PHASE2":"#38BDF8", "PHASE1":"#F59E0B",
-  "PHASE1/PHASE2":"#F59E0B", "PHASE2/PHASE3":"#38BDF8",
-  "EARLY_PHASE1":"#F59E0B", "PHASE4":"#8B5CF6", "NA":"#475569", "—":"#475569",
-};
-
 function abbrTA(name) {
   if (name.length <= 14) return name;
   const abbrs = {
