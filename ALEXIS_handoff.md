@@ -23,15 +23,20 @@ ALEXIS/
 │   ├── sci_wq3.py      ← wq9: MeSH quality waterfall[STUB]
 │   ├── ops_wq1.py      ← wq10: Velocity dashboard   [LIVE]
 │   ├── ops_wq2.py      ← wq11: Complexity waffle    [STUB]
-│   └── ops_wq3.py      ← wq12: Phase 1 intake list  [STUB]
+│   ├── ops_wq3.py      ← wq12: Phase 1 intake list  [STUB]
+│   ├── bd_sq2.py       ← sq2: Top 25 sponsors        [LIVE]
+│   └── mk_sq1.py       ← sq4: Modality landscape     [LIVE]
 ├── viz/
-│   ├── alexis_weekly_dashboard.html  ← TEMPLATE — edit this, never the _live file
+│   ├── alexis_weekly_dashboard.html  ← TEMPLATE — edit this, never the _live files
 │   ├── bd_wq1.jsx      ← React component for wq1
 │   ├── mk_wq1.jsx      ← React component for wq4
 │   ├── sci_wq1.jsx     ← React component for wq7
-│   └── ops_wq1.jsx     ← React component for wq10
+│   ├── ops_wq1.jsx     ← React component for wq10
+│   ├── bd_sq2.jsx      ← React component for sq2
+│   └── mk_sq1_sq.jsx   ← React component for sq4
 ├── pipelines/
-│   └── generate_weekly_viz.py  ← Orchestrator: prompts user, calls all wqN, injects JSON, writes _live.html
+│   ├── generate_weekly_viz.py      ← Weekly orchestrator
+│   └── generate_quarterly_viz.py   ← Quarterly orchestrator
 └── utils/
     ├── mesh_lookup.py
     └── parallel_processor.py
@@ -187,7 +192,10 @@ App
     ├── WeeklyMarketing({ data, color })  → Card(wq4), Placeholder(wq5,wq6)
     ├── WeeklyScientific({ data, color }) → Card(wq7), Placeholder(wq8,wq9)
     ├── WeeklyOperations({ data, color }) → Card(wq10), Placeholder(wq11,wq12)
-    └── QuarterlyView (all Placeholders)
+    └── QuarterlyView({ team, color })
+        ├── sq2 → SQ2TopSponsors (BD)       [LIVE]
+        ├── sq4 → SQ1ModalityLandscape (MK)  [LIVE]
+        └── sq1,sq3,sq5,sq6,sq7-sq12         Placeholder
 ```
 
 **Card** — collapsible wrapper, shows question ID + business question text + viz type badge. `defaultOpen` prop keeps expanded on load.  
@@ -305,24 +313,104 @@ This field is persisted in enriched JSON after re-running the classifier pipelin
 
 ---
 
-## Remaining Work (Priority Order)
+## Quarterly Pipeline
 
-1. **wq2** — BD: Sponsor watchlist (top movers week-over-week)
-3. **wq3** — BD: Competitive intelligence feed
-4. **wq5** — Marketing: Trending modalities/TAs chart
-5. **wq6** — Marketing: Conference snapshot
-6. **wq8** — Scientific: Classification gap report
-7. **wq9** — Scientific: MeSH quality waterfall
-8. **wq11** — Operations: Complexity waffle chart
-9. **wq12** — Operations: Phase 1 intake list (individual trial cards)
-10. **Quarterly view** — sq1–sq12 (all placeholders, master DB as primary source)
+**Run:** `python pipelines/generate_quarterly_viz.py` from `~/projects/ALEXIS`
+
+**Output:** `viz/alexis_quarterly_dashboard_live.html`
+
+Same template as weekly (`viz/alexis_weekly_dashboard.html`) — the pipeline injects quarterly data + all JSX components (weekly + quarterly) so both tabs work. Weekly keys are set to empty stubs so the weekly tab renders gracefully.
+
+### Interactive flow
+User picks a master DB (default: latest). The pipeline loads the selected DB for bd_sq2, and scans ALL master DBs in the directory for mk_sq1 (full history aggregation).
+
+### Sidecar cache pattern
+Both `bd_sq2` and `mk_sq1` use sidecar JSON caches next to each master DB file:
+- `bd_sq2_cache_YYYY_QN.json` — sponsor data for one master DB
+- `mk_sq1_cache_YYYY_QN.json` — modality snapshot for one master DB
+
+Caches are auto-created on first run and reused when the master DB file’s mtime hasn’t changed. Delete the cache file to force recomputation.
 
 ---
 
-## Adding a New Question (Pattern)
+## sq2 — Top 25 Sponsors (BD)
+**Source:** Single master DB (user-selected) → industry drug trials only
+**Shows:** 3-section infographic — donut of top sponsors by trial count, TA territory heat grid, phase pipeline stacked bars.
+
+---
+
+## sq4 — Modality Landscape (Marketing)
+**Source:** ALL 8 master DBs (2019_Q4 → 2025_Q4) → full history aggregation
+**Shows:** Side-by-side layout — donut chart (left) + 3×4 clickable legend grid (right). Click a modality to open a detail modal with:
+- Trend badge + sparkline (6-year time series)
+- YoY delta (count and pct points)
+- Top 5 therapeutic areas
+- Phase distribution stacked bar
+- Sponsor diversity bar (Industry / NIH / Other)
+- Maturity badge (early-heavy / late-heavy / balanced)
+- Complexity weight
+
+**Scope:** All drug trials (`is_drug_trial=True`), all sponsor classes. Excludes modalities with < 5 trials.
+
+**Trend classification:** >10% growth = “growing”, <-10% = “declining”, else “stable”. Growth rate computed from first to last period.
+
+### Python output
+```python
+{
+    "available": True,
+    "total_drug_trials": int,
+    "periods": ["2019_Q4", ..., "2025_Q4"],
+    "modalities": [{
+        "name", "count", "pct", "trend", "growth_rate",
+        "delta_yoy_count", "delta_yoy_pct_pts",
+        "top_tas": [{"name", "count"}],
+        "phase_dist": {"PHASE1": n, ...},
+        "maturity": "early-heavy"|"late-heavy"|"balanced",
+        "unique_sponsors": int,
+        "sponsor_class_split": {"INDUSTRY": n, "NIH": n, "OTHER": n},
+        "complexity_weight": float,
+        "history": [{"period", "count", "pct"}]
+    }],
+    "meta": { "master_db_file", "unique_modalities", "periods_loaded" }
+}
+```
+
+---
+
+## Remaining Work (Priority Order)
+
+### Weekly questions
+1. **wq2** — BD: Sponsor watchlist (top movers week-over-week)
+2. **wq3** — BD: Competitive intelligence feed
+3. **wq5** — Marketing: Trending modalities/TAs chart
+4. **wq6** — Marketing: Conference snapshot
+5. **wq8** — Scientific: Classification gap report
+6. **wq9** — Scientific: MeSH quality waterfall
+7. **wq11** — Operations: Complexity waffle chart
+8. **wq12** — Operations: Phase 1 intake list (individual trial cards)
+
+### Quarterly questions
+9. **sq1** — BD: TAM bubble matrix (placeholder)
+10. **sq3** — BD: Pipeline tracker (placeholder)
+11. **sq5** — Marketing: Content calendar heatmap (placeholder)
+12. **sq6** — Marketing: KOL network map (placeholder)
+13. **sq7–sq12** — Scientific + Operations quarterly questions (placeholders)
+
+---
+
+## Adding a New Weekly Question (Pattern)
 
 1. Implement `wqN_function()` in the matching `analytics/XX_wqM.py` — return a dict
 2. Import and call it in `pipelines/generate_weekly_viz.py`, assign to `payload["wqN"]`
 3. Write a JSX component in `viz/XX_wqM.jsx` — reads `data.wqN`
 4. Copy the JSX into the HTML template inside the correct `WeeklyXX` component
 5. Replace the `<Placeholder>` for that question with a `<Card>` wrapping your component
+
+## Adding a New Quarterly Question (Pattern)
+
+1. Implement analytics in `analytics/XX_sqM.py` — return a dict with `"available": True`
+2. If using full history: iterate `MASTER_DB_DIR/*.json`, compute per-DB with sidecar cache
+3. Add JSX file to `COMPONENT_FILES` in `pipelines/generate_quarterly_viz.py`
+4. Import and call analytics function in `main()`, add result to `payload`
+5. Write JSX component in `viz/XX_sqM_sq.jsx`
+6. Add conditional in `QuarterlyView` in the template (check `c.id === "sqN" && ALEXIS_DATA.sqN?.available`)
