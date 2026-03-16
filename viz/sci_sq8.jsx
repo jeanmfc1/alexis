@@ -198,8 +198,8 @@ function SQ8BiomarkerMatrix({ data, color }) {
                                 whiteSpace:"nowrap",
                               }}>{t.source || ""}</span>
                             </td>
-                            <td style={{ padding:"3px 0 3px 8px", maxWidth:450,
-                                         overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                            <td style={{ padding:"3px 0 3px 8px", minWidth:250,
+                                         whiteSpace:"normal", lineHeight:"1.4",
                                          fontSize:9, fontFamily:"var(--fm)", color:"var(--dim)" }}
                                 title={t.context || ""}>
                               {t.context || ""}
