@@ -1,5 +1,5 @@
 """
-analytics/sci_biomarker.py
+analytics/sci_sq8.py
 ──────────────────────────
 Scientific / sq8 — Biomarker × TA Heatmap
 

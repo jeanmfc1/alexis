@@ -3,7 +3,7 @@
 // Scientific / sq8 — Biomarker × TA Bubble Matrix
 //
 // Data source : ALEXIS_DATA.sq8  (matrix dict)
-// Injected by : analytics/sci_biomarker.py → sq8_biomarker_ta_matrix()
+// Injected by : analytics/sci_sq8.py → sq8_biomarker_ta_matrix()
 // ─────────────────────────────────────────────────────────────────────────
 
 function abbrTA(name) {

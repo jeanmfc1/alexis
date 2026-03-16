@@ -185,7 +185,7 @@ def build_quarterly_payload(db_path, meta) -> dict:
     else:
         print("  sci_sq3 : no data (no drug trials in master DB)")
 
-    from analytics.sci_biomarker import sq8_biomarker_ta_matrix
+    from analytics.sci_sq8 import sq8_biomarker_ta_matrix
     sq8_data = sq8_biomarker_ta_matrix(str(db_path))
     sq8_tagged = sq8_data.get("meta", {}).get("total_tagged", 0)
     sq8_total = sq8_data.get("grand_total", 0)
