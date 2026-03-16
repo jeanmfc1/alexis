@@ -7,6 +7,13 @@ when structured intervention.type and MeSH tree rules cannot classify.
 """
 
 TEXT_PATTERN_TO_SUBMODALITY = [
+    # ADC -- must precede monoclonal_antibody (ADCs also match "antibody"/"mab")
+    (re.compile(r"\bantibody[- ]?drug conjugate", re.IGNORECASE), "adc"),
+    (re.compile(r"\b(vedotin|emtansine|deruxtecan|govitecan|ozogamicin|mertansine|soravtansine|tesirine|ravtansine|maytansinoid|auristatin)\b", re.IGNORECASE), "adc"),
+    (re.compile(r"\b(mmae|mmaf)\b", re.IGNORECASE), "adc"),
+    (re.compile(r"\b(t-dm1|tdm1|kadcyla|enhertu|adcetris|polivy|padcev|trodelvy|zynlonta|elahere|tivdak|dato-dxd|her3-dxd)\b", re.IGNORECASE), "adc"),
+    (re.compile(r"\bimmunoconjugate\b", re.IGNORECASE), "adc"),
+
     # Antibodies and antibody-like biologics
     (re.compile(r"\bmonoclonal\b", re.IGNORECASE), "monoclonal_antibody"),
     (re.compile(r"\bantibody\b", re.IGNORECASE), "monoclonal_antibody"),
