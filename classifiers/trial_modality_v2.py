@@ -164,6 +164,7 @@ def _resolve_modality_priority(candidates: list[str], base: str) -> str:
     MODALITY_PRIORITY = [
         "gene_therapy",
         "cell_therapy",
+        "adc",
         "monoclonal_antibody",
         "antibody_protein",
         "fusion_protein",

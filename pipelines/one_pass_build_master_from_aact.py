@@ -565,6 +565,12 @@ def _save_master(trials: list, output_path: Path, aact_dir: Path, W: int = 60):
     print(f"  SAVING MASTER DB")
     print(f"{'─'*W}")
 
+    if not trials:
+        print("  ⚠ No drug trials to save — skipping output file.")
+        print("    This usually means Step 1 filtered to 0 trials.")
+        print("    Check that the AACT snapshot has the expected overall_status values.")
+        return
+
     def _trial_to_master_dict(t) -> Dict[str, Any]:
         """Serialize trial to master DB format with all expanded fields."""
         d = _trial_to_dict(t)
@@ -877,14 +883,20 @@ def main():
     print(f"    {len(studies_rows):,} total studies")
 
     # Filter: interventional + active status
+    # Normalize before comparing: older AACT snapshots (pre-2023) use legacy
+    # mixed-case values ("Recruiting", "Active, not recruiting") while newer
+    # snapshots use the modernized ALL_CAPS format ("RECRUITING", etc.).
+    # _normalize_status() maps both to the canonical uppercase form so the
+    # ACTIVE_STATUSES_RAW set works against any snapshot vintage.
     studies_by_nct = {}
     for r in studies_rows:
         nct = _safe_str(r.get("nct_id"))
         if not nct:
             continue
         stype = _safe_str(r.get("study_type"))
-        status = _safe_str(r.get("overall_status"))
-        if stype and stype.upper() == "INTERVENTIONAL" and status in ACTIVE_STATUSES_RAW:
+        status_raw = _safe_str(r.get("overall_status"))
+        status_norm = _normalize_status(status_raw)
+        if stype and stype.upper() == "INTERVENTIONAL" and status_norm in ACTIVE_STATUSES_RAW:
             studies_by_nct[nct] = r
 
     del studies_rows  # free ~560K rows
