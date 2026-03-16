@@ -176,6 +176,77 @@ def classify_biomarkers_with_evidence(text: str) -> dict[str, str]:
     return evidence
 
 
+def classify_trial_biomarkers(trial: dict) -> dict:
+    """
+    Classify a trial into biomarker categories with rich evidence context.
+
+    Instead of searching a flat concatenated string, this inspects each trial
+    field separately so the evidence records *where* in the trial the match
+    was found and provides surrounding context.
+
+    Args:
+        trial: dict with keys title, primary_outcomes, secondary_outcomes.
+
+    Returns:
+        Dict mapping matched category name to an evidence dict:
+        {"trigger": <matched text>, "source": <field label>, "context": <snippet>}
+    """
+    if not trial:
+        return {}
+
+    # -- Build labelled segments -----------------------------------------
+    segments: list[tuple[str, str]] = []
+
+    title = trial.get("title") or ""
+    if title:
+        segments.append(("Title", title))
+
+    for key, label in (("primary_outcomes", "Primary Outcome"),
+                       ("secondary_outcomes", "Secondary Outcome")):
+        outcomes = trial.get(key) or []
+        for o in outcomes:
+            if isinstance(o, dict):
+                measure = o.get("measure") or ""
+                description = o.get("description") or ""
+            else:
+                measure = getattr(o, "measure", "") or ""
+                description = getattr(o, "description", "") or ""
+            if measure:
+                segments.append((label, measure))
+            if description:
+                segments.append((label, description))
+
+    if not segments:
+        return {}
+
+    # -- Search each category --------------------------------------------
+    evidence: dict[str, dict] = {}
+
+    for category, patterns in BIOMARKER_CATEGORIES.items():
+        found = False
+        for pat in patterns:
+            if found:
+                break
+            for source_label, text in segments:
+                m = pat.search(text)
+                if m:
+                    start = max(0, m.start() - 50)
+                    end = min(len(text), m.end() + 50)
+                    ctx = text[start:end]
+                    if start > 0:
+                        ctx = "…" + ctx
+                    if end < len(text):
+                        ctx = ctx + "…"
+                    evidence[category] = {
+                        "trigger": m.group(),
+                        "source": source_label,
+                        "context": ctx,
+                    }
+                    found = True
+                    break
+
+    return evidence
+
 
 def trial_biomarker_text(trial: dict) -> str:
     """

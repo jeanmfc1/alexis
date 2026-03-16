@@ -154,6 +154,18 @@ function SQ8BiomarkerMatrix({ data, color }) {
                       {bm} × {activeTa} — {trials.length} trial{trials.length > 1 ? "s" : ""}
                     </div>
                     <table style={{ width:"100%", borderCollapse:"collapse", fontSize:10, fontFamily:"var(--fm)" }}>
+                      <thead>
+                        <tr>
+                          {["NCT ID","TITLE","PHASE","FOUND IN","EVIDENCE"].map(h => (
+                            <th key={h} style={{
+                              fontSize:9, fontFamily:"var(--fb)", color:"var(--muted)",
+                              padding:"4px 8px 4px 0", letterSpacing:"0.06em",
+                              borderBottom:"1px solid var(--border)",
+                              textAlign:"left", fontWeight:"normal",
+                            }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
                       <tbody>
                         {trials.map(t => (
                           <tr key={t.nct_id} style={{ borderBottom:"1px solid var(--border)" }}>
@@ -177,11 +189,19 @@ function SQ8BiomarkerMatrix({ data, color }) {
                                 color:"#fff",
                               }}>{t.phase || "—"}</span>
                             </td>
-                            <td style={{ padding:"3px 0 3px 8px", maxWidth:200,
+                            <td style={{ padding:"3px 8px 3px 8px", whiteSpace:"nowrap" }}>
+                              <span style={{
+                                fontSize:8, fontFamily:"var(--fb)",
+                                padding:"1px 5px", borderRadius:3,
+                                background:"var(--surf3)", color:"var(--muted)",
+                                whiteSpace:"nowrap",
+                              }}>{t.source || ""}</span>
+                            </td>
+                            <td style={{ padding:"3px 0 3px 8px", maxWidth:280,
                                          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-                                         fontFamily:"monospace", fontSize:9, color:"var(--dim)" }}
-                                title={t.trigger || ""}>
-                              {t.trigger || ""}
+                                         fontSize:9, fontFamily:"var(--fm)", color:"var(--dim)" }}
+                                title={t.context || ""}>
+                              {t.context || ""}
                             </td>
                           </tr>
                         ))}
