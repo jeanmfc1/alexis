@@ -230,13 +230,33 @@ def classify_trial_biomarkers(trial: dict) -> dict:
             for source_label, text in segments:
                 m = pat.search(text)
                 if m:
-                    start = max(0, m.start() - 50)
-                    end = min(len(text), m.end() + 50)
-                    ctx = text[start:end]
-                    if start > 0:
-                        ctx = "…" + ctx
-                    if end < len(text):
-                        ctx = ctx + "…"
+                    # Extract the enclosing sentence (period to period)
+                    # Fall back to ;\ or the whole segment if no periods
+                    pos = m.start()
+                    # Find sentence start: last period/semicolon before match
+                    sent_start = 0
+                    for delim in '.;':
+                        idx = text.rfind(delim, 0, pos)
+                        if idx != -1 and idx + 1 > sent_start:
+                            sent_start = idx + 1
+                    # Find sentence end: first period/semicolon after match
+                    sent_end = len(text)
+                    for delim in '.;':
+                        idx = text.find(delim, m.end())
+                        if idx != -1 and idx + 1 < sent_end:
+                            sent_end = idx + 1
+                    ctx = text[sent_start:sent_end].strip()
+                    # Cap at 200 chars to keep payload reasonable
+                    if len(ctx) > 200:
+                        # Re-center on match within 200 chars
+                        half = 100
+                        c_start = max(sent_start, pos - half)
+                        c_end = min(sent_end, pos + half)
+                        ctx = text[c_start:c_end].strip()
+                        if c_start > sent_start:
+                            ctx = "…" + ctx
+                        if c_end < sent_end:
+                            ctx = ctx + "…"
                     evidence[category] = {
                         "trigger": m.group(),
                         "source": source_label,

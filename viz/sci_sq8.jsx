@@ -148,7 +148,7 @@ function SQ8BiomarkerMatrix({ data, color }) {
                 return (
                   <div style={{
                     background:"var(--surf2)", borderBottom:"1px solid var(--border)",
-                    padding:"10px 12px 10px " + LABEL_W + "px",
+                    padding:"10px 16px",
                   }}>
                     <div style={{ fontSize:10, color:"var(--muted)", marginBottom:6, fontFamily:"var(--fb)" }}>
                       {bm} × {activeTa} — {trials.length} trial{trials.length > 1 ? "s" : ""}
@@ -159,7 +159,7 @@ function SQ8BiomarkerMatrix({ data, color }) {
                         <tr>
                           {["NCT ID","TITLE","PHASE","FOUND IN","EVIDENCE"].map(h => (
                             <th key={h} style={{
-                              fontSize:9, fontFamily:"var(--fb)", color:"var(--muted)",
+                              fontSize:9, fontFamily:"var(--fb)", color:"var(--muted)", position:"sticky", top:0, background:"var(--surf2)",
                               padding:"4px 8px 4px 0", letterSpacing:"0.06em",
                               borderBottom:"1px solid var(--border)",
                               textAlign:"left", fontWeight:"normal",
@@ -198,7 +198,7 @@ function SQ8BiomarkerMatrix({ data, color }) {
                                 whiteSpace:"nowrap",
                               }}>{t.source || ""}</span>
                             </td>
-                            <td style={{ padding:"3px 0 3px 8px", maxWidth:280,
+                            <td style={{ padding:"3px 0 3px 8px", maxWidth:450,
                                          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
                                          fontSize:9, fontFamily:"var(--fm)", color:"var(--dim)" }}
                                 title={t.context || ""}>
