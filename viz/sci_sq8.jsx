@@ -151,7 +151,7 @@ function SQ8BiomarkerMatrix({ data, color }) {
                     padding:"10px 16px",
                   }}>
                     <div style={{ fontSize:10, color:"var(--muted)", marginBottom:6, fontFamily:"var(--fb)" }}>
-                      {bm} × {activeTa} — {trials.length} trial{trials.length > 1 ? "s" : ""}
+                      {bm} × {activeTa} — {cell.total_count || trials.length} trial{(cell.total_count || trials.length) > 1 ? "s" : ""}{cell.total_count > trials.length ? ` (showing ${trials.length})` : ""}
                     </div>
                     <div style={{ maxHeight:260, overflowY:"auto", overflowX:"auto", border:"1px solid var(--border)", borderRadius:6 }}>
                     <table style={{ width:"100%", borderCollapse:"collapse", fontSize:10, fontFamily:"var(--fm)" }}>

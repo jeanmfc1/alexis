@@ -15,11 +15,12 @@ Source:
 Returns:
     dict matching the wq7 bubble matrix shape:
         rows          list  — biomarker category names
-        columns       list  — top TAs by biomarker-tagged trial count
-        cells         dict  — keyed by "biomarker||ta", each with count + trials
+        columns       list  — top TAs by distinct biomarker-tagged trial count
+        cells         dict  — keyed by "biomarker||ta", each with count,
+                              total_count, and up to MAX_TRIALS_PER_CELL trials
         row_totals    dict  — total trials per biomarker category
         col_totals    dict  — total trials per TA
-        grand_total   int   — total biomarker-tagged trials
+        grand_total   int   — total distinct biomarker-tagged trials
 
 Sidecar cache:
     Writes sq8_cache_YYYY_QN.json next to the master DB file.
@@ -29,9 +30,8 @@ import json
 import os
 from collections import defaultdict
 from pathlib import Path
-from typing import List
 
-from policy.biomarker_policy import BIOMARKER_CATEGORIES, classify_biomarkers, classify_biomarkers_with_evidence, classify_trial_biomarkers, trial_biomarker_text
+from policy.biomarker_policy import BIOMARKER_CATEGORIES, classify_trial_biomarkers
 
 
 MAX_TA = 12
@@ -74,13 +74,13 @@ def sq8_biomarker_ta_matrix(master_db_path: str) -> dict:
             "available": False,
             "rows": [], "columns": [], "cells": {},
             "row_totals": {}, "col_totals": {}, "grand_total": 0,
-            "has_heat": False, "heat_mode": "none",
         }
 
     # ── Classify each trial ───────────────────────────────────────
     bm_ta_count: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     cell_trials: dict[str, list] = defaultdict(list)
-    ta_totals_all: dict[str, int] = defaultdict(int)
+    ta_tagged: dict[str, int] = defaultdict(int)
+    cell_total: dict[str, int] = defaultdict(int)
     total_tagged = 0
 
     for t in drug_trials:
@@ -91,10 +91,13 @@ def sq8_biomarker_ta_matrix(master_db_path: str) -> dict:
         ta = t.get("therapeutic_area") or "Unknown"
         total_tagged += 1
 
+        # Count distinct tagged trials per TA (once per trial, not per category)
+        ta_tagged[ta] += 1
+
         for cat in evidence_dict:
             bm_ta_count[cat][ta] += 1
-            ta_totals_all[ta] += 1
             cell_key = f"{cat}||{ta}"
+            cell_total[cell_key] += 1
             if len(cell_trials[cell_key]) < MAX_TRIALS_PER_CELL:
                 cell_trials[cell_key].append({
                     "nct_id":  t.get("nct_id"),
@@ -110,13 +113,19 @@ def sq8_biomarker_ta_matrix(master_db_path: str) -> dict:
             "available": False,
             "rows": [], "columns": [], "cells": {},
             "row_totals": {}, "col_totals": {}, "grand_total": 0,
-            "has_heat": False, "heat_mode": "none",
         }
 
     # ── Select top TAs ────────────────────────────────────────────
-    top_tas = sorted(
-        ta_totals_all, key=ta_totals_all.__getitem__, reverse=True
-    )[:MAX_TA]
+    # Rank by distinct tagged trial count; exclude "Unknown"
+    ta_ranked = sorted(
+        (ta for ta in ta_tagged if ta != "Unknown"),
+        key=ta_tagged.__getitem__,
+        reverse=True,
+    )
+    top_tas = ta_ranked[:MAX_TA]
+    # Push "Unknown" to end if it exists and there is room
+    if "Unknown" in ta_tagged and len(top_tas) < MAX_TA:
+        top_tas.append("Unknown")
 
     # Rows: all biomarker categories (fixed order from policy)
     rows = list(BIOMARKER_CATEGORIES.keys())
@@ -124,7 +133,7 @@ def sq8_biomarker_ta_matrix(master_db_path: str) -> dict:
     # ── Build cells ───────────────────────────────────────────────
     cells = {}
     row_totals = {}
-    col_totals = {ta: 0 for ta in top_tas}
+    col_totals = {ta: ta_tagged.get(ta, 0) for ta in top_tas}
 
     for bm in rows:
         row_total = 0
@@ -132,22 +141,20 @@ def sq8_biomarker_ta_matrix(master_db_path: str) -> dict:
             count = bm_ta_count.get(bm, {}).get(ta, 0)
             cell_key = f"{bm}||{ta}"
             cells[cell_key] = {
-                "bm":     bm,
-                "ta":     ta,
-                "count":  count,
-                "trials": cell_trials.get(cell_key, []),
+                "bm":          bm,
+                "ta":          ta,
+                "count":       count,
+                "total_count": cell_total.get(cell_key, 0),
+                "trials":      cell_trials.get(cell_key, []),
             }
             row_total += count
-            col_totals[ta] += count
         row_totals[bm] = row_total
 
-    grand_total = sum(row_totals.values())
+    grand_total = total_tagged
 
     # ── Assemble result ───────────────────────────────────────────
     result = {
         "available":   True,
-        "has_heat":    False,
-        "heat_mode":   "none",
         "rows":        rows,
         "columns":     top_tas,
         "cells":       cells,
