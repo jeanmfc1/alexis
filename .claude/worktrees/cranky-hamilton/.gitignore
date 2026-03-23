@@ -1,0 +1,52 @@
+# ---------------------------
+# Python cache / bytecode
+# ---------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ---------------------------
+# Pytest cache
+# ---------------------------
+.pytest_cache/
+
+# ---------------------------
+# Security zone identifier (Windows)
+# ---------------------------
+*:Zone.Identifier
+*Zone.Identifier
+
+# ---------------------------
+# Virtual environments
+# ---------------------------
+.venv/
+venv/
+env/
+
+# ---------------------------
+# Data files (large, regenerable)
+# ---------------------------
+storage/snapshots/
+storage/changelogs/
+storage/instructions/
+storage/checkpoints/
+storage/audits/
+storage/raw/
+storage/mesh/
+storage/unassigned_650.json
+*.json.bak
+
+# ---------------------------
+# One-off diagnostic scripts / outputs
+# ---------------------------
+diagnose_modality.py
+modality_diagnosis.csv
+modality_fix_report.py
+no_id_mesh_terms.txt
+
+# ---------------------------
+# Backup files
+# ---------------------------
+*_backup.py
+*backup*.py

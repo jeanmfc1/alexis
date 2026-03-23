@@ -454,6 +454,10 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any], skip_non_essential:
     # NEW: Why stopped
     why_stopped = _get(study, ["protocolSection", "statusModule", "whyStopped"], default=None)
 
+    # Narrative text fields
+    brief_summary = _get(study, ["protocolSection", "descriptionModule", "briefSummary"], default="") or ""
+    detailed_description = _get(study, ["protocolSection", "descriptionModule", "detailedDescription"], default="") or ""
+
     # NEW: Key protocol dates
     start_date = _parse_date(
         _get(study, ["protocolSection", "statusModule", "startDateStruct", "date"])
@@ -500,6 +504,8 @@ def normalize_clinicaltrials_study_v2(study: Dict[str, Any], skip_non_essential:
     return ClinicalTrialSignalV2(
         nct_id=str(nct_id),
         title=str(title),
+        brief_summary=brief_summary,
+        detailed_description=detailed_description,
         conditions=conditions,
         study_type=study_type,
         phase=phase,

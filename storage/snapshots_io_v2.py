@@ -140,6 +140,8 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
     return {
         "nct_id": t.nct_id,
         "title": t.title,
+        "brief_summary": t.brief_summary,
+        "detailed_description": t.detailed_description,
         "study_type": t.study_type,
         "phase": t.phase,
         "sponsor_class": t.sponsor_class,

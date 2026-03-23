@@ -154,6 +154,40 @@ def build_facilities_lookup(aact_dir: Path) -> Dict[str, List[Dict[str, Any]]]:
     return lookup
 
 
+def build_summaries_lookup(aact_dir):
+    """brief_summaries.txt -> dict keyed by nct_id with description text."""
+    path = aact_dir / "brief_summaries.txt"
+    if not path.exists():
+        print(f"  ⚠ brief_summaries.txt not found, skipping")
+        return {}
+    rows = _read_aact(path)
+    lookup = {}
+    for r in rows:
+        nct = _safe_str(r.get("nct_id"))
+        text = _safe_str(r.get("description"))
+        if nct:
+            lookup[nct] = text or ""
+    print(f"  brief_summaries.txt: {len(lookup):,} entries")
+    return lookup
+
+
+def build_descriptions_lookup(aact_dir):
+    """detailed_descriptions.txt -> dict keyed by nct_id with description text."""
+    path = aact_dir / "detailed_descriptions.txt"
+    if not path.exists():
+        print(f"  ⚠ detailed_descriptions.txt not found, skipping")
+        return {}
+    rows = _read_aact(path)
+    lookup = {}
+    for r in rows:
+        nct = _safe_str(r.get("nct_id"))
+        text = _safe_str(r.get("description"))
+        if nct:
+            lookup[nct] = text or ""
+    print(f"  detailed_descriptions.txt: {len(lookup):,} entries")
+    return lookup
+
+
 # ── Patch logic ─────────────────────────────────────────────────────────────
 
 def patch_trial(
@@ -162,6 +196,8 @@ def patch_trial(
     sponsors: Dict[str, str],
     outcomes: Dict[str, Dict[str, List[Dict[str, Any]]]],
     facilities: Dict[str, List[Dict[str, Any]]],
+    summaries: Dict[str, str] = None,
+    descriptions: Dict[str, str] = None,
 ) -> int:
     """
     Patch a single trial dict in-place. Returns count of fields updated.
@@ -207,6 +243,13 @@ def patch_trial(
     else:
         trial["facilities"] = []
         trial["facility_count"] = 0
+    patched += 2
+
+    # ── brief_summary & detailed_description ──
+    _summaries = summaries or {}
+    _descriptions = descriptions or {}
+    trial["brief_summary"] = _summaries.get(nct, "")
+    trial["detailed_description"] = _descriptions.get(nct, "")
     patched += 2
 
     # ── update categorization placeholders (ensure keys exist) ──
@@ -260,6 +303,8 @@ def main():
     outcomes = build_outcomes_lookup(aact_dir)
     print(f"  design_outcomes.txt: {len(outcomes):,} trials with outcomes")
     fac = build_facilities_lookup(aact_dir)
+    summaries = build_summaries_lookup(aact_dir)
+    descriptions = build_descriptions_lookup(aact_dir)
     print(f"  facilities.txt:      {len(fac):,} trials with facilities")
 
     # Patch
@@ -272,7 +317,7 @@ def main():
             matched += 1
         else:
             unmatched.append(nct)
-        patch_trial(trial, studies, sponsors, outcomes, fac)
+        patch_trial(trial, studies, sponsors, outcomes, fac, summaries, descriptions)
 
     print(f"  Matched:   {matched} / {len(trials)}")
     if unmatched:

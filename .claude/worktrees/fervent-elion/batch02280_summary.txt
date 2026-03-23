@@ -1,0 +1,198 @@
+=== NCT03288545 ===
+Title: A Study of Enfortumab Vedotin (ASG-22CE) as Monotherapy or in Combination With Other Anticancer Therapies for the Treatment of Urothelial Cancer
+Phase: PHASE1/PHASE2
+Brief summary: This study will test an experimental drug (enfortumab vedotin) alone and with different combinations of anticancer therapies. Pembrolizumab is an immune checkpoint inhibitor (CPI) that is used to treat patients with cancer of the urinary system (urothelial cancer). This type of cancer includes cancer of the bladder, renal pelvis, ureter or urethra. Some parts of the study will look 
+Interventions: enfortumab vedotin (EV) (DRUG) - Intravenous (IV) infusion on days 1 and 8 every 21 days; pembrolizumab (DRUG) - IV infusion on day 1 every 21 days; cisplatin (DRUG) - IV infusion on day 1 every 21 days
+Conditions: Carcinoma, Transitional Cell, Urinary Bladder Neoplasms, Urologic Neoplasms, Renal Pelvis Neoplasms, Urothelial Cancer, Ureteral Neoplasms, Urethral Neoplasms
+Primary outcomes: Type, incidence, severity, seriousness, and relatedness of adverse events (Dose escalation and Expansion Parts 1 to 3 cohorts only): Descriptive statistics will be used to summarize results.; Type, incidence, and severity of laboratory abnormalities (Dose escalation and Expansion Parts 1 to 3 cohorts only): Descriptive statistics will be used to summarize results.; Confirmed obje
+Secondary outcomes: Incidence of dose-limiting toxicity (DLT): Incidence of DLTs (dose-escalation expansion Cohorts D, E, F, and the first 6 patients of Cohort G).; Confirmed ORR by investigator assessment according to RECIST 1.1 (la/mUC cohorts only): The proportion of patients with confirmed CR or PR according to RECIST 1.1.; Confirmed ORR by BICR according to RECIST 1.1 (Dose escalation and Coh
+Eligibility criteria: Inclusion Criteria:~* Locally advanced or metastatic urothelial cancer (la/mUC) - Cohorts A, B, D, E, F, G and K.~  * Histologically documented la/mUC, including squamous differentiation or mixed cell types.~ * An Eastern Cooperative Oncology Group (ECOG) Performance Status score of 0, 1 or 2: Participants with ECOG performance status of 2 must meet the following additional c
+
+=== NCT03289299 ===
+Title: Aggressive Smoldering Curative Approach Evaluating Novel Therapies (ASCENT): A Phase 2 Trial of Induction, Consolidation, and Maintenance in Subjects With High Risk Smoldering Multiple Myeloma (SMM)
+Phase: PHASE2
+Brief summary: This study evaluates the use of carfilzomib, lenalidomide, daratumumab, and dexamethasone in subjects with high-risk smoldering multiple myeloma (SMM). Subjects will receive treatment in 3 phases - induction (6 cycles), consolidation (6 cycles), and maintenance (12 cycles). Each cycle is 28 days.
+Interventions: Carfilzomib (DRUG) - 56 mg/m2 IV given on days 1, 8, and 15 of each cycle during induction and consolidation phases of the study.; Lenalidomide (DRUG) - 25 mg po given on days 1-21 of each cycle during the induction and consolidation phases.~10 mg po given on days 1-21 of each cycle during the maintenance phase.; Daratumumab (DRUG) - 16 mg/kg IV given on days 1, 8, 15, and 22 of cyc
+Conditions: Smoldering Multiple Myeloma
+Primary outcomes: Stringent complete response rate: A confirmed sCR on 2 consecutive evaluations at any time during the course of treatment.
+Secondary outcomes: MRD negativity after each treatment phase: MRD negativity after induction, consolidation, and maintenance; MRD negativity at 1 year post treatment: Persistent MRD negativity rate will be evaluated at 1 year after completion of planned treatment consisting of induction, consolidation, and maintenan; Overall Survival: time of registration to death due to any cause; Progression-fr
+Eligibility criteria: Inclusion Criteria:~* Age 18 years and â‰¤ 80 years~* High risk smoldering myeloma, which is untreated, as defined by either of the two following criteria:~  1. Presence of any two of the following: Serum M spike \> 2 gm/dL OR an involved to uninvolved free light chain (FLC) ratio \> 20 OR bone marrow PC% \> 20%~ 2. Total score of 9 or above using the following scoring system
+
+=== NCT03289910 ===
+Title: NCI 10147: A Phase II Randomized Study of Topotecan/Carboplatin With or Without Veliparib in Advanced Myeloproliferative Disorders and Chronic Myelomonocytic Leukemia (CMML)
+Phase: PHASE2
+Brief summary: This phase II trial studies how well topotecan hydrochloride and carboplatin with or without veliparib work in treating patients with myeloproliferative disorders that have spread to other places in the body and usually cannot be cured or controlled with treatment (advanced), and acute myeloid leukemia or chronic myelomonocytic leukemia. Drugs used in chemotherapy, such as topotecan
+Interventions: Carboplatin (DRUG) - Given IV; Topotecan (DRUG) - Given IV; Topotecan Hydrochloride (DRUG) - Given IV
+Conditions: Acute Myeloid Leukemia, Acute Myeloid Leukemia Arising From Previous Myelodysplastic Syndrome, Atypical Chronic Myeloid Leukemia, Chronic Myelomonocytic Leukemia, Essential Thrombocythemia, Myelodysplastic/Myeloproliferative Neoplasm, Myelofibrosis, Polycythemia Vera, Recurrent Acute Myeloid Leukemia, Refractory Acute Myeloid Leukemia
+Primary outcomes: Number of Participants With a Response: Based on published standards for acute leukemias, Complete Response (CR) means less than 5% leukemic blasts in the bone marrow, no blasts in the blood, no longer presence of cytogenetic abnormalities,
+Secondary outcomes: The Highest Grade Adverse Event Experienced: Adverse events were graded according to the National Cancer Institute Common Terminology Criteria for Adverse Events version 5.0.; Number of Participants Without Disease at Study Completion: Study completion was either death or completion of all protocol-specified activities, whichever came first. Participants who came off study due 
+Eligibility criteria: Inclusion Criteria:~* PRE-REGISTRATION ELIGIBILITY CRITERIA~* Newly diagnosed acute myeloid leukemia (AML) associated with antecedent myeloproliferative disorder (polycythemia vera, essential thrombocythemia, myelofibrosis, atypical chronic myeloid leukemia, chronic myelomonocytic leukemia and related undifferentiated myeloproliferative/myelodysplastic disorders)~* Relapsed/r
+
+=== NCT03289949 ===
+Title: The Neurobiological Effect of 5-HT2AR Modulation
+Phase: PHASE1
+Brief summary: The investigators wish to investigate neurobiological effects of serotonin 2A receptor modulation in healthy volunteers, contrasting effects of an agonist (psilocybin) and an antagonist (ketanserin). Magnetic resonance imaging (MRI) and positron emission tomography (PET) will be used as neuroimaging tools.
+Interventions: Psilocybine (DRUG) - Oral dose of psilocybine.; Ketanserin (DRUG) - Oral dose of ketanserin.
+Conditions: Basic Science
+Primary outcomes: Psilocin/ketanserin blood concentrations and 5-HT2A receptor occupancy (i.e., binding potential).: The investigators aim to model relations psilocin/ketanserin blood drug concentrations and receptor occupancy, using C11-Cimbi-36 PET imaging.; Effects of psilocybin on Cimbi-36 binding potential at baseline and at one and twelve weeks: Cimbi-36 PET scan binding potential at baselin
+Eligibility criteria: Inclusion Criteria:~1\) Healthy individuals above 18 years of age.~Exclusion Criteria (For Subprojects 1, 2a, 2b, and 3):~1. Presence of or previous primary psychiatric disease (DSM axis 1 or WHO ICD-10 diagnostic classifications) or in first-degree relatives.~2. Previous or present neurological condition/disease, significant somatic condition/disease or intake of drugs suspe
+
+=== NCT03290456 ===
+Title: A Prospective, Multicentric, Randomized, Double-blind, Placebo-controlled Study to Evaluate the Remission MAINtenance Using Extended Administration of Prednisone in Systemic Anti-neutrophil Cytoplasmic Antibodies (ANCA)-Associated Vasculitis.
+Phase: 
+Brief summary: Immunosuppressive therapy of granulomatosis with polyangiitis (GPA, Wegener's) and microscopic polyangiitis (MPA) has transformed the outcome from death to a strong likelihood of disease control and temporary remission. However, most patients have recurrent relapses that lead to damage and require repeated treatment associated with long-term morbidity and death.~Rituximab has been s
+Interventions: Prednisone 5mg/day extended of 12 additional months (DRUG) - Prednisone 5mg/day orally during 12 Month + 1 mg/week tapering until 0mg.; Placebo 5mg/day extended of 12 additionnal months. (DRUG) - 1mg/week orally tapering Prednisone until Month 1 + Placebo orally 5mg/day until Month 13
+Conditions: Granulomatosis With Polyangitis
+Primary outcomes: Relapse-free survival, relapse being defined as BVAS > 0.: rate of relapse-free survival of patients continuing low-dose prednisone treatment until Month 10 VS those who will have prednisone treatment cessation at Month 1, on remission maintenance with Rituxi
+Secondary outcomes: Compare the rate of serious adverse events between Inclusion and Month 30 after randomization: Proportion of patients with at least one adverse event between inclusion and Month 30.~* Percentage of patients with at least one serious adverse even; Compare the rate of predefined severe events related to glucocorticoids between inclusion and Month 30 including osteoporotic fractur
+Eligibility criteria: Inclusion Criteria:~* Patients with a diagnosis of MPA or GPA independently of ANCA status,~* Patient aged of 18 years or older,~* Patients with newly-diagnosed disease or relapsing disease at the time of screening, with an inactive disease defined as a BVAS = 0,~* Patients receiving maintenance infusion of rituximab 500 mg at 6 and 12 months after the start of vasculitis ind
+
+=== NCT03290937 ===
+Title: Phase I Clinical Trial Evaluating the Safety and Response With PF-05082566, Cetuximab, and Irinotecan in Patients With Advanced Colorectal Cancer
+Phase: PHASE1
+Brief summary: This phase I trial studies the best dose and side effects of irinotecan hydrochloride when given with utomilumab and cetuximab in treating patients with colorectal cancer that has spread to other places in the body (metastatic). Monoclonal antibodies, such as utomilumab and cetuximab, may interfere with the ability of tumor cells to grow and spread. Drugs used in chemotherapy, such 
+Interventions: Cetuximab (BIOLOGICAL) - Given IV; Irinotecan Hydrochloride (DRUG) - Given IV; Pharmacodynamic Study (OTHER) - Correlative studies
+Conditions: Metastatic Colorectal Carcinoma, Stage IV Colorectal Cancer AJCC v8, Stage IVA Colorectal Cancer AJCC v8, Stage IVB Colorectal Cancer AJCC v8, Stage IVC Colorectal Cancer AJCC v8
+Primary outcomes: Recommended phase 2 dose of irinotecan hydrochloride (Dose escalation): A modified 3+3 design will be used to determine the maximum tolerated dose.; Objective response rate (Dose expansion): Assessed by using the immune-related Response Evaluation Criteria in Solid Tumors (irRECIST).
+Secondary outcomes: Incidence of adverse events: Characterized by type, frequency, severity (as graded by National Cancer Institute \[NCI\] Common Terminology Criteria for Adverse Events \[CTCAE\] ve; Progression free survival: Will be analyzed using Kaplan-Meier methods and descriptive statistics.; Overall survival: Will be analyzed using Kaplan-Meier methods and descriptive statistics.; Overall 
+Eligibility criteria: Inclusion Criteria:~* Patients must have histologically and or cytologically confirmed metastatic colorectal cancer~* Patients must have a wild type or mutated RAS tumor status known prior to enrollment~* Metastatic colorectal cancer patients have progressed following at least one line of fluorouracil (5-FU)-based chemotherapy~* Eastern Cooperative Oncology Group (ECOG) perfo
+
+=== NCT03290950 ===
+Title: Daratumumab, Carfilzomib, Lenalidomide, and Dexamethasone in Newly-Diagnosed Multiple Myeloma: A Clinical and Correlative Phase II Study
+Phase: PHASE2
+Brief summary: This is a study to test the safety and effectiveness of the study drug, daratumumab in combination with carfilzomib, lenalidomide and dexamethasone. The purpose of this study is to test whether giving daratumumab along with the other drugs (carfilzomib, lenalidomide and dexamethasone) is safe for patients.
+Interventions: daratumumab (DRUG) - Cycle 1 ONLY: Daratumumab 16 mg/kg days 1, 8, 15, and 22, Cycle 2: Daratumumab 16mg/kg days 1, 8, 15, and 22; Cycles 3-6: Daratumumab 16mg/kg days 1 and 15, Cycles 7-8: Daratumumab 16mg/kg day 1; Daratumumab rate of infusion is per MSKCC guidelines.; carfilzomib (DRUG) - Cycle 1 ONLY: Carfilzomib 20 mg/m2 per dose, days 2 and 3; Carfilzomib 36 mg/m2 per dose, da
+Conditions: Multiple Myeloma
+Primary outcomes: assess the rate of MRD negativity: Patients with â‰¤ PR after completing 4 cycles will be included in the analysis of the primary objective and will be considered MRD positive. Patients who receive any study drug and have at least one po
+Eligibility criteria: Inclusion Criteria:~* Newly diagnosed patients with histologically confirmed MM based on the following criteria:~  * Clonal plasma cells in the bone marrow~ * Measurable disease within the past 4 weeks defined by any one of the following:~ * Serum monoclonal protein â‰¥ 1.0 g/dL~ * Urine monoclonal protein \>200 mg/24 hour~ * Involved serum immunoglobulin free light chain \> 
+
+=== NCT03291444 ===
+Title: A Clinical Study of Chimeric Antigen Receptor T Cells Combined With Eps8 Peptide Specific Dendritic Cell for Patients With Relapsed/Refractory Leukemia and Myelodysplastic Syndromes
+Phase: PHASE1
+Brief summary: The main purpose of this study is to verify the safety and potential effectiveness of CART cells combined with peptide specific dendritic cell in relapsed/refractory leukemia.
+Interventions: Chimeric antigen receptor T cells (BIOLOGICAL) - After pretreatment, chimeric antigen receptor T cells will be transfused.; peptide specific dendritic cell (BIOLOGICAL) - After transfusion of chimeric antigen receptor T cells, Eps8 or WT1 peptide specific dendritic cell were intradermal injected.
+Conditions: Leukemia, Acute Lymphocytic (ALL), Leukemia, Acute Myelogenous (AML), Myelodysplastic Syndromes
+Primary outcomes: Occurrence of study related adverse events, according to NCI CTCAE Version 4.0: Incidence and severity of cytokine release syndrome(CRS): The systemic inflammatory response in patients with significantly increased IL-6 and other cytokines during the observation period is defined 
+Secondary outcomes: Progression free survival time: Time from random to the first occurrence of disease progression.; Overall survival time: Time from randomization to death due to any cause; Overall response rate: The proportion of the total number of patients with complete remission and partial remission (CR+PR) after treatment in the total number of evaluable ; Duration of response: During the 
+Eligibility criteria: Inclusion Criteria:~1. Tumor type: Acute Myeloid Leukemia (AML) and Acute Lymphoblastic Leukemia (ALL) according to the WHO criteria (at least 20% blasts in the marrow). All FAB subtypes except M3. Patients with Myelodysplastic Syndrome, category of Refractory Anemia with Excess Blasts (RAEB): RAEB I (WHO: medullary blast count â‰¤ 10% and a peripheral blast count â‰¤ 5%) and
+
+=== NCT03291470 ===
+Title: A Randomized, Double-Blind, Placebo-Controlled, Multi-Center, Phase 3 Study to Determine the Efficacy and Safety of TG-C in Subjects With Kellgren and Lawrence Grade 2 or 3 Osteoarthritis of the Knee
+Phase: PHASE3
+Brief summary: A randomized, double-blind, placebo-controlled, multi-center, phase 3 study to determine the efficacy and safety of TG-C in subjects with Kellgren and Lawrence Grade 2 or 3 Osteoarthritis of the Knee, Osteoarthritis Research Society International (OARSI) medial joint space narrowing (JSN) Grade 1 or 2 of the knee joint. TG-C is to be administered by a single intra-articular injectio
+Interventions: TG-C (BIOLOGICAL) - 2 mL injection of non-transduced human chondrocytes and irradiated transduced human GP2-293 cells expressing TGF-B1; Placebo Control (BIOLOGICAL) - 2 mL normal saline intraarticular injection
+Conditions: Degenerative Osteoarthritis
+Primary outcomes: Change in Knee Function as Assessed by the Western Ontario and McMaster Universities Index (WOMAC): Assessment of change from baseline in target knee function using the WOMAC Osteoarthritis Index. The WOMAC is a proprietary set of standardized questionnaires used by health professionals to evaluate ; Change in Knee Pain as Assessed by VAS: Assessment of change from baseline in ta
+Secondary outcomes: MRI Assessment of Target Knee: Assessment of knee organ tissues and structure by comparing change in MRI scoring using WORMS and partial MRI Osteoarthritis Knee Score (MOAKS); PCS of the SF-12 Questionnaire: Evaluation of the change from baseline in physical component score (PCS) of the SF-12v2 questionnaire.; WOMAC Total Score: Evaluation of the efficacy of TG-C with regard to
+Eligibility criteria: Inclusion Criteria:~* Aged 40 or older~* BMI between 18.5 and 40~* KL Grade 2 or 3 knee OA~* OARSI Grade 1 or 2 medial JSN~* Pain \>= 40 on VAS scale~* Written informed consent~* Using birth control~Exclusion Criteria:~* Knee symptoms that result in difficulty or inability to walk~* Knee effusion \>2+~* Has Grade 3 OARSI JSN~* MRI exam indicates fracture or tumor~* Has a posi
+
+=== NCT03292263 ===
+Title: Autologous Stem Cell Transplantation With Nivolumab in Patients With Multiple Myeloma
+Phase: PHASE1/PHASE2
+Brief summary: This is an open-label, single center trial of Autologous Stem Cell Transplantation (ASCT) with nivolumab in multiple myeloma patients to determine the efficacy and safety of ASCT and PD1 inhibitor combination.~For this purpose, 30 multiple myeloma patients, who have received induction therapy and have achieved a partial response (PR), stable disease (SD) or progression, and thus hav
+Interventions: Melphalan (DRUG) - iv infusion 70-100 mg/m2 on day -3, -2; Nivolumab (DRUG) - iv infusion 100 mg on day -3, +17; Autologous Stem Cell Transplantation (PROCEDURE) - peripheral blood stem cell transfusion at day 0
+Conditions: Multiple Myeloma
+Primary outcomes: Overall response: Includes complete response, very good partial response, and partial response (based on IMWG criteria)
+Secondary outcomes: Progression free survival (PFS): PFS will be assessed with Kaplan-Meier method from the date of ASCT, with day 0 defined as date of stem cell infusion (in case of tandem transplant th; Overall Survival (OS): Will be assessed with Kaplan-Meier method from the date of ASCT, with day 0 defined as date of stem cell infusion (in case of tandem transplant the 2n; Frequency of grade 3
+Eligibility criteria: Inclusion Criteria:~* Subjects with MM (Multiple Myeloma)~* Partial response, stable disease or progression after induction therapy (including ASCT)~* Measurable disease~* Successful peripheral blood stem cell collection with G-CSF~* Eastern Cooperative Oncology Group (ECOG) Performance Status (PS) 0-2~* Signed informed consent~* Patients after first-line induction therapy~Ex
+
+=== NCT03292861 ===
+Title: A Pilot Randomized Study to Assess the Effect and Safety Profile of ThymoglobulinÂ® in Primary Cardiac Transplant Recipients: A 12-month, Single Center, Randomized, Open-label Study of Efficacy Comparing Immediate Treatment With and Without ThymoglobulinÂ® 1.5 mg/kg/d for 5 Consecutive Days in Heart Transplant Recipients
+Phase: PHASE2
+Brief summary: This is a randomized, controlled, single center study to evaluate the efficacy of Thymoglobulin induction therapy in combination with Mycophenolate Mofetil, tacrolimus, and steroids in the prevention of CAV. Approximately half of the patients will be randomized to receive a total of 5 doses of Thymoglobulin during the study. The first dose of Thymoglobulin will be administered at 1.
+Interventions: Thymoglobulin (DRUG) - Approximately half of the patients will be randomized to receive a total of 5 doses of Thymoglobulin during the study. The first dose of Thymoglobulin will be administered at 1.5 mg/kg via intravenous infusion over 8 hours immediately upon arrival to the ICU post-operation (day 1). Subsequent doses of 1.5 mg/kg will be administered on days 2, 3, 4, and 5 via I
+Conditions: Heart Transplantation
+Primary outcomes: Percentage of Participants With Composite Efficacy Failure at 12 Months: Composite efficacy failure is defined as development of de novo donor specific antibodies (measured by standardized alloantibody testing by Luminex and control sera, characterizing kinetics, specifici
+Secondary outcomes: Changes in immune cell profiles: Correlations between significant changes in immune cell profiles and biomarkers, and their relation to any significant differences in clinical outcome; Changes in biomarkers: Correlations between significant changes in biomarkers and their relation to any significant differences in clinical outcomes; Number of patients who experience rejection: 
+Eligibility criteria: Inclusion Criteria for Study Entry:~1. Subjects must be undergoing their first allograft transplant~2. Men and non-pregnant women must be 18 to 70 years old~3. Women of childbearing potential must have a negative serum pregnancy test within 7 days prior to transplantation. The sensitivity must be equal to at least 50 mIU/mL. (Urine test is allowed in addition to serum test in
+
+=== NCT03293173 ===
+Title: Biomarker Driven and Dose Intensified Chemoimmunotherapy With Early CNS Prophylaxis in Patients Less Than 65 Years With High Risk Diffuse Large B-Cell Lymphoma
+Phase: PHASE2
+Brief summary: This study is testing whether stratification of the patients according to biological risk factors for different treatment groups will improve the outcome of patients with clinically high diffuse large B-cell lymphoma (DLBCL).
+Interventions: R-CHOEP (COMBINATION_PRODUCT) - rituximab, cyclophosphamide, doxorubicin, etoposide, vincristine, prednisone; DA-EPOCH-R (COMBINATION_PRODUCT) - dose-adjusted etoposide, prednisone, vincristine, cyclophosphamide, doxorubicin, rituximab
+Conditions: Lymphoma, Large B-Cell, Diffuse
+Primary outcomes: Time to treatment failure (TTF) of the patients with biological risk factors: Interval between the registration date and the date of documented progression or lack of response, first relapse, death for any reason or discontinuation/change of therapy because of toxicity, whichev
+Secondary outcomes: Time to treatment failure (TTF) at 3 years from date of registration of all patients and the patients in the low risk group: Interval between the registration date and the date of documented progression or lack of response, first relapse, death for any reason or discontinuat; Incidence of treatment-emergent adverse events (Safety and tolerability): Number of patients with treat
+Eligibility criteria: Inclusion Criteria:~* Age 18 - 64 years~* Histologically confirmed CD20+ DLBCL based on revised WHO 2008 Lymphoma Classification. The following subgroups and variants can be included:~  * ALK-positive large B-cell lymphoma~ * Intravascular large B-cell lymphoma~ * T-cell rich B-cell lymphoma~ * Myc/BCL-2 double hit lymphoma~ * Follicular lymphomas grade 3b~ * DLBCL with previ
+
+=== NCT03294083 ===
+Title: A Phase 1b/2a Dose-escalation and Safety/Efficacy Evaluation Study of Pexa-Vec (Thymidine Kinase-Deactivated Vaccinia Virus Plus GM-CSF) in Combination With Cemiplimab (REGN2810; Anti-PD-1) in Patients With Metastatic or Unresectable Renal Cell Carcinoma (RCC)
+Phase: PHASE1/PHASE2
+Brief summary: This is a Phase 1b/2a, open-label, multi-center, dose-escalation and safety/efficacy evaluation trial of Pexa-Vec plus Cemiplimab in patients with metastatic or unresectable renal cell carcinoma (RCC). The trial consists of a dose-escalation stage, where the maximum feasible dose of Pexa-Vec in combination with Cemiplimab will be determined, followed by an expansion stage. During th
+Interventions: Pexastimogene Devacirepvec (Pexa-Vec) (BIOLOGICAL) - Pexa-Vec is a vaccinia virus based oncolytic immunotherapy designed to stimulate the immune system following infection and replication within tumor cells; Cemiplimab (BIOLOGICAL) - Cemiplimab is a monoclonal antibody to Programmed Death-1 (PD-1)
+Conditions: Renal Cell Carcinoma
+Primary outcomes: Maximum tolerated dose(MTD) / Maximum feasible dose (MFD): MTD/MFD of Pexa-Vec administered by IV infusion in combination with Cemiplimab; Severity and frequency of adverse events to determine safety of Pexa-Vec administered by IV infusions or IT injections in combination with IV Cemiplimab: Safety will be determined by assessing the severity and frequency of adverse events and l
+Secondary outcomes: Progression free survival; Disease control rate; Best radiographic response; Overall survival
+Eligibility criteria: Inclusion Criteria:~* Histologically or cytologically confirmed metastatic or unresectable clear cell renal cell carcinoma (ccRCC)~* Part 2 Arm D ONLY: Patients must be refractory to anti PD-1 or anti-PD-L1 (either as monotherapy or in-combination with other approved checkpoint inhibitors or targeted therapies according to their approved label) and patients must meet all of t
+
+=== NCT03294460 ===
+Title: Nicotinic Receptor Genetic Variation and Alcohol Reward
+Phase: PHASE1
+Brief summary: Background:~People with the brain disease AUD (alcohol use disorder) have a serious problem with drinking. Researchers want to study how different people react to alcohol, and how genes affect this. They will focus on a nicotine receptor gene that may increase a person s AUD risk.~Objectives:~To see if people with variations of a nicotine receptor gene take alcohol differently and h
+Interventions: Alcohol (Oral) (DRUG) - Oral Self-administration; Alcohol (IV) (DRUG) - IV Self-administration; Alcohol (Ethanol) (DRUG) - IV and Oral Self-administration
+Conditions: Alcohol Drinking
+Primary outcomes: To examine the effect of CHRNA5 (rs16969968) genetic variation on neural correlates of incentive salience for alcohol, as measured by BOLD response during the Alcohol-Food Incentive Delay (AFID) task using fMRI.: The following measures will be examined as a function of smoking status (smokers and non-smokers) and CHRNA5 genotype. The influence of sex, age, and recent drinking his
+Secondary outcomes: To examine the relationship between fMRI measures (BOLD response during AFID and rsFC measures) and IV alcohol self-administration, and any differences in the degree of association among these measures by CHRNA5 genotype.; To examine the effect of CHRNA5 (rs16969968) genetic variation on the rate of IV alcohol self-administration, as measured by the preferred rate during the se
+Eligibility criteria: * INCLUSION CRITERIA:~  1. Male and female participants between 21-60 years of age. \[assessment: identification provided to Clinical Center Admissions office\]~ 2. Smoking status:~     * Smokers will have a history of at least 1 year of daily smoking, defined as individuals who smoke more than 20 uses of nicotinic products/week on average, and a cotinine level, measured by t
+
+=== NCT03294954 ===
+Title: GD2 Specific Chimeric Antigen Receptor (CAR) and Interleukin-15 Expressing Autologous Natural Killer T-cells to Treat Children With Neuroblastoma
+Phase: PHASE1
+Brief summary: This research study combines two different ways of fighting cancer: antibodies and Natural Killer T cells (NKT). Antibodies are types of proteins that protect the body from infectious diseases and possibly cancer. T cells, also called T lymphocytes, are special white blood cells that can kill other cells, including cells infected with viruses and tumor cells. Both antibodies and T c
+Interventions: GINAKIT Cells (GENETIC) - Six dose levels of GINAKIT cells will be studied. Dosing will be based on the actual number of transduced cells. All doses are per m2.~* Dose Level 1 = 3 x 10\^6~* Dose Level 2 = 1 x 10\^7~* Dose Level 3 = 3 x 10\^7~* Dose Level 4 = 1 x 10\^8~* Dose Level 5 = 3 x 10\^8~* Dose Level 6 = 1 x 10\^9; GINAKIT cells + Etanercept (BIOLOGICAL) - Four dose levels of
+Conditions: Neuroblastoma
+Primary outcomes: Maximum tolerated dose of autologous NKTs expressing a 2nd generation GD2-specific chimeric antigen receptor administered to patients with relapsed or refractory neuroblastoma in combination with Etanercept.: Defined as the highest dose level that will have at most a 33% chance of inducing the following NKT-cell-related dose limiting toxicities (DLTs) within 28 days after infusio
+Secondary outcomes: Anti-tumor response of autologous GINAKIT cells in patients with relapsed/refractory neuroblastoma and compare the anti-tumor response in patients treated with and without Etanercept.: Summarize tumor response by calculating overall response rates and report the Kaplan-Meier curves for the relapse-free survival.
+Eligibility criteria: Procurement Inclusion Criteria:~1. Relapsed or refractory high risk neuroblastoma~2. Life expectancy of at least 12 weeks~3. Age greater than 1 year and less than 21 years old~4. Karnofsky/Lansky score of 60% or greater~5. Absence of HAMA prior to enrollment (only in patients that have been previously treated with murine antibodies)~6. Ability to tolerate leukocyte apheresis~
+
+=== NCT03295227 ===
+Title: Feasibility Trial of Pembrolizumab in Unresectable Thymoma and Thymic Carcinoma
+Phase: PHASE1
+Brief summary: This phase I trial studies the sides effects and best dose of pembrolizumab in treating participants with thymoma or thymic cancer that cannot be removed by surgery. Immunotherapy with monoclonal antibodies, such as pembrolizumab, may help the body's immune system attack the cancer, and may interfere with the ability of tumor cells to grow and spread.
+Interventions: Pembrolizumab (BIOLOGICAL) - Given IV
+Conditions: Stage III Thymoma AJCC v8, Stage IIIA Thymoma AJCC v8, Stage IIIB Thymoma AJCC v8, Stage IV Thymoma AJCC v8, Stage IVA Thymoma AJCC v8, Stage IVB Thymoma AJCC v8, Unresectable Thymic Carcinoma
+Primary outcomes: Incidence of adverse events: Frequency tables will be used to summarize categorical variables such toxicity type and severity.
+Secondary outcomes: Progression-free survival: Assessed by immune related Response Criterion (irRC) and immune-modified Response Evaluation Criteria in Solid Tumors (iRECIST). Kaplan-Meier estimate; Overall survival assessed by iRECIST: Kaplan-Meier estimates will be constructed. Confidence intervals around the median will be calculated using the Brookmeyer-Crowley method, confidence ; Overall res
+Eligibility criteria: Inclusion Criteria:~* Unresectable thymoma or thymic carcinoma.~* Any line of prior therapy allowed.~* Be willing and able to provide written informed consent/assent for the trial.~* Have measurable disease based on Response Evaluation Criteria in Solid Tumors (RECIST) 1.1.~* Be willing to provide tissue from a newly obtained core or excisional biopsy of a tumor lesion. Newly
+
+=== NCT03295981 ===
+Title: Local Bisphosphonate Effect on Recurrence Rate in Extremity Giant Cell Tumor of Bone: A Prospective Randomized Controlled Trial
+Phase: PHASE3
+Brief summary: The purpose of the clinical study is to investigate whether the local delivery of bisphosphonate as a surgical adjuvant can decrease the chance of a giant cell tumor of bone coming back to the same location. The hypothesis is that the local administration of bisphosphonate will decrease the rate of the tumor returning compared to traditional aggressive surgical removal of the tumor.
+Interventions: Zoledronic Acid (DRUG) - 4 mg of zoledronic acid (Zometa) will be added to each bag of bone cement
+Conditions: Giant Cell Tumor of Bone
+Primary outcomes: The endpoint for patient participation will be local recurrence: Local recurrence of giant cell tumor of bone
+Secondary outcomes: MSTS Score: The Musculoskeletal Tumor Society (MSTS) scoring system is a validated and well-accepted functional scoring system used in orthopaedic oncology resear; Surgical site infection: The surgical site will be assessed for a surgical site infection (SSI) as defined by CDC guidelines after surgery and during scheduled follow-up as ou; Wound healing: The surgical site will b
+Eligibility criteria: Inclusion Criteria:~* Primary benign GCT of bone~* Lesion located in an extremity~* Lesion amenable to reconstruction (intralesional curettage) defined as having at least one intact column of bone after removal~* No previous systemic bisphosphonate or denosumab therapy~Exclusion Criteria:~* Recurrent GCT of bone~* Non-extremity location~* Lesion too extensive for intralesiona
+
+=== NCT03297606 ===
+Title: Canadian Profiling and Targeted Agent Utilization Trial (CAPTUR): A Phase II Basket Trial
+Phase: PHASE2
+Brief summary: Cancer drugs which target the effects of abnormal gene changes are called 'targeted therapies'. This study, called PM.1 or CAPTUR, will include some targeted therapies that are currently available. The purpose of this study is to find out what are the effects on a patient and their cancer when they are given a targeted therapy drug that is specific to an abnormal gene change in thei
+Interventions: Olaparib (DRUG) - 300mg taken twice daily; Dasatinib (DRUG) - 100mg administered orally once daily; Nivolumab plus Ipilimumab (DRUG) - * Combination Phase - 3mg/kg nivolumab administered as an intravenous infusion over 30 minutes every 3 weeks for the first 4 doses in combination with ipilmumab 1mg/kg administered intravenously over 30 minutes, followed by the single-agent phase.~* 
+Conditions: Lymphoma, Non-Hodgkin, Multiple Myeloma, Advanced Solid Tumors
+Primary outcomes: Objective response rate defined as the number of patients with complete response or partial response: over the total number of patients in a given cohort.
+Secondary outcomes: Number and severity of adverse events grade >3, or of lesser grade resulting in discontinuation, delay or reduction in dose of study drug: measured by CTCAE; Progression-free survival by disease-appropriate objective criteria
+Eligibility criteria: Inclusion Criteria: (screening step - non-drug specific)~* Adult (â‰¥ 18 yrs) patient with a histologically-proven incurable metastatic solid tumour (excluding primary brain tumours), multiple myeloma or B cell non-Hodgkin lymphoma (excluding CLL, SLL and HCL), for whom there is no standard treatment known to prolong life, or who has refused such treatment.~* ECOG performance
+
+=== NCT03298334 ===
+Title: Vaginal Microbiome Seeding and Health Outcomes in Cesarean-delivered Neonates: a Randomized Controlled Trial
+Phase: PHASE1/PHASE2
+Brief summary: Neonates delivered by scheduled Cesarean Section will be randomized to receive vaginal seeding (exposing the infant to Mother's vaginal flora) or sham. Infants will be followed for three years to examine health outcomes including microbiome development, immune development, metabolic outcomes, and any adverse events.
+Interventions: Vaginal Seeding (BIOLOGICAL) - A gauze containing the Mother's vaginal flora will be swabbed over the face and body of the neonate shortly after cesarean delivery.; No Vaginal Seeding (OTHER) - A gauze carrying sterile saline will be swabbed over the face and body of the neonate shortly after cesarean delivery.
+Conditions: Cesarean Delivery Affecting Newborn, Obesity, Childhood, Intestinal Microbiome, Microbiota, Host Microbial Interactions, Gastrointestinal Microbiome
+Primary outcomes: Adiposity: E.g. Body mass index z-score
+Secondary outcomes: Adverse events: Monitoring for adverse events; Intestinal microbiota: Intestinal microbiota development over the first three years of life; Immune and inflammatory regulation: E.g. Monitoring for immune and inflammatory mediated conditions
+Eligibility criteria: Inclusion Criteria for Mother:~* Scheduled for cesarean delivery at â‰¥ 37 weeks~* Pregnant with single fetus, in good general health, age 18 years or older~* Negative maternal testing for infections transmitted through vaginal and/or other body fluids performed as standard of care tests in early pregnancy~* Negative testing for Group B strep at 35-37 weeks gestation~* Vagina
+
+=== NCT03298451 ===
+Title: A Randomized, Open-label, Multi-center Phase III Study of Durvalumab and Tremelimumab as First-line Treatment in Patients With Advanced Hepatocellular Carcinoma
+Phase: PHASE3
+Brief summary: This is a randomized, open-label, multi-center, global, Phase III study to assess the efficacy and safety of durvalumab plus tremelimumab combination therapy and durvalumab monotherapy versus sorafenib in the treatment of patients with no prior systemic therapy for unresectable HCC. The patients cannot be eligible for locoregional therapy
+Interventions: Durvalumab (DRUG) - Durvalumab IV (intravenous infusion).; Tremelimumab (Regimen 1) (DRUG) - Tremelimumab IV (intravenous infusion).; Tremelimumab (Regimen 2) (DRUG) - Tremelimumab IV (intravenous infusion).
+Conditions: Hepatocellular Carcinoma
+Primary outcomes: Overall Survival (OS) - Treme 300 mg x1 Dose + Durva 1500 mg vs Sora 400 mg: OS was defined as the time from the date of randomization until death due to any cause, regardless of whether the participant withdrew from randomized therapy or received another anticancer therapy. A
+Secondary outcomes: Overall Survival (OS) - Durva 1500 mg vs Sora 400 mg: OS was defined as the time from the date of randomization until death due to any cause, regardless of whether the participant withdrew from randomized; Overall Survival (OS) at 18, 24, and 36 Months After Randomization: Percentage of participants who were alive at fixed time points (18, 24, and 36 months) after randomization
+Eligibility criteria: Inclusion criteria~* HCC based on histopathological confirmation~* No prior systemic therapy for HCC~* Barcelona Clinic Liver Cancer (BCLC) stage B (that is not eligible for locoregional therapy) or stage C~* Child-Pugh Score class A~* ECOG performance status of 0 or 1 at enrollment~Exclusion criteria~* Hepatic encephalopathy within past 12 months or requirement for medicatio
+

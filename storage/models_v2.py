@@ -122,6 +122,11 @@ class ClinicalTrialSignalV2:
     nct_id: str
     title: str
 
+    # Narrative text fields (from AACT brief_summaries / detailed_descriptions
+    # or CT.gov descriptionModule). Empty string if not available.
+    brief_summary: str = ""
+    detailed_description: str = ""
+
     # Conditions — raw list of strings
     conditions: List[str] = field(default_factory=list)
 

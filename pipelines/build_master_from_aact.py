@@ -22,6 +22,10 @@ AACT tables used:
 
 Optional (for arm group roles):
   design_groups.txt              → arm_group_map
+
+Optional (narrative text):
+  brief_summaries.txt            → brief_summary
+  detailed_descriptions.txt      → detailed_description
 """
 
 from __future__ import annotations
@@ -369,6 +373,29 @@ def build_design_groups_lookup(rows: List[Dict[str, str]]) -> Dict[str, Dict[str
     return dict(lookup)
 
 
+
+def build_summaries_lookup(rows):
+    """Pre-filtered rows from brief_summaries.txt -> {nct_id: description_text}"""
+    lookup = {}
+    for r in rows:
+        nct = _safe_str(r.get("nct_id"))
+        text = _safe_str(r.get("description"))
+        if nct:
+            lookup[nct] = text or ""
+    return lookup
+
+
+def build_descriptions_lookup(rows):
+    """Pre-filtered rows from detailed_descriptions.txt -> {nct_id: description_text}"""
+    lookup = {}
+    for r in rows:
+        nct = _safe_str(r.get("nct_id"))
+        text = _safe_str(r.get("description"))
+        if nct:
+            lookup[nct] = text or ""
+    return lookup
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # STEP 2: ASSEMBLE TRIAL OBJECTS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -383,6 +410,8 @@ def build_trial_from_aact(
     condition_mesh: Optional[Dict[str, List[Dict]]],
     intervention_mesh: Optional[Dict[str, List[Dict]]],
     arm_group_map: Optional[Dict[str, str]],
+    brief_summary: str = "",
+    detailed_description: str = "",
 ) -> ClinicalTrialSignalV2:
     """Assemble a ClinicalTrialSignalV2 from AACT lookup data."""
 
@@ -451,6 +480,8 @@ def build_trial_from_aact(
     return ClinicalTrialSignalV2(
         nct_id=nct_id,
         title=title,
+        brief_summary=brief_summary,
+        detailed_description=detailed_description,
         conditions=conditions,
         study_type=_normalize_study_type(study_row.get("study_type")),
         phase=phase,
@@ -851,7 +882,8 @@ def main():
     required = ["studies.txt", "conditions.txt", "interventions.txt", "sponsors.txt"]
     optional = ["design_outcomes.txt", "facilities.txt",
                 "browse_conditions.txt", "browse_interventions.txt",
-                "design_groups.txt"]
+                "design_groups.txt",
+                "brief_summaries.txt", "detailed_descriptions.txt"]
 
     for fname in required:
         if not (aact_dir / fname).exists():
@@ -933,6 +965,8 @@ def main():
     outcomes_lookup = build_outcomes_lookup(_read_filtered("design_outcomes.txt"))
     facilities_lookup = build_facilities_lookup(_read_filtered("facilities.txt"))
     arm_groups_lookup = build_design_groups_lookup(_read_filtered("design_groups.txt"))
+    summaries_lookup = build_summaries_lookup(_read_filtered("brief_summaries.txt"))
+    descriptions_lookup = build_descriptions_lookup(_read_filtered("detailed_descriptions.txt"))
 
     t1 = time.time()
     print(f"\n  All tables loaded in {t1 - t0:.1f}s")
@@ -978,6 +1012,8 @@ def main():
                     condition_mesh=condition_mesh_lookup.get(nct_id),
                     intervention_mesh=intervention_mesh_lookup.get(nct_id),
                     arm_group_map=arm_groups_lookup.get(nct_id),
+                    brief_summary=summaries_lookup.get(nct_id, ""),
+                    detailed_description=descriptions_lookup.get(nct_id, ""),
                 )
                 trials.append(trial)
             except Exception as e:
@@ -1016,6 +1052,7 @@ def main():
     del studies_by_nct, conditions_lookup, interventions_lookup
     del sponsors_lookup, outcomes_lookup, facilities_lookup
     del condition_mesh_lookup, intervention_mesh_lookup, arm_groups_lookup
+    del summaries_lookup, descriptions_lookup
     gc.collect()
 
     # ── Step 5: Merge batches, deduplicate ──────────────────────────

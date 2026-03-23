@@ -1,0 +1,1597 @@
+]633;E;echo "===== storage/models_v2.py =====";5b39a504-de84-40cc-9692-c14f4d57794e]633;C===== storage/models_v2.py =====
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import date
+from typing import List, Optional, Union
+
+# These type aliases are semantic (no runtime enforcement)
+# They match ClinicalTrials.gov semantic date formats.
+
+# Date fully specified: yyyy-MM-dd
+NormalizedDate = str
+
+# Partial date: yyyy, yyyy-MM, or yyyy-MM-dd
+PartialDate = str
+
+# DateTime minutes: yyyy-MM-dd'T'HH:mm
+DateTimeMinutes = str
+
+# Normalized time string (if needed)
+NormalizedTime = str
+
+
+@dataclass
+class DesignOutcomeV2:
+    """
+    A primary or secondary outcome measure from the study protocol.
+    Maps to CT.gov outcomesModule / AACT design_outcomes table.
+    """
+    type: str                        # PRIMARY, SECONDARY, OTHER
+    measure: str                     # e.g. "Overall Survival"
+    time_frame: Optional[str] = None # e.g. "From randomization to 24 months"
+    description: Optional[str] = None
+
+
+@dataclass
+class FacilityV2:
+    """
+    A study site / facility.
+    Maps to CT.gov locationsModule / AACT facilities table.
+    """
+    name: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    status: Optional[str] = None     # RECRUITING, COMPLETED, etc.
+
+
+@dataclass
+class UpdateCategoryV2:
+    """
+    A single categorized change detected by the update categorizer.
+    One trial can have multiple UpdateCategoryV2 entries.
+    """
+    category: str                           # e.g. "status_to_recruiting", "enrollment_change"
+    tier: int                               # 1 = high impact, 2 = medium, 3 = system
+    direction: Optional[str] = None         # e.g. "enrollment_up", "from_not_yet"
+    field_name: Optional[str] = None        # CT.gov field that changed
+    old_value: Optional[object] = None
+    new_value: Optional[object] = None
+    delta: Optional[object] = None          # numeric delta if applicable
+    delta_pct: Optional[str] = None         # e.g. "+133%"
+    note: Optional[str] = None              # human-readable annotation
+
+
+@dataclass
+class LinkedTrialV2:
+    """
+    A linked trial detected by the phase linkage engine.
+    Represents a probable phase advance across NCT IDs.
+    """
+    nct_id: str                             # the other NCT ID in the pair
+    phase: Optional[str] = None             # phase of the linked trial
+    link_confidence: Optional[float] = None # 0.0–1.0
+    link_type: Optional[str] = None         # "phase_advance", "reformulation", etc.
+
+
+@dataclass
+class OutcomeAssessmentV2:
+    """
+    Pass/fail assessment for a completed trial.
+    """
+    assessment: str                         # "passed", "failed", "unknown"
+    confidence: Optional[str] = None        # "high", "medium", "low"
+    signals: List[str] = field(default_factory=list)  # evidence strings
+    assessed_at: Optional[str] = None       # ISO date of assessment
+
+
+@dataclass
+class MeshTermV2:
+    """
+    Controlled vocabulary term from a browse module.
+    Used for MeSH on conditions or interventions.
+    """
+    id: Optional[str]
+    term: str
+
+
+@dataclass
+class InterventionV2:
+    """
+    A normalized intervention with role information.
+    Only 'new experimental drugs' are kept in the final list.
+    """
+    name: str
+    type: Optional[str] = None
+    description: Optional[str] = None
+    arm_group_labels: List[str] = field(default_factory=list)
+    other_names: List[str] = field(default_factory=list)
+
+    # Derived role (from arm type, e.g., Experimental, Active Comparator, Placebo)
+    role: Optional[str] = None
+
+
+@dataclass
+class ClinicalTrialSignalV2:
+    """
+    A normalized representation of a clinical trial for ALEXIS V2.
+    Interventions list contains only experimental new drugs.
+    """
+
+    # Core identity
+    nct_id: str
+    title: str
+
+    # Conditions — raw list of strings
+    conditions: List[str] = field(default_factory=list)
+
+    # Study metadata
+    study_type: Optional[str] = None
+    phase: Optional[str] = None
+    sponsor_class: Optional[str] = None
+
+    # ── NEW: Status & enrollment ──────────────────────────
+    # Maps to CT.gov statusModule.overallStatus / AACT studies.overall_status
+    overall_status: Optional[str] = None  # RECRUITING, COMPLETED, TERMINATED, etc.
+
+    # Maps to CT.gov designModule.enrollmentInfo / AACT studies.enrollment
+    enrollment: Optional[int] = None
+    enrollment_type: Optional[str] = None  # ACTUAL or ESTIMATED
+
+    # Maps to CT.gov statusModule.whyStopped / AACT studies.why_stopped
+    why_stopped: Optional[str] = None
+
+    # ── NEW: Sponsor identity ─────────────────────────────
+    # Maps to CT.gov sponsorCollaboratorsModule.leadSponsor.name / AACT sponsors.name
+    sponsor_name: Optional[str] = None
+
+    # ── NEW: Outcomes ─────────────────────────────────────
+    # Maps to CT.gov outcomesModule / AACT design_outcomes table
+    primary_outcomes: List[DesignOutcomeV2] = field(default_factory=list)
+    secondary_outcomes: List[DesignOutcomeV2] = field(default_factory=list)
+
+    # ── NEW: Facilities / study sites ─────────────────────
+    # Maps to CT.gov locationsModule / AACT facilities table
+    facilities: List[FacilityV2] = field(default_factory=list)
+    facility_count: Optional[int] = None  # convenience: len(facilities)
+
+    # ── NEW: Key protocol dates ───────────────────────────
+    # Maps to CT.gov statusModule / AACT studies table
+    start_date: Optional[PartialDate] = None
+    completion_date: Optional[PartialDate] = None
+    primary_completion_date: Optional[PartialDate] = None
+
+    # Dates (posting dates — already existed)
+    first_posted_date: Union[date, str, None] = None
+    last_update_posted_date: Union[date, str, None] = None
+
+    # Interventions
+    interventions_all: List[InterventionV2] = field(default_factory=list)
+    # Only new experimental drugs (filtered in normalization)
+    interventions: List[InterventionV2] = field(default_factory=list)
+
+    # Legacy intervention text (optional diagnostic use)
+    interventions_text: List[str] = field(default_factory=list)
+
+    # Arm map: label → arm type
+    # e.g., {"Arm A": "Experimental", "Arm B": "Active Comparator"}
+    arm_group_map: dict[str, str] = field(default_factory=dict)
+
+    # MeSH derived for conditions
+    condition_meshes: List[MeshTermV2] = field(default_factory=list)
+    condition_mesh_ancestors: List[MeshTermV2] = field(default_factory=list)
+
+    # MeSH derived for interventions
+    # (optional semantic enrichment — not required for new drug detection)
+    intervention_meshes: List[MeshTermV2] = field(default_factory=list)
+    intervention_mesh_ancestors: List[MeshTermV2] = field(default_factory=list)
+
+    # INFO flags
+    info_flags: List[str] = field(default_factory=list)
+
+    # classification outputs (persisted)
+    therapeutic_area: Optional[str] = None
+    is_drug_trial: Optional[bool] = None
+    modality: Optional[str] = None
+
+    # optional, future-proof
+    modality_source: Optional[str] = None
+
+    # intent output (computed in pipeline)
+    study_intent: Optional[str] = None
+
+    # data completeness flag (computed in pipeline)
+    mesh_missing_condition: Optional[bool] = None
+
+    # multi-TA detection provenance (computed in pipeline)
+    therapeutic_areas_detected: List[str] = field(default_factory=list)
+
+    # NEW: non-disease study categorization (computed in pipeline)
+    study_category: Optional[str] = None
+    study_category_evidence: List[str] = field(default_factory=list)
+
+    # ── NEW: Update categorization outputs ────────────────
+    # Populated by analytics/update_categorizer.py when diffing pulse vs. master
+
+    # "new" if first seen in this pulse, "existing" if in master DB, None if not yet categorized
+    update_type: Optional[str] = None
+
+    # All detected changes, multiple allowed per trial
+    update_categories: List[UpdateCategoryV2] = field(default_factory=list)
+
+    # Phase linkage: link to related trial at different phase (cross-NCT)
+    linked_from: Optional[LinkedTrialV2] = None
+
+    # Outcome assessment for completed trials
+    outcome: Optional[OutcomeAssessmentV2] = None
+
+
+===== analytics/summary_v2.py =====
+from storage.models_v2 import ClinicalTrialSignalV2
+from policy.text_modality_policy_v2 import text_modality_from_text
+from policy.ta_policy import TA_NON_DISEASE
+import re
+
+CTGOV_INTERVENTION_CATEGORIES = [
+    "BEHAVIORAL",
+    "BIOLOGICAL",
+    "COMBINATION_PRODUCT",
+    "DEVICE",
+    "DIAGNOSTIC_TEST",
+    "DIETARY_SUPPLEMENT",
+    "DRUG",
+    "GENETIC",
+    "PROCEDURE",
+    "RADIATION",
+    "OTHER",
+]
+
+# -------------------------------------------------
+# TA × Modality counts (TRUE DRUG TRIALS ONLY)
+# -------------------------------------------------
+
+def ta_modality_counts_true_drugs(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Therapeutic Area × Modality counts for TRUE DRUG trials only.
+    Non-drug trials are excluded.
+    """
+    counts: dict = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue  # critical: exclude non-drug trials
+
+        ta = t.therapeutic_area or "Unknown"
+        modality = t.modality or "Unknown"
+
+        if ta not in counts:
+            counts[ta] = {}
+
+        counts[ta][modality] = counts[ta].get(modality, 0) + 1
+
+    return counts
+
+
+# -------------------------------------------------
+# High-level drug vs non-drug counts
+# -------------------------------------------------
+
+def drug_trial_counts(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Global counts separating drug and non-drug trials.
+    """
+    total = len(trials)
+    drug_trials = [t for t in trials if t.is_drug_trial]
+
+    return {
+        "total_trials": total,
+        "drug_trials": len(drug_trials),
+        "non_drug_trials": total - len(drug_trials),
+        "drug_trials_with_unknown_modality": sum(
+            1 for t in drug_trials if t.modality is None
+        ),
+    }
+
+
+# -------------------------------------------------
+# INFO flag counts (TRUE DRUG TRIALS ONLY)
+# -------------------------------------------------
+
+def info_flag_counts_true_drugs(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count INFO flags for TRUE DRUG trials only.
+    """
+    counts: dict = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue  # critical: exclude non-drug trials
+
+        for flag in t.info_flags or []:
+            counts[flag] = counts.get(flag, 0) + 1
+
+    return counts
+
+
+# -------------------------------------------------
+# Drug INFO overview (sanity anchor)
+# -------------------------------------------------
+
+def drug_info_overview(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Compact overview to understand INFO flags impact
+    on TRUE DRUG trials.
+    """
+    drug_trials = [t for t in trials if t.is_drug_trial]
+
+    return {
+        "drug_trials_total": len(drug_trials),
+        "drug_trials_with_info_flags": sum(
+            1 for t in drug_trials if t.info_flags
+        ),
+        "drug_trials_with_unknown_modality": sum(
+            1 for t in drug_trials if t.modality is None
+        ),
+        "drug_trials_unknown_with_info": sum(
+            1
+            for t in drug_trials
+            if t.modality is None and t.info_flags
+        ),
+    }
+
+def study_type_summary_all_trials(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count trials by CT.gov StudyType (INTERVENTIONAL, OBSERVATIONAL, etc.).
+    Includes ALL trials.
+    """
+    counts: dict = {}
+
+    for t in trials:
+        st = t.study_type or "UNKNOWN"
+        counts[st] = counts.get(st, 0) + 1
+
+    return counts
+
+def intervention_type_summary_all_trials(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    CT.gov SOURCE-LAYER summary.
+
+    Counts number of trials that include at least one intervention
+    of each CT.gov intervention category.
+
+    Notes:
+    - Categories are NOT mutually exclusive.
+    - Each trial contributes at most once per category.
+    - Valid ONLY immediately after normalization.
+    - NOT valid on snapshots or reclassified trials.
+    """
+    category_counts = {k: 0 for k in CTGOV_INTERVENTION_CATEGORIES}
+    category_counts["NO_STRUCTURED_INTERVENTIONS"] = 0
+    category_counts["UNEXPECTED"] = 0
+
+    has_interventions_all = hasattr(trials[0], "interventions_all")
+
+    for t in trials:
+        ivs = t.interventions_all if has_interventions_all else []
+
+        types = {
+            iv.type.upper()
+            for iv in ivs
+            if isinstance(iv.type, str)
+        }
+
+        if not types:
+            category_counts["NO_STRUCTURED_INTERVENTIONS"] += 1
+            continue
+
+        for tp in types:
+            if tp in category_counts:
+                category_counts[tp] += 1
+            else:
+                category_counts["UNEXPECTED"] += 1
+
+    return {
+        "_layer": "ctgov_source",
+        "_requires": "interventions_all",
+        "_valid_on_snapshots": False,
+        "trials_with_category": category_counts,
+    }
+
+def drug_modality_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count drug trials by modality.
+
+    Each drug trial (NCT) is counted exactly once.
+    """
+    counts: dict[str, int] = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        modality = t.modality or "UNASSIGNED"
+        counts[modality] = counts.get(modality, 0) + 1
+
+    return counts
+
+def drug_therapeutic_area_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count drug trials by primary therapeutic area.
+
+    Each drug trial (NCT) is counted exactly once.
+    """
+    counts: dict[str, int] = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        ta = t.therapeutic_area or "UNASSIGNED"
+        counts[ta] = counts.get(ta, 0) + 1
+
+    return counts
+
+def drug_modality_provenance_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count how drug modality was derived:
+    - mesh
+    - text_fallback
+    - base_only
+    """
+    counts = {
+        "mesh": 0,
+        "text_fallback": 0,
+        "base_only": 0,
+    }
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        mesh_available = bool(t.intervention_meshes)
+        has_info_flag = bool(t.info_flags)
+
+        if mesh_available and not has_info_flag:
+            # mesh used successfully
+            counts["mesh"] += 1
+        elif has_info_flag:
+            # mesh present but failed → text or base
+            # disambiguate text vs base
+            text_blob = " ".join((t.interventions_text or []) + [t.title or ""])
+            text_hit = text_modality_from_text(text_blob, t.modality)
+
+            if text_hit:
+                counts["text_fallback"] += 1
+            else:
+                counts["base_only"] += 1
+        else:
+            # no mesh at all → check if text fallback assigned the modality
+            text_blob = " ".join((t.interventions_text or []) + [t.title or ""])
+            text_hit = text_modality_from_text(text_blob, t.modality)
+
+            if text_hit:
+                counts["text_fallback"] += 1
+            else:
+                counts["base_only"] += 1
+
+    return counts
+
+def drug_ta_provenance_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count how therapeutic area was derived for drug trials.
+    """
+    counts = {
+        "mesh": 0,
+        "text_fallback": 0,
+        "multi_ta_mesh": 0,
+    }
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        if t.therapeutic_areas_detected:
+            counts["mesh"] += 1
+            if len(t.therapeutic_areas_detected) > 1:
+                counts["multi_ta_mesh"] += 1
+        else:
+            counts["text_fallback"] += 1
+
+    return counts
+
+def drug_study_intent_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Split drug trials into disease vs non-disease intent.
+    """
+    counts = {
+        "disease": 0,
+        "non_disease": 0,
+    }
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        intent = getattr(t, "study_intent", None)
+        if intent == "non_disease":
+            counts["non_disease"] += 1
+        elif intent == "disease":
+            counts["disease"] += 1
+
+    return counts
+
+# -------------------------------------------------
+# Non-disease study categories (trial-level)
+# -------------------------------------------------
+
+CAT_SAFETY = "Safety & Tolerability Characterization (Non-escalation)"
+CAT_PROCEDURAL = "Procedural / Perioperative Analgesia & Anesthesia"
+CAT_PK = "Clinical Pharmacokinetics (PK / Exposure)"
+CAT_ESC = "Phase I Dose Escalation & Tolerability (SAD/MAD/FIH)"
+CAT_FORM = "Formulation / Delivery Optimization"
+CAT_BIOM = "Biomarker / Imaging / Method Validation (Drug-involved)"
+CAT_BABE = "Bioavailability / Bioequivalence (BA/BE)"
+CAT_DDI = "Drug–Drug Interaction (DDI)"
+CAT_MOA = "Mechanism of Action / Target Engagement (Non-disease)"
+CAT_ADME = "ADME / Mass Balance"
+CAT_FOOD = "Food Effect"
+CAT_ORGAN_IMPAIR = "Organ Impairment (Renal/Hepatic)"
+CAT_HV = "Healthy Volunteers (Non-disease)"
+CAT_TRANSPLANT = "Transplant Support"
+CAT_WOUND = "Wound / Tissue Healing"
+CAT_AESTHETIC = "Aesthetic / Cosmetic"
+CAT_WELLNESS = "Wellness / Longevity"
+CAT_CONTRACEPTION = "Contraception / Family Planning"
+CAT_ANESTHESIA = "Anesthesia / Sedation"
+CAT_ACUTE_PAIN = "Acute Pain / Perioperative Analgesia"
+CAT_AGING = "Aging / Frailty / Longevity"
+CAT_ICU = "Critical Care / ICU"
+
+PK_REGEX = re.compile(
+    r"\bpharmacokinetic(s)?\b|\bpk study\b|\bpk analysis\b|\bpk evaluation\b",
+    re.IGNORECASE,
+)
+PKPD_REGEX = re.compile(
+    r"\bpk\/pd\b|\bpharmacokinetic(s)? and pharmacodynamic(s)?\b",
+    re.IGNORECASE,
+)
+BA_BE_REGEX = re.compile(
+    r"\bbioavailability\b|\bbioequivalence\b",
+    re.IGNORECASE,
+)
+DDI_REGEX = re.compile(
+    r"\bdrug[- ]drug interaction(s)?\b|\bddi study\b",
+    re.IGNORECASE,
+)
+ORGAN_IMPAIRMENT_REGEX = re.compile(
+    r"\brenal impairment\b|\bhepatic impairment\b",
+    re.IGNORECASE,
+)
+HV_REGEX = re.compile(
+    r"\bhealthy volunteers?\b|\bhealthy subjects?\b|\bhealthy adults?\b|"
+    r"\bhealthy participants?\b|\bhealthy males?\b|\bhealthy females?\b|"
+    r"\bhealthy individuals?\b|\bHV\b",
+    re.IGNORECASE,
+)
+
+SAD_MAD_REGEX = re.compile(
+    r"\bsingle\s+ascending\s+dose\b|\bmultiple\s+ascending\s+dose\b|\bSAD\b|\bMAD\b",
+    re.IGNORECASE,
+)
+
+DOSE_ESCALATION_REGEX = re.compile(
+    r"\bdose\s+escalation\b|\bdose\s+expansion\b|\bdose[-\s]?ranging\b",
+    re.IGNORECASE,
+)
+
+FIH_REGEX = re.compile(
+    r"\bfirst[-\s]?in[-\s]?human\b|\bFIH\b",
+    re.IGNORECASE,
+)
+
+FOOD_EFFECT_REGEX = re.compile(
+    r"\bfood[-\s]?effect\b|\bfed\b.*\bfasted\b|\bhigh[-\s]?fat\b",
+    re.IGNORECASE,
+)
+
+QT_REGEX = re.compile(
+    r"\bQTc?\b|\bthorough\s+QT\b|\bTQT\b",
+    re.IGNORECASE,
+)
+
+ADME_REGEX = re.compile(
+    r"\bADME\b|\bmass\s+balance\b|\bradiolabeled\b|\bcarbon[-\s]?14\b|\b14C\b",
+    re.IGNORECASE,
+)
+
+# Procedural / pain / anesthesia anchors
+PROCEDURAL_REGEX = re.compile(
+    r"\bnerve block\b|\bgenicular\b|\bregional anesth|\banesthe|"
+    r"\bprocedural sedation\b|\bpostoperative\b|\bperioperative\b|\banalges|"
+    r"\bcolonoscopy\b|\bbowel prep|\bbowel preparation\b|"
+    r"\bendometrial biopsy\b|\bbiopsy procedure\b|"
+    r"\bcesarean\b|\bc-section\b|\bcaesarean\b|"
+    r"\bdialysis catheter\b|\bcatheter insertion\b|"
+    r"\blithotripsy\b|\bshockwave",
+    re.IGNORECASE,
+)
+
+# Delivery/formulation anchors (separate from BA/BE)
+FORMULATION_REGEX = re.compile(
+    r"\bformulation\b|\bpatch\b|\btransdermal\b|\bophthalmic\b|\bnasal\b|\bspray\b|"
+    r"\bautoinjector\b|\bpre[- ]filled\b|\bon[- ]body injector\b|\bprefilled syringe\b|"
+    r"\binfusion pump\b",
+    re.IGNORECASE,
+)
+
+# Biomarker / imaging / method validation anchors
+BIOMARKER_REGEX = re.compile(
+    r"\bbiomarker\b|\bassay\b|\bmonitoring\b|\bdiagnos|\bimaging\b|\bpet\b|\bmri\b|"
+    r"\bultrasound\b|\bspect\b|\breader\b|\bconspicuity\b|\bcontrast\b",
+    re.IGNORECASE,
+)
+
+# MOA / target engagement anchors (keep conservative)
+MOA_REGEX = re.compile(
+    r"\bmechanism\b|\btarget\b|\breceptor\b|\boccupancy\b|\bpathway\b|\binhibition\b|\bactivation\b|"
+    r"\bcxcr4\b|\brage\b|\bcd38\b|\bcomplement[- ]mediated\b",
+    re.IGNORECASE,
+)
+
+TRANSPLANT_REGEX = re.compile(
+    r"\btransplants?\b|\btransplantation\b|\brejection\b|\bgrafts?\b|"
+    r"\ballograft\b|\bantibody[- ]mediated rejection\b|"
+    r"\bdelayed graft function\b|\bDGF\b|\bgvhd\b|"
+    r"\bgraft[- ]versus[- ]host\b|\bptld\b|"
+    r"\bpost[- ]transplant\b|\bengraftment\b",
+    re.IGNORECASE,
+)
+
+WOUND_HEALING_REGEX = re.compile(
+    r"\bburns?\b|\bwound healing\b|\btissue regeneration\b|"
+    r"\bosseointegration\b|\bbone regeneration\b|\btissue repair\b|"
+    r"\bxenograft\b|\bautologous graft\b|\ballogenic graft\b|"
+    r"\bplatelet[- ]rich\b|\bPRP\b|\bPRF\b|\bA-PRF\b|"
+    r"\bstem cell therapy\b|\bmesenchymal stem cell",
+    re.IGNORECASE,
+)
+
+AESTHETIC_REGEX = re.compile(
+    r"\baesthetic\b|\bcosmetic\b|\bwrinkles?\b|"
+    r"\bglabellar lines?\b|\bfacial lines?\b|\bfrown lines?\b|"
+    r"\bskin aging\b|\bfacial aging\b|\bfacial rejuvenation\b|"
+    r"\bfillers?\b.*(?:aesthetic|cosmetic|facial)|"
+    r"\bhyaluronic acid filler\b|\bjaw contouring\b|"
+    r"\bbotox.*cosmetic|"
+    r"\bbotulinum.*(?:aesthetic|cosmetic|glabellar)",
+    re.IGNORECASE,
+)
+
+WELLNESS_LONGEVITY_REGEX = re.compile(
+    r"\banti[- ]aging\b|\breverse aging\b|\blongevity\b|"
+    r"\baging intervention\b|\bwellness\b|\bhealth optimization\b|"
+    r"\bperformance enhancement\b|\bmetabolic optimization\b|"
+    r"\bantioxidant.*(?:supplementation|intervention)",
+    re.IGNORECASE,
+)
+
+CONTRACEPTION_REGEX = re.compile(
+    r"\bcontraception\b|\bcontraceptive\b|\bbirth control\b|"
+    r"\bcontraceptive ring\b|\bhormonal contraception\b|"
+    r"\bfamily planning\b",
+    re.IGNORECASE,
+)
+
+# Anesthesia and sedation studies
+ANESTHESIA_SEDATION_REGEX = re.compile(
+    r'\b(anesthesia|sedation|postoperative pain|post-operative|perioperative|anesthetic|nausea vomiting|ponv)\b',
+    re.IGNORECASE
+)
+
+# Acute pain / perioperative — matched against CONDITIONS text (not title/interventions)
+# because these trials list the symptom/procedure as the condition rather than a disease
+ACUTE_PAIN_COND_REGEX = re.compile(
+    r'\bpostoperative\b|\bpost[-\s]?operative\b|\bpostsurgical\b|\bpost[-\s]?surgical\b|'
+    r'\bperioperative\b|\bprocedural pain\b|\blabor pain\b|\blabour pain\b|'
+    r'\bneuromuscular blockade\b|'
+    r'\bacute pain\b|\bpain,?\s+acute\b|\bpain,?\s+postoperative\b|'
+    r'\banesthesia\b|\bsedation\b|\banalgesia\b|'
+    # Trauma / hemorrhage / shock — acute care, not disease TAs
+    r'\btrauma\b|\btrauma injury\b|\btrauma, multiple\b|'
+    r'\bhemorrhage\b|\bhemorrhagic shock\b|\bhypovolemic shock\b|\bblood loss\b|'
+    r'\bburns?\b|'
+    # ICU / critical care
+    r'\bintensive care\b|\bicu\b|\bcritically ill\b|'
+    r'\bmechanical ventilation\b|\bvasopressor\b|\bintubation\b|'
+    r'\bextracorporeal membrane\b|\becmo\b',
+    re.IGNORECASE,
+)
+
+def has_enabling_signal(t: ClinicalTrialSignalV2) -> bool:
+    # Use pre-cached text if available, otherwise compute
+    text = getattr(t, '_cached_title_interventions', None)
+    if text is None:
+        text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
+    
+    return bool(
+        # Core PK/PD / BA/BE / DDI
+        DDI_REGEX.search(text)
+        or BA_BE_REGEX.search(text)
+        or PK_REGEX.search(text)
+        or PKPD_REGEX.search(text)
+
+        # Organ impairment / HV
+        or ORGAN_IMPAIRMENT_REGEX.search(text)
+        or HV_REGEX.search(text)
+
+        # SAD/MAD/FIH / dose escalation
+        or SAD_MAD_REGEX.search(text)
+        or DOSE_ESCALATION_REGEX.search(text)
+        or FIH_REGEX.search(text)
+
+        # Food effect
+        or FOOD_EFFECT_REGEX.search(text)
+
+        # QT / cardiac safety
+        or QT_REGEX.search(text)
+
+        # ADME / mass balance
+        or ADME_REGEX.search(text)
+
+        # Procedural anesthesia / nerve block / sedation
+        or PROCEDURAL_REGEX.search(text)
+        or ANESTHESIA_SEDATION_REGEX.search(text)
+
+        # Formulation / delivery systems
+        or FORMULATION_REGEX.search(text)
+
+        # Biomarker / imaging / assay validation
+        or BIOMARKER_REGEX.search(text)
+
+        # MOA / target engagement
+        or MOA_REGEX.search(text)
+
+        # NEW: Transplant support
+        or TRANSPLANT_REGEX.search(text)
+
+        # NEW: Wound healing / tissue regeneration
+        or WOUND_HEALING_REGEX.search(text)
+
+        # NEW: Aesthetic / cosmetic procedures
+        or AESTHETIC_REGEX.search(text)
+
+        # NEW: Wellness / longevity interventions
+        or WELLNESS_LONGEVITY_REGEX.search(text)
+
+        # NEW: Contraception / family planning
+        or CONTRACEPTION_REGEX.search(text)
+
+        # Simple string fallbacks
+        or ("formulation" in text)
+        or ("delivery" in text)
+
+        # Acute pain / perioperative — check conditions text since
+        # these trials list the symptom as condition, not in title/interventions
+        or ACUTE_PAIN_COND_REGEX.search(
+            " ".join(getattr(t, "conditions", None) or [])
+        )
+
+        # Transplant / wound / sedation / aging — also check conditions text
+        or TRANSPLANT_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        or WOUND_HEALING_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        or ANESTHESIA_SEDATION_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        or WELLNESS_LONGEVITY_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+        # Bare "Healthy" as a condition entry (HV trials that list condition as just "Healthy")
+        or any(c.strip().lower() == "healthy" for c in (getattr(t, "conditions", None) or []))
+        # HV regex against conditions text too
+        or HV_REGEX.search(" ".join(getattr(t, "conditions", None) or []))
+    )
+
+def assign_non_disease_study_category(
+    t: ClinicalTrialSignalV2,
+) -> tuple[str, list[str]]:
+    evidence: list[str] = []
+    # Use pre-cached text if available, otherwise compute
+    text = getattr(t, '_cached_title_interventions', None)
+    if text is None:
+        text = " ".join((t.interventions_text or []) + [t.title or ""]).lower()
+
+    # Precedence order MUST match the exported results:
+    # procedural → transplant → wound → aesthetic → ADME → DDI → food → BA/BE → formulation → SAD/MAD/FIH → PK → organ_impairment → HV → biomarker → MOA → wellness → contraception → safety(exclusion)
+
+    if PROCEDURAL_REGEX.search(text):
+        evidence.append("procedural: PROCEDURAL_REGEX")
+        return (CAT_PROCEDURAL, evidence)
+
+    if ANESTHESIA_SEDATION_REGEX.search(text):
+        evidence.append("anesthesia_sedation")
+        return (CAT_ANESTHESIA, evidence)
+
+    # Acute pain / perioperative — checked against conditions text
+    cond_text = " ".join(getattr(t, "conditions", None) or [])
+    if ACUTE_PAIN_COND_REGEX.search(cond_text) or PROCEDURAL_REGEX.search(cond_text):
+        evidence.append("acute_pain: ACUTE_PAIN_COND_REGEX on conditions")
+        return (CAT_ACUTE_PAIN, evidence)
+
+    # ICU / critical care — checked against conditions text
+    if re.search(
+        r'\bintensive care\b|\bicu\b|\bcritically ill\b|\bmechanical ventilation\b|'
+        r'\bvasopressor\b|\bintubation\b|\becmo\b|\bextracorporeal membrane\b',
+        cond_text, re.IGNORECASE
+    ):
+        evidence.append("icu: ICU_COND on conditions")
+        return (CAT_ICU, evidence)
+
+    # Transplant — check conditions text too
+    if TRANSPLANT_REGEX.search(cond_text):
+        evidence.append("transplant: TRANSPLANT_REGEX on conditions")
+        return (CAT_TRANSPLANT, evidence)
+
+    # Wound healing — check conditions text too
+    if WOUND_HEALING_REGEX.search(cond_text):
+        evidence.append("wound_healing: WOUND_HEALING_REGEX on conditions")
+        return (CAT_WOUND, evidence)
+
+    # Anesthesia/sedation — check conditions text too
+    if ANESTHESIA_SEDATION_REGEX.search(cond_text):
+        evidence.append("anesthesia_sedation: ANESTHESIA_SEDATION_REGEX on conditions")
+        return (CAT_ANESTHESIA, evidence)
+
+    # Aging / frailty / longevity — check conditions text too
+    if WELLNESS_LONGEVITY_REGEX.search(cond_text) or re.search(
+        r'\baging\b|\bageing\b|\bfrailty\b|\bfrail\b|\bsarcopenia\b|\bgeriatric\b',
+        cond_text, re.IGNORECASE
+    ):
+        evidence.append("aging: WELLNESS/AGING on conditions")
+        return (CAT_AGING, evidence)
+
+    # NEW: Transplant support (high priority after procedural)
+    if TRANSPLANT_REGEX.search(text):
+        evidence.append("transplant: TRANSPLANT_REGEX")
+        return (CAT_TRANSPLANT, evidence)
+
+    # NEW: Wound healing / tissue regeneration
+    if WOUND_HEALING_REGEX.search(text):
+        evidence.append("wound_healing: WOUND_HEALING_REGEX")
+        return (CAT_WOUND, evidence)
+
+    # NEW: Aesthetic / cosmetic procedures
+    if AESTHETIC_REGEX.search(text):
+        evidence.append("aesthetic: AESTHETIC_REGEX")
+        return (CAT_AESTHETIC, evidence)
+
+    if ADME_REGEX.search(text):
+        evidence.append("adme: ADME_REGEX")
+        return (CAT_ADME, evidence)
+
+    if DDI_REGEX.search(text):
+        evidence.append("ddi: DDI_REGEX")
+        return (CAT_DDI, evidence)
+
+    if FOOD_EFFECT_REGEX.search(text):
+        evidence.append("food_effect: FOOD_EFFECT_REGEX")
+        return (CAT_FOOD, evidence)
+
+    if BA_BE_REGEX.search(text):
+        evidence.append("ba_be: BA_BE_REGEX")
+        return (CAT_BABE, evidence)
+
+    if FORMULATION_REGEX.search(text):
+        evidence.append("formulation: FORMULATION_REGEX")
+        return (CAT_FORM, evidence)
+
+    if SAD_MAD_REGEX.search(text) or DOSE_ESCALATION_REGEX.search(text) or FIH_REGEX.search(text):
+        evidence.append("dose_escalation: SAD_MAD/DOSE_ESCALATION/FIH")
+        return (CAT_ESC, evidence)
+
+    if PK_REGEX.search(text) or PKPD_REGEX.search(text):
+        evidence.append("pk: PK_REGEX/PKPD_REGEX")
+        return (CAT_PK, evidence)
+    
+    if ORGAN_IMPAIRMENT_REGEX.search(text):
+        evidence.append("organ_impairment: ORGAN_IMPAIRMENT_REGEX")
+        return (CAT_ORGAN_IMPAIR, evidence)
+
+    if HV_REGEX.search(text):
+        evidence.append("healthy_volunteers: HV_REGEX")
+        return (CAT_HV, evidence)
+
+    if BIOMARKER_REGEX.search(text):
+        evidence.append("biomarker: BIOMARKER_REGEX")
+        return (CAT_BIOM, evidence)
+
+    if MOA_REGEX.search(text):
+        evidence.append("moa: MOA_REGEX")
+        return (CAT_MOA, evidence)
+
+    # NEW: Wellness / longevity interventions
+    if WELLNESS_LONGEVITY_REGEX.search(text):
+        evidence.append("wellness: WELLNESS_LONGEVITY_REGEX")
+        return (CAT_WELLNESS, evidence)
+
+    # NEW: Contraception / family planning
+    if CONTRACEPTION_REGEX.search(text):
+        evidence.append("contraception: CONTRACEPTION_REGEX")
+        return (CAT_CONTRACEPTION, evidence)
+
+    # If no anchors matched: real category by exclusion (not "other")
+    evidence.append("safety_default: no category anchors matched")
+    return (CAT_SAFETY, evidence)
+
+def non_disease_drug_subtype_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict[str, int]:
+    """
+    Summarize non-disease drug studies by the same categories used in
+    assign_non_disease_study_category().
+
+    Deterministic, consistent, and single-source-of-truth.
+    """
+    counts: dict[str, int] = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        if getattr(t, "study_intent", None) != "non_disease":
+            continue
+
+        category, _evidence = assign_non_disease_study_category(t)
+        counts[category] = counts.get(category, 0) + 1
+
+    return counts
+
+def non_disease_study_category_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict[str, int]:
+    """
+    Count non-disease drug trials by study_category.
+    """
+    counts: dict[str, int] = {}
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+        if getattr(t, "study_intent", None) != "non_disease":
+            continue
+
+        cat = getattr(t, "study_category", None) or "UNASSIGNED"
+        counts[cat] = counts.get(cat, 0) + 1
+
+    return counts
+
+
+def ta_by_phase(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    counts = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        ta = t.therapeutic_area
+        phase = t.phase or "UNKNOWN"
+
+        counts.setdefault(ta, {})
+        counts[ta][phase] = counts[ta].get(phase, 0) + 1
+
+    return counts
+
+def modality_by_phase(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    counts = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        modality = t.modality
+        phase = t.phase or "UNKNOWN"
+
+        counts.setdefault(modality, {})
+        counts[modality][phase] = counts[modality].get(phase, 0) + 1
+
+    return counts
+
+def ta_by_sponsor_class(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    counts = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        ta = t.therapeutic_area
+        sponsor = t.sponsor_class or "UNKNOWN"
+
+        counts.setdefault(ta, {})
+        counts[ta][sponsor] = counts[ta].get(sponsor, 0) + 1
+
+    return counts
+
+def multi_ta_rate_by_phase(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    totals = {}
+    multi = {}
+
+    for t in trials:
+        if not t.is_drug_trial:
+            continue
+
+        phase = t.phase or "UNKNOWN"
+        totals[phase] = totals.get(phase, 0) + 1
+
+        if (
+            hasattr(t, "therapeutic_areas_detected")
+            and t.therapeutic_areas_detected
+            and len(t.therapeutic_areas_detected) > 1
+        ):
+            multi[phase] = multi.get(phase, 0) + 1
+
+    return {
+        phase: multi.get(phase, 0) / totals[phase]
+        for phase in totals
+    }
+
+def drug_mesh_missing_condition_summary(
+    trials: list[ClinicalTrialSignalV2],
+) -> dict:
+    """
+    Count drug trials with missing condition MeSH.
+    This is a data completeness metric, NOT intent.
+    """
+    return {
+        "mesh_missing_condition": sum(
+            1
+            for t in trials
+            if t.is_drug_trial and not t.condition_meshes
+        )
+    }
+
+===== analytics/snapshot_full_summary.py =====
+"""
+snapshot_full_summary.py
+Run from ALEXIS root: ipython analytics/snapshot_full_summary.py
+"""
+import json, os, sys
+sys.path.insert(0, '.')
+
+from storage.models_v2 import ClinicalTrialSignalV2
+from analytics.summary_v2 import (
+    drug_trial_counts,
+    drug_info_overview,
+    drug_modality_summary,
+    drug_therapeutic_area_summary,
+    drug_modality_provenance_summary,
+    drug_ta_provenance_summary,
+    drug_study_intent_summary,
+    drug_mesh_missing_condition_summary,
+    info_flag_counts_true_drugs,
+    non_disease_study_category_summary,
+    ta_by_phase,
+    modality_by_phase,
+    multi_ta_rate_by_phase,
+)
+
+# ── Load ──────────────────────────────────────────────────────────────────────
+SNAPSHOT = os.environ.get(
+    'SNAPSHOT',
+    'storage/snapshots/clinical_trials_v2/reclassified/reclassified_2026_feb_w4.json'
+)
+print(f"Loading: {SNAPSHOT}")
+raw    = json.load(open(SNAPSHOT))
+trials = [ClinicalTrialSignalV2(**t) for t in raw['trials']]
+print(f"Trials loaded: {len(trials):,}\n")
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+W = 52
+
+def banner(title):
+    print(f"\n{'='*70}\n  {title}\n{'='*70}")
+
+def show(d, pct_of=None, sort=True):
+    total = pct_of if pct_of is not None else sum(d.values())
+    rows  = sorted(d.items(), key=lambda x: -x[1]) if sort else d.items()
+    for k, v in rows:
+        pct = f"  ({v/total*100:.1f}%)" if total else ""
+        print(f"  {str(k):<{W}} {v:>8,}{pct}")
+
+def show_pct_only(d):
+    for k, v in sorted(d.items(), key=lambda x: -x[1]):
+        print(f"  {str(k):<{W}} {v*100:>8.1f}%")
+
+def show_nested(d):
+    """Dict of dicts — one sub-section per outer key, sorted by total."""
+    for outer_key in sorted(d, key=lambda k: -sum(d[k].values())):
+        row   = d[outer_key]
+        total = sum(row.values())
+        print(f"\n  {outer_key}  [{total:,}]")
+        for k, v in sorted(row.items(), key=lambda x: -x[1]):
+            pct = f"  ({v/total*100:.1f}%)" if total else ""
+            print(f"    {str(k):<{W-2}} {v:>8,}{pct}")
+
+# ── 1. Top-line ───────────────────────────────────────────────────────────────
+banner("1. TOP-LINE COUNTS")
+tc = drug_trial_counts(trials)
+show(tc, sort=False)
+
+# ── 2. Drug info overview ─────────────────────────────────────────────────────
+banner("2. DRUG INFO OVERVIEW")
+show(drug_info_overview(trials), sort=False)
+
+# ── 3. Study intent ───────────────────────────────────────────────────────────
+banner("3. STUDY INTENT  (drug trials only)")
+si = drug_study_intent_summary(trials)
+si['none_or_unset'] = tc['drug_trials'] - si.get('disease',0) - si.get('non_disease',0)
+show(si, pct_of=tc['drug_trials'])
+
+# ── 4. Therapeutic area ───────────────────────────────────────────────────────
+banner("4. THERAPEUTIC AREA  (drug trials only)")
+show(drug_therapeutic_area_summary(trials), pct_of=tc['drug_trials'])
+
+# ── 5. Modality ───────────────────────────────────────────────────────────────
+banner("5. MODALITY  (drug trials only)")
+show(drug_modality_summary(trials), pct_of=tc['drug_trials'])
+
+# ── 6. TA provenance ──────────────────────────────────────────────────────────
+banner("6. TA PROVENANCE")
+show(drug_ta_provenance_summary(trials), pct_of=tc['drug_trials'])
+
+# ── 7. Modality provenance ────────────────────────────────────────────────────
+banner("7. MODALITY PROVENANCE")
+show(drug_modality_provenance_summary(trials), pct_of=tc['drug_trials'])
+
+# ── 8. Info flags ─────────────────────────────────────────────────────────────
+banner("8. INFO FLAGS  (drug trials only)")
+show(info_flag_counts_true_drugs(trials))
+
+# ── 9. Non-disease categories ─────────────────────────────────────────────────
+banner("9. NON-DISEASE STUDY CATEGORIES")
+nd = non_disease_study_category_summary(trials)
+show(nd, pct_of=sum(nd.values()))
+
+# ── 10. Condition mesh missing ────────────────────────────────────────────────
+banner("10. CONDITION MESH MISSING")
+show(drug_mesh_missing_condition_summary(trials), pct_of=tc['drug_trials'])
+
+# ── 11. Multi-TA rate by phase ────────────────────────────────────────────────
+banner("11. MULTI-TA RATE BY PHASE")
+show_pct_only(multi_ta_rate_by_phase(trials))
+
+# ── 12. TA × Phase ────────────────────────────────────────────────────────────
+banner("12. TA × PHASE  (drug trials only)")
+show_nested(ta_by_phase(trials))
+
+# ── 13. Modality × Phase ──────────────────────────────────────────────────────
+banner("13. MODALITY × PHASE  (drug trials only)")
+show_nested(modality_by_phase(trials))
+
+print(f"\n{'='*70}\n  DONE\n{'='*70}\n")
+===== storage/changelogs/changelog_2026-02-20_2026-02-27_v1.json =====
+{
+  "generated_at": "2026-02-28T15:52:06.699516+00:00",
+  "window": "2026-02-20_2026-02-27",
+  "summary": {
+    "total_trials": 2525,
+    "new_active_registrations": 528,
+    "new_inactive_updates": 204,
+    "existing_with_business_changes": 1250,
+    "existing_metadata_only": 543,
+    "category_counts": {
+      "sites_changed": 684,
+      "metadata_only": 543,
+      "new_registration": 528,
+      "enrollment_change": 272,
+      "phase_format_change": 262,
+      "enrollment_type_change": 209,
+      "inactive_update": 204,
+      "status_to_recruiting": 159,
+      "secondary_endpoint_changed": 153,
+      "status_to_completed": 129,
+      "status_to_active_not_recruiting": 127,
+      "endpoint_changed": 105,
+      "new_arm_added": 88,
+      "status_to_stopped": 62,
+      "reclassified": 55,
+      "intervention_changed": 50,
+      "sponsor_changed": 22,
+      "status_changed": 8,
+      "phase_changed": 4
+    },
+    "direction_counts": {
+      "sites_changed:sites_added": 593,
+      "enrollment_type_change:estimated_to_actual": 206,
+      "phase_format_change:PHASE1/PHASE2_to_PHASE1": 198,
+      "secondary_endpoint_changed:modified": 153,
+      "status_to_recruiting:from_not_yet_recruiting": 147,
+      "enrollment_change:enrollment_up": 137,
+      "enrollment_change:enrollment_down": 135,
+      "status_to_completed:completed_unknown": 129,
+      "status_to_active_not_recruiting:from_recruiting": 125,
+      "endpoint_changed:endpoint_modified": 92,
+      "sites_changed:sites_removed": 91,
+      "phase_format_change:PHASE2/PHASE3_to_PHASE2": 63,
+      "new_arm_added:arm_added": 52,
+      "intervention_changed:description_changed": 50,
+      "reclassified:modality_changed": 48,
+      "new_arm_added:arm_removed": 36,
+      "status_to_stopped:terminated": 30,
+      "sponsor_changed:sponsor_changed": 22,
+      "status_to_stopped:suspended": 18,
+      "status_to_stopped:withdrawn": 14,
+      "status_to_recruiting:from_active_not_recruiting": 12,
+      "endpoint_changed:endpoint_removed": 9,
+      "status_changed:not_yet_recruiting_to_active_not_recruiting": 8,
+      "reclassified:ta_changed": 7,
+      "endpoint_changed:endpoint_added": 4,
+      "enrollment_type_change:actual_to_estimated": 3,
+      "status_to_active_not_recruiting:from_enrolling_by_invitation": 2,
+      "phase_changed:PHASE2_to_PHASE1": 1,
+      "phase_format_change:PHASE1/PHASE2_to_PHASE2": 1,
+      "phase_changed:PHASE3_to_NA": 1,
+      "phase_changed:PHASE2_to_PHASE4": 1,
+      "phase_changed:PHASE1_to_EARLY_PHASE1": 1
+    }
+  },
+  "tier1": [
+    {
+      "category": "new_registration",
+      "count": 528,
+      "directions": {}
+    },
+    {
+      "category": "status_to_recruiting",
+      "count": 159,
+      "directions": {
+        "from_not_yet_recruiting": 147,
+        "from_active_not_recruiting": 12
+      }
+    },
+    {
+      "category": "status_to_completed",
+      "count": 129,
+      "directions": {
+        "completed_unknown": 129
+      }
+    },
+    {
+      "category": "status_to_stopped",
+      "count": 62,
+      "directions": {
+        "terminated": 30,
+        "suspended": 18,
+        "withdrawn": 14
+      }
+    },
+    {
+      "category": "status_to_active_not_recruiting",
+      "count": 127,
+      "directions": {
+        "from_recruiting": 125,
+        "from_enrolling_by_invitation": 2
+      }
+    },
+    {
+      "category": "status_changed",
+      "count": 8,
+      "directions": {
+        "not_yet_recruiting_to_active_not_recruiting": 8
+      }
+    },
+    {
+      "category": "new_arm_added",
+      "count": 88,
+      "directions": {
+        "arm_added": 52,
+        "arm_removed": 36
+      }
+    },
+    {
+      "category": "phase_changed",
+      "count": 4,
+      "directions": {
+        "PHASE2_to_PHASE1": 1,
+        "PHASE3_to_NA": 1,
+        "PHASE2_to_PHASE4": 1,
+        "PHASE1_to_EARLY_PHASE1": 1
+      }
+    }
+  ],
+  "tier2": [
+    {
+      "category": "enrollment_change",
+      "count": 272,
+      "directions": {
+        "enrollment_down": 135,
+        "enrollment_up": 137
+      }
+    },
+    {
+      "category": "enrollment_type_change",
+      "count": 209,
+      "directions": {
+        "estimated_to_actual": 206,
+        "actual_to_estimated": 3
+      }
+    },
+    {
+      "category": "intervention_changed",
+      "count": 50,
+      "directions": {
+        "description_changed": 50
+      }
+    },
+    {
+      "category": "endpoint_changed",
+      "count": 105,
+      "directions": {
+        "endpoint_removed": 9,
+        "endpoint_modified": 92,
+        "endpoint_added": 4
+      }
+    },
+    {
+      "category": "secondary_endpoint_changed",
+      "count": 153,
+      "directions": {
+        "modified": 153
+      }
+    },
+    {
+      "category": "sponsor_changed",
+      "count": 22,
+      "directions": {
+        "sponsor_changed": 22
+      }
+    },
+    {
+      "category": "sites_changed",
+      "count": 684,
+      "directions": {
+        "sites_added": 593,
+        "sites_removed": 91
+      }
+    }
+  ],
+  "tier3": [
+    {
+      "category": "metadata_only",
+      "count": 543,
+      "directions": {}
+    },
+    {
+      "category": "reclassified",
+      "count": 55,
+      "directions": {
+        "modality_changed": 48,
+        "ta_changed": 7
+      }
+    },
+    {
+===== sample weekly snapshot (head) =====
+{
+  "metadata": {
+    "source": "clinicaltrials.gov",
+    "window_basis": "LastUpdatePostDate",
+    "as_of": "2026-01-30",
+    "window_start": "2026-01-26",
+    "window_end": "2026-01-30",
+    "window_days": 4,
+    "condition_query": null,
+    "page_size": 10,
+    "max_studies": 100000,
+    "run_time": "2026-02-19T11:21:20",
+    "run_id": "2026_jan_w5",
+    "format": "ALEXIS_SNAPSHOT_V2"
+  },
+  "trials": [
+    {
+      "nct_id": "NCT04739059",
+      "title": "An Open-label Study to Evaluate the Long-term Safety and Efficacy of CSL312 (Garadacimab) in the Prophylactic Treatment of Hereditary Angioedema",
+      "study_type": "INTERVENTIONAL",
+      "phase": "PHASE3",
+      "sponsor_class": "INDUSTRY",
+      "conditions": [
+        "Hereditary Angioedema"
+      ],
+      "first_posted_date": "2021-02-04",
+      "last_update_posted_date": "2026-01-26",
+      "interventions": [],
+      "interventions_text": [
+        "CSL312",
+        "Biological: CSL312"
+      ],
+      "interventions_all": [
+        {
+          "name": "CSL312",
+          "type": "BIOLOGICAL",
+          "role": "other",
+          "arm_group_labels": [
+            "CSL312"
+          ],
+          "other_names": [
+            "Factor XIIa inhibitor monoclonal antibody",
+            "garadacimab"
+          ],
+          "description": "Fully human immunoglobulin G subclass 4/lambda recombinant inhibitor monoclonal antibody"
+        }
+      ],
+      "arm_group_map": {},
+      "intervention_meshes": [],
+      "intervention_mesh_ancestors": [],
+      "condition_meshes": [
+        {
+          "id": "D054179",
+          "term": "Angioedemas, Hereditary"
+        }
+      ],
+      "condition_mesh_ancestors": [
+        {
+          "id": "D000799",
+          "term": "Angioedema"
+        },
+        {
+          "id": "D014652",
+          "term": "Vascular Diseases"
+        },
+        {
+          "id": "D002318",
+          "term": "Cardiovascular Diseases"
+        },
+        {
+          "id": "D000081208",
+          "term": "Hereditary Complement Deficiency Diseases"
+        },
+        {
+          "id": "D000081207",
+          "term": "Primary Immunodeficiency Diseases"
+        },
+        {
+          "id": "D030342",
+          "term": "Genetic Diseases, Inborn"
+        },
+        {
+          "id": "D009358",
+          "term": "Congenital, Hereditary, and Neonatal Diseases and Abnormalities"
+        },
+        {
+          "id": "D014581",
+          "term": "Urticaria"
+        },
+        {
+          "id": "D017445",
+          "term": "Skin Diseases, Vascular"
+        },
+        {
+          "id": "D012871",
+          "term": "Skin Diseases"
+        },
+        {
+          "id": "D017437",
+          "term": "Skin and Connective Tissue Diseases"
+        },
+        {
+          "id": "D006969",
+          "term": "Hypersensitivity, Immediate"
+        },
+        {
+          "id": "D006967",
+          "term": "Hypersensitivity"
+        },
+        {
+          "id": "D007154",
+          "term": "Immune System Diseases"
+        },
+        {
+          "id": "D007153",
+          "term": "Immunologic Deficiency Syndromes"
+        }
+      ],
+      "therapeutic_area": "Rare / Genetic",
+      "is_drug_trial": true,
+      "modality": "biologic",
+      "info_flags": [],
+      "study_intent": "disease",
+      "mesh_missing_condition": false
+    },
+    {
+      "nct_id": "NCT06704061",
+      "title": "Online Yoga vs Acceptance and Commitment Therapy for Treating Chronic Musculoskeletal Pain",
+      "study_type": "INTERVENTIONAL",
+      "phase": "NA",
+      "sponsor_class": "OTHER",
+      "conditions": [
+        "Chronic Pain",
+        "Musculoskeletal Pain"
+      ],
+      "first_posted_date": "2024-11-25",
+      "last_update_posted_date": "2026-01-29",
+      "interventions": [],
+      "interventions_text": [
+        "Yoga",
+        "Acceptance and Commitment Therapy (ACT)",
+        "Behavioral: Yoga",
+        "Behavioral: Acceptance and Commitment Therapy (ACT)"
+      ],
+      "interventions_all": [
+        {
+          "name": "Yoga",
+          "type": "BEHAVIORAL",
+          "role": "other",
+          "arm_group_labels": [
+            "Online Yoga"
+          ],
+          "other_names": [],
+          "description": "A 12-week online yoga course designed to treat pain."
+        },
+        {
+          "name": "Acceptance and Commitment Therapy (ACT)",
+          "type": "BEHAVIORAL",
+          "role": "other",
+          "arm_group_labels": [
+            "Acceptance and Commitment Therapy"
+          ],
+          "other_names": [],
+          "description": "A 12-week behavioral therapy course designed to treat pain."
+        }
+      ],
+      "arm_group_map": {},
+      "intervention_meshes": [
+        {
+          "id": "D015013",
+          "term": "Yoga"
+        },
+        {
+          "id": "D064869",
+          "term": "Acceptance and Commitment Therapy"
+        }
+      ],
+      "intervention_mesh_ancestors": [
+        {
+          "id": "D026441",
+          "term": "Mind-Body Therapies"
+        },
+        {
+          "id": "D000529",
+          "term": "Complementary Therapies"
+        },
+        {
+          "id": "D013812",
+          "term": "Therapeutics"
+        },
+        {
+          "id": "D026443",
+          "term": "Spiritual Therapies"
+        },
+        {
+          "id": "D026241",
+          "term": "Exercise Movement Techniques"
+        },
+        {
+          "id": "D026741",
