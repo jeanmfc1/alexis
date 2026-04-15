@@ -142,6 +142,7 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
         "title": t.title,
         "brief_summary": t.brief_summary,
         "detailed_description": t.detailed_description,
+        "eligibility_criteria": getattr(t, "eligibility_criteria", None),
         "study_type": t.study_type,
         "phase": t.phase,
         "sponsor_class": t.sponsor_class,
@@ -188,8 +189,10 @@ def _trial_to_dict(t: ClinicalTrialSignalV2) -> Dict[str, Any]:
 
         # classification outputs (set by pipeline)
         "therapeutic_area": t.therapeutic_area,
+        "therapeutic_area_source": getattr(t, "therapeutic_area_source", None),
         "is_drug_trial": t.is_drug_trial,
         "modality": t.modality,
+        "modality_source": getattr(t, "modality_source", None),
         "therapeutic_areas_detected": list(t.therapeutic_areas_detected or []),
 
         # INFO flags (v2)

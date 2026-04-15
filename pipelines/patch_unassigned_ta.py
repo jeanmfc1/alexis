@@ -64,7 +64,11 @@ def main():
         sys.argv[1] if len(sys.argv) > 1
         else "storage/snapshots/clinical_trials_v2/active_universe/master_DB_2025_Q4.json"
     )
-    output_path = snapshot_path.parent / "master_DB_2025_Q4_patched.json"
+    # Derive output from input filename so it works for any master DB,
+    # not just Q4 2025.  e.g. master_DB_2026_Q1.json -> master_DB_2026_Q1_ta_patched.json
+    output_path = snapshot_path.with_name(
+        snapshot_path.stem + "_ta_patched" + snapshot_path.suffix
+    )
 
     print(f"Loading {snapshot_path} ...")
     t0 = time.time()

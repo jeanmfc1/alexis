@@ -127,6 +127,10 @@ class ClinicalTrialSignalV2:
     brief_summary: str = ""
     detailed_description: str = ""
 
+    # Eligibility criteria text (from AACT eligibilities.txt / CT.gov
+    # eligibilityModule). None if not available.
+    eligibility_criteria: Optional[str] = None
+
     # Conditions — raw list of strings
     conditions: List[str] = field(default_factory=list)
 
@@ -201,6 +205,9 @@ class ClinicalTrialSignalV2:
 
     # optional, future-proof
     modality_source: Optional[str] = None
+
+    # provenance for therapeutic_area assignment (populated by build/backfill)
+    therapeutic_area_source: Optional[str] = None
 
     # intent output (computed in pipeline)
     study_intent: Optional[str] = None

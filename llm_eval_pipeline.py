@@ -6,7 +6,7 @@ import pandas as pd
 BASE = Path(r"//wsl.localhost/Ubuntu/home/jeanmfc/projects/ALEXIS")
 SNAPSHOT = BASE / "storage" / "snapshots" / "clinical_trials_v2" / "active_universe"
 RAW = SNAPSHOT / "raw 01-01-26"
-MASTER_DB = SNAPSHOT / "master_DB_2025_Q4_patched.json"
+MASTER_DB = SNAPSHOT / "master_DB_2025_Q4.json"
 CHUNK_DIR = SNAPSHOT / "llm_eval_chunks"
 TRIALS_PER_CHUNK = 100
 LOAD_CHUNKSIZE = 50000

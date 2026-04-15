@@ -26,6 +26,7 @@ Optional (for arm group roles):
 Optional (narrative text):
   brief_summaries.txt            → brief_summary
   detailed_descriptions.txt      → detailed_description
+  eligibilities.txt              -> eligibility_criteria
 """
 
 from __future__ import annotations
@@ -396,6 +397,17 @@ def build_descriptions_lookup(rows):
     return lookup
 
 
+def build_eligibility_lookup(rows: List[Dict[str, str]]) -> Dict[str, str]:
+    """Pre-filtered rows from eligibilities.txt -> {nct_id: criteria_text}"""
+    lookup: Dict[str, str] = {}
+    for r in rows:
+        nct = _safe_str(r.get("nct_id"))
+        criteria = _safe_str(r.get("criteria"))
+        if nct and criteria:
+            lookup[nct] = criteria
+    return lookup
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # STEP 2: ASSEMBLE TRIAL OBJECTS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -412,6 +424,7 @@ def build_trial_from_aact(
     arm_group_map: Optional[Dict[str, str]],
     brief_summary: str = "",
     detailed_description: str = "",
+    eligibility_criteria: Optional[str] = None,
 ) -> ClinicalTrialSignalV2:
     """Assemble a ClinicalTrialSignalV2 from AACT lookup data."""
 
@@ -492,6 +505,7 @@ def build_trial_from_aact(
         enrollment=enrollment,
         enrollment_type=enrollment_type,
         why_stopped=_safe_str(study_row.get("why_stopped")),
+        eligibility_criteria=eligibility_criteria,
 
         # Sponsor identity
         sponsor_name=sponsor_name,
@@ -850,6 +864,64 @@ def _prompt_output_path(universe_dir: Path) -> Path:
         return universe_dir / raw
 
 
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PROVENANCE BACKFILL (modality_source / therapeutic_area_source)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Literal TA values — kept inline to avoid heavy policy import chain at module
+# load time (workers fork from this file).
+_TA_NON_DISEASE = "Non-disease drug study"
+_TA_UNASSIGNED  = "Unassigned drug study"
+
+
+def _apply_source_fields(trial) -> None:
+    """
+    Set trial.modality_source and trial.therapeutic_area_source in place,
+    using the same derivation logic as pipelines/backfill_source_fields.py.
+
+    Must be called AFTER classify_single_trial has populated modality /
+    therapeutic_area / therapeutic_areas_detected / info_flags.
+    """
+    if not getattr(trial, "is_drug_trial", False):
+        trial.modality_source = None
+        trial.therapeutic_area_source = None
+        return
+
+    # ── modality_source ────────────────────────────────────────────────
+    mesh_available = bool(getattr(trial, "intervention_meshes", None))
+    mesh_failed = "mesh_available_but_not_used" in (getattr(trial, "info_flags", None) or [])
+
+    if mesh_available and not mesh_failed:
+        trial.modality_source = "mesh_tree"
+    else:
+        # Re-run text matcher to distinguish text vs intervention_type paths.
+        # Imported lazily so module load stays light for worker forks.
+        from policy.text_modality_policy_v2 import text_modality_from_text
+        text_blob = " ".join(
+            (getattr(trial, "interventions_text", None) or [])
+            + [getattr(trial, "title", None) or ""]
+        )
+        text_hit = text_modality_from_text(text_blob, getattr(trial, "modality", None))
+        trial.modality_source = "text" if text_hit else "intervention_type"
+
+    # ── therapeutic_area_source ────────────────────────────────────────
+    ta = getattr(trial, "therapeutic_area", None)
+    ta_detected = getattr(trial, "therapeutic_areas_detected", None) or []
+
+    if ta_detected:
+        trial.therapeutic_area_source = "mesh_evidence"
+    elif ta == _TA_NON_DISEASE:
+        trial.therapeutic_area_source = "enabling_signal"
+    elif ta == _TA_UNASSIGNED:
+        trial.therapeutic_area_source = "unassigned_fallback"
+    elif ta:
+        trial.therapeutic_area_source = "text_matching"
+    else:
+        trial.therapeutic_area_source = None
+
+
 def main():
     import gc
 
@@ -883,7 +955,8 @@ def main():
     optional = ["design_outcomes.txt", "facilities.txt",
                 "browse_conditions.txt", "browse_interventions.txt",
                 "design_groups.txt",
-                "brief_summaries.txt", "detailed_descriptions.txt"]
+                "brief_summaries.txt", "detailed_descriptions.txt",
+                "eligibilities.txt"]
 
     for fname in required:
         if not (aact_dir / fname).exists():
@@ -967,6 +1040,7 @@ def main():
     arm_groups_lookup = build_design_groups_lookup(_read_filtered("design_groups.txt"))
     summaries_lookup = build_summaries_lookup(_read_filtered("brief_summaries.txt"))
     descriptions_lookup = build_descriptions_lookup(_read_filtered("detailed_descriptions.txt"))
+    eligibility_lookup = build_eligibility_lookup(_read_filtered("eligibilities.txt"))
 
     t1 = time.time()
     print(f"\n  All tables loaded in {t1 - t0:.1f}s")
@@ -1014,6 +1088,7 @@ def main():
                     arm_group_map=arm_groups_lookup.get(nct_id),
                     brief_summary=summaries_lookup.get(nct_id, ""),
                     detailed_description=descriptions_lookup.get(nct_id, ""),
+                    eligibility_criteria=eligibility_lookup.get(nct_id),
                 )
                 trials.append(trial)
             except Exception as e:
@@ -1037,6 +1112,11 @@ def main():
         # Keep drug trials only — save to disk
         drug = [t for t in classified if t.is_drug_trial]
 
+        # Backfill provenance fields in-place so master DB is complete
+        # (matches pipelines/backfill_source_fields.py logic).
+        for _t in drug:
+            _apply_source_fields(_t)
+
         if drug:
             import pickle
             batch_file = batch_dir / f"batch_{batch_idx:04d}.pkl"
@@ -1052,7 +1132,7 @@ def main():
     del studies_by_nct, conditions_lookup, interventions_lookup
     del sponsors_lookup, outcomes_lookup, facilities_lookup
     del condition_mesh_lookup, intervention_mesh_lookup, arm_groups_lookup
-    del summaries_lookup, descriptions_lookup
+    del summaries_lookup, descriptions_lookup, eligibility_lookup
     gc.collect()
 
     # ── Step 5: Merge batches, deduplicate ──────────────────────────
