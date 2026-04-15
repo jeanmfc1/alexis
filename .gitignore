@@ -50,3 +50,15 @@ no_id_mesh_terms.txt
 # ---------------------------
 *_backup.py
 *backup*.py
+
+# ---------------------------
+# Large data / model binaries
+# (raw exports, checkpoints, derived parquet/csv, classifier pickles)
+# ---------------------------
+classifiers/*.pkl
+storage/*.xml
+storage/*.parquet
+storage/*.zip
+storage/*.jsonl
+storage/*.csv
+storage/TrialDetails*/

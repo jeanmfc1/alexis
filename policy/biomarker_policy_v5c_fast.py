@@ -306,17 +306,17 @@ NOISY_TARGETS = {
     "ADA", "IL-6", "Insulin",
 }
 
+# FLAT_PATTERNS_NON_NOISY is populated after BIOMARKER_TARGETS is defined (see below)
+
 
 def has_any_signal_outside_eligibility(fields: dict) -> bool:
     """
     Returns True if any biomarker signal fires in non-eligibility fields.
-    Uses pre-built fields dict with 'non_elig' key (concatenation of all
-    non-eligibility text) for speed.
-
-    Falls back to individual field iteration for per-sentence context checks
-    (CONTEXT_UPGRADEABLE with same_sentence).
+    Uses pre-built fields dict with 'non_elig' key and keyword pre-filtering
+    to eliminate most regex calls.
     """
-    text = fields.get("non_elig", "")
+    text     = fields.get("non_elig", "")
+    text_low = text.lower()
 
     # HIGH_CONFIDENCE patterns
     for pat in HIGH_CONFIDENCE_PATTERNS:
@@ -324,15 +324,13 @@ def has_any_signal_outside_eligibility(fields: dict) -> bool:
         if m and not is_negated(text, m):
             return True
 
-    # Known targets — only non-noisy targets count as corroboration
-    # A noisy target cannot corroborate another noisy target
-    for target, patterns in BIOMARKER_TARGETS.items():
-        if target in NOISY_TARGETS:
+    # Non-noisy targets only — with keyword pre-filter
+    for target, kw, pat in FLAT_PATTERNS_NON_NOISY:
+        if kw and kw not in text_low:
             continue
-        for pat in patterns:
-            m = pat.search(text)
-            if m and not is_negated(text, m):
-                return True
+        m = pat.search(text)
+        if m and not is_negated(text, m):
+            return True
 
     # CONTEXT_UPGRADEABLE — needs per-field same_sentence check
     for field_key in ["title", "brief_summary", "detailed_desc", "primary", "secondary"]:
@@ -414,21 +412,24 @@ def is_biomarker_relevant(trial: dict) -> tuple[bool, str, str]:
                 return True, "high", f'"{m.group()}" in {source}'
 
     # Pass 2 — Known targets (outcomes first, eligibility last)
-    # Noisy targets in eligibility require corroboration from other fields
+    # Uses keyword pre-filter to skip regex when target keyword is absent.
+    # Noisy targets in eligibility require corroboration from other fields.
     for source, text in ordered:
         if not text:
             continue
-        for target, patterns in BIOMARKER_TARGETS.items():
-            for pat in patterns:
-                m = pat.search(text)
-                if m and not is_negated(text, m):
-                    if source == "eligibility" and target in NOISY_TARGETS:
-                        if not has_any_signal_outside_eligibility(
-                            fields_for_corroboration
-                        ):
-                            continue  # eligibility-only noisy hit, no corroboration
-                    return (True, "high",
-                            f'"{m.group()}" ({target}) in {source}')
+        text_low = text.lower()
+        for target, kw, pat in FLAT_PATTERNS:
+            if kw and kw not in text_low:
+                continue  # keyword absent — skip regex entirely
+            m = pat.search(text)
+            if m and not is_negated(text, m):
+                if source == "eligibility" and target in NOISY_TARGETS:
+                    if not has_any_signal_outside_eligibility(
+                        fields_for_corroboration
+                    ):
+                        continue  # eligibility-only noisy hit, no corroboration
+                return (True, "high",
+                        f'"{m.group()}" ({target}) in {source}')
 
     # Pass 3 — CONTEXT_UPGRADEABLE
     for source, text in ordered:
@@ -830,6 +831,138 @@ BIOMARKER_TARGETS: dict[str, list[re.Pattern]] = {
 
 # Remove placeholder
 del BIOMARKER_TARGETS["TMB_v2"]
+
+
+# ── Keyword pre-filter ────────────────────────────────────────────────────────
+#
+# One lowercase literal keyword per target. If the keyword is absent from a
+# field's lowercased text, ALL patterns for that target are skipped — no regex
+# is called. This eliminates ~95% of wasted regex calls.
+#
+# Rules:
+#   - Keyword MUST appear in any text where the target's patterns could match
+#   - Empty string "" = no keyword, regex always runs (safe fallback)
+#   - When unsure, use "" — correctness > speed
+
+TARGET_KEYWORDS: dict[str, str] = {
+    # Only keep keywords that are guaranteed present for ALL patterns of that target.
+    # Any target with alternative full-name patterns uses "" (regex always runs).
+    # Default for any target not listed is "" (safe).
+
+    # Unambiguous CD markers — these only appear as "CDxx" never as full names
+    "CD19":         "cd19",
+    "CD20":         "cd20",
+    "CD22":         "cd22",
+    "CD38":         "cd38",
+    "CD79b":        "cd79",
+    "CD3":          "cd3",
+    "CD33":         "cd33",
+    "CD47":         "cd47",
+    "CD30":         "cd30",
+    "CD123":        "cd123",
+    "CD34":         "cd34",
+    "CD8":          "cd8",
+    "CD4":          "cd4",
+    "CD70":         "cd70",
+    # Unambiguous gene/target names with no full-name alternatives in patterns
+    "BCMA":         "bcma",
+    "FLT3":         "flt3",
+    "IDH1":         "idh1",
+    "IDH2":         "idh2",
+    "JAK2":         "jak2",
+    "PIK3CA":       "pik3ca",
+    "FGFR":         "fgfr",
+    "NTRK":         "ntrk",
+    "ctDNA":        "ctdna",
+    "CTC":          "ctc",
+    "TMB":          "tmb",
+    "MRD":          "mrd",
+    "BRCA":         "brca",
+    "mTOR":         "mtor",
+    "PARP":         "parp",
+    "PSMA":         "psma",
+    "TIGIT":        "tigit",
+    "EZH2":         "ezh2",
+    "PDGFRA":       "pdgfra",
+    "NfL":          "nfl",
+    "DLL3":         "dll3",
+    "MGMT":         "mgmt",
+    "TP53":         "tp53",
+    "MDSC":         "mdsc",
+    "GPC3":         "gpc3",
+    "GD2":          "gd2",
+    "TROP2":        "trop2",
+    "CLDN18.2":     "cldn18",
+    "NY-ESO-1":     "ny-eso",
+    "B7-H3":        "b7-h3",
+    "MSLN":         "msln",
+    "Nectin-4":     "nectin",
+    "HER3":         "her3",
+    "EGFRvIII":     "egfrviii",
+    "BCR-ABL":      "bcr-abl",
+    "ACPA":         "acpa",
+    "Chimerism":    "chimerism",
+    "Tenofovir":    "tenofovir",
+    "UACR":         "uacr",
+    "DSA":          "dsa",
+    "APOC3":        "apoc3",
+    "P1NP":         "p1np",
+    "Osteocalcin":  "osteocalcin",
+    "Bone turnover":"bone turnover",
+    "Fecal calprotectin": "calprotectin",
+    "Microbiome":   "microbiom",
+    "Dengue RNA":   "dengue",
+    "Influenza RNA":"influenza",
+    "SARS-CoV-2":   "sars",
+    "EBV DNA":      "ebv",
+    "CMV DNA":      "cmv",
+    "HDV RNA":      "hdv",
+    "RSV RNA":      "rsv",
+    "Regulatory T cells": "treg",
+    "NK cells":     "nk cell",
+    "Thyroglobulin":"thyroglobulin",
+    "Progesterone": "progesterone",
+    "Testosterone": "testosterone",
+    "Estradiol":    "estradiol",
+    "Cortisol":     "cortisol",
+    "Ammonia":      "ammonia",
+    "Ferritin":     "ferritin",
+    "Hyaluronic acid": "hyaluronic",
+    "TIMP-1":       "timp-1",
+    "PRO-C3":       "pro-c3",
+    "LDH":          "ldh",
+    "Uric acid":    "uric acid",
+    "Triglycerides":"triglyceride",
+    "Lipoprotein(a)":"lipoprotein",
+    "Hemoglobin":   "hemoglobin",
+    "HbF":          "hbf",
+    "Amyloid-b":    "amyloid",
+    "HBV DNA":      "hbv",
+    "HBV RNA":      "hbv",
+    "MCP-1":        "mcp-1",
+    "IL-18":        "il-18",
+    "IL-2":         "il-2",
+    "TTR":          "ttr",
+    "NRAS":         "nras",
+    "HLA":          "hla",
+    "C-peptide":    "c-peptide",
+    "CTx":          "ctx",
+}
+
+# Pre-built flat list: (target, keyword, pattern)
+# keyword is "" for targets where pre-filtering is unsafe/unclear
+FLAT_PATTERNS: list = []
+for _target, _patterns in BIOMARKER_TARGETS.items():
+    _kw = TARGET_KEYWORDS.get(_target, "")
+    for _pat in _patterns:
+        FLAT_PATTERNS.append((_target, _kw, _pat))
+
+# Same but excluding NOISY_TARGETS — for corroboration checks
+FLAT_PATTERNS_NON_NOISY: list = [
+    (_target, _kw, _pat)
+    for _target, _kw, _pat in FLAT_PATTERNS
+    if _target not in NOISY_TARGETS
+]
 
 
 # ── Target metadata ───────────────────────────────────────────────────────────
