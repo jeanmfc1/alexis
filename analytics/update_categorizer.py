@@ -664,6 +664,8 @@ def generate_changelog(enriched_trials: List[Dict], metadata: Dict) -> Dict:
                 new_active += 1
             else:
                 new_inactive += 1
+        elif update_type == "new_inactive":
+            new_inactive += 1
         elif update_type == "existing":
             if any(c["category"] == "metadata_only" for c in cats) and len(cats) == 1:
                 metadata_only_count += 1
@@ -1060,17 +1062,29 @@ def main():
     enriched_trials = []
 
     new_count = 0
+    new_inactive_count = 0
     existing_count = 0
 
     for nct, snap_trial in snap_trials.items():
         enriched = deepcopy(snap_trial)
 
         if nct not in master_index:
-            # New trial
-            enriched["update_type"] = "new"
-            enriched["update_categories"] = categorize_new_trial(snap_trial)
+            # Not in the active-universe master DB.
+            # If overall_status is terminal (COMPLETED / TERMINATED /
+            # WITHDRAWN / SUSPENDED), this is a retrospective registration:
+            # the trial was already finished when CT.gov first surfaced it.
+            # Tag update_type="new_inactive" so charts filtering on
+            # update_type == "new" automatically exclude these.
+            cats = categorize_new_trial(snap_trial)
+            enriched["update_categories"] = cats
             enriched["field_diffs"] = []
-            new_count += 1
+            status = (snap_trial.get("overall_status") or "").upper()
+            if status in TERMINAL_STATUSES:
+                enriched["update_type"] = "new_inactive"
+                new_inactive_count += 1
+            else:
+                enriched["update_type"] = "new"
+                new_count += 1
         else:
             # Existing trial — diff
             master_trial = master_index[nct]
@@ -1091,8 +1105,9 @@ def main():
         enriched_trials.append(enriched)
 
     if not args.quiet:
-        print(f"\n  Processed: {new_count:,} new + {existing_count:,} existing "
-              f"= {len(enriched_trials):,} total")
+        print(f"\n  Processed: {new_count:,} new (active) + "
+              f"{new_inactive_count:,} new_inactive (retrospective completed) + "
+              f"{existing_count:,} existing = {len(enriched_trials):,} total")
 
     # ── Step 7: Tag & Save (enriched snapshot) ──────────────────────
     if args.output_enriched:
