@@ -14,10 +14,50 @@ import argparse
 import time
 import json
 import random
+from datetime import date, datetime
 import pandas as pd
 from pathlib import Path
 from playwright.sync_api import sync_playwright, Page
 from playwright_stealth import Stealth
+
+
+def parse_reg_date(s: str):
+    """Parse ChiCTR reg_date strings. Tolerates YYYY/MM/DD, YYYY-MM-DD, or junk."""
+    if not s:
+        return None
+    s = s.strip()
+    for fmt in ("%Y/%m/%d", "%Y-%m-%d", "%Y/%m/%d %H:%M:%S"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except Exception:
+            pass
+    return None
+
+
+def filter_by_window(trials, since, until):
+    """Return (kept, all_older_than_since). kept = trials whose reg_date is
+    within [since, until] inclusive. all_older_than_since is True when every
+    parseable row on this page is older than since. ChiCTR returns newest-first
+    so this flag drives pagination short-circuit."""
+    if not since and not until:
+        return trials, False
+    kept = []
+    older_count = 0
+    parsed_count = 0
+    for t in trials:
+        d = parse_reg_date(t.get("reg_date"))
+        if d is None:
+            kept.append(t)
+            continue
+        parsed_count += 1
+        if since and d < since:
+            older_count += 1
+            continue
+        if until and d > until:
+            continue
+        kept.append(t)
+    all_older = parsed_count > 0 and older_count == parsed_count
+    return kept, all_older
 
 
 BASE_URL = "https://www.chictr.org.cn/searchprojEN.html"
@@ -74,7 +114,8 @@ def parse_results_page(page: Page) -> list[dict]:
     return trials
 
 
-def scrape(headless: bool = True, limit: int = None) -> list[dict]:
+def scrape(headless: bool = True, limit: int = None,
+           since=None, until=None) -> list[dict]:
     all_trials = []
     checkpoint_path = Path("storage/chictr_playwright_checkpoint.jsonl")
     Path("storage").mkdir(exist_ok=True)
@@ -108,7 +149,12 @@ def scrape(headless: bool = True, limit: int = None) -> list[dict]:
             time.sleep(3)
             total = get_total_count(page)
 
-        print(f"Total trials: {total:,}")
+        if since or until:
+            print(f"Total trials in ChiCTR (unfiltered): {total:,}")
+            print(f"Window since={since} until={until} -- will stop early "
+                  f"once rows pass the window.")
+        else:
+            print(f"Total trials: {total:,}")
         total_pages = (total + 9) // 10
 
         if limit:
@@ -118,8 +164,16 @@ def scrape(headless: bool = True, limit: int = None) -> list[dict]:
             max_pages = total_pages
 
         trials = parse_results_page(page)
-        all_trials.extend(trials)
-        print(f"  Page 1: {len(trials)} trials")
+        kept, all_older = filter_by_window(trials, since, until)
+        all_trials.extend(kept)
+        if since or until:
+            print(f"  Page 1: {len(trials)} trials, kept {len(kept)} in window")
+        else:
+            print(f"  Page 1: {len(trials)} trials")
+        if since and all_older and not kept:
+            print("  Page 1 already older than --since; stopping.")
+            browser.close()
+            return all_trials
 
         # --- Pages 2+ ---
         for page_num in range(2, max_pages + 1):
@@ -138,14 +192,32 @@ def scrape(headless: bool = True, limit: int = None) -> list[dict]:
                 if not trials:
                     print(f"  Page {page_num}: empty — stopping")
                     break
-                all_trials.extend(trials)
+                kept, all_older = filter_by_window(trials, since, until)
+                all_trials.extend(kept)
+
+                if since and all_older and not kept:
+                    print(f"  Page {page_num}: all rows older than --since; stopping")
+                    break
+
+                # Per-page date progress so user can gauge how far back we are.
+                page_dates = [parse_reg_date(t.get("reg_date")) for t in trials]
+                page_dates = [d for d in page_dates if d is not None]
+                if page_dates:
+                    newest, oldest = max(page_dates), min(page_dates)
+                    if since or until:
+                        print(f"  Page {page_num}/{max_pages}  "
+                              f"newest={newest} oldest={oldest}  "
+                              f"kept {len(kept)}/{len(trials)}  "
+                              f"total {len(all_trials):,}")
+                    else:
+                        print(f"  Page {page_num}/{max_pages}  "
+                              f"newest={newest} oldest={oldest}  "
+                              f"total {len(all_trials):,}")
 
                 if page_num % 50 == 0:
-                    print(f"  Page {page_num}/{max_pages} — {len(all_trials):,} trials")
                     with open(checkpoint_path, "w") as f:
                         for t in all_trials:
                             f.write(json.dumps(t) + "\n")
-
             except Exception as e:
                 print(f"  Page {page_num}: ERROR — {e}")
                 time.sleep(5)
@@ -160,13 +232,29 @@ def scrape(headless: bool = True, limit: int = None) -> list[dict]:
     return all_trials
 
 
+def _parse_date_arg(s):
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be YYYY-MM-DD, got {s!r}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--since", type=_parse_date_arg, default=None,
+                        help="Only keep trials with reg_date >= YYYY-MM-DD; "
+                             "stops paginating once an entire page is older.")
+    parser.add_argument("--until", type=_parse_date_arg, default=None,
+                        help="Only keep trials with reg_date <= YYYY-MM-DD.")
     args = parser.parse_args()
 
-    trials = scrape(headless=args.headless, limit=args.limit)
+    if args.since or args.until:
+        print(f"Window: since={args.since}  until={args.until}")
+
+    trials = scrape(headless=args.headless, limit=args.limit,
+                    since=args.since, until=args.until)
 
     if not trials:
         print("No trials retrieved.")
