@@ -185,12 +185,17 @@ def build_quarterly_payload(db_path, meta) -> dict:
     else:
         print("  sci_sq3 : no data (no drug trials in master DB)")
 
-    from analytics.sci_sq8 import sq8_biomarker_ta_matrix
-    sq8_data = sq8_biomarker_ta_matrix(str(db_path))
-    sq8_tagged = sq8_data.get("meta", {}).get("total_tagged", 0)
-    sq8_total = sq8_data.get("grand_total", 0)
-    print(f"  sci_sq8 : {sq8_tagged:,} biomarker-tagged trials, "
-          f"{sq8_total:,} category×TA hits")
+    # sq8 (biomarker x TA) -- DISABLED: biomarker policy not fully implemented.
+    # Re-enable once policy.biomarker_policy exports BIOMARKER_CATEGORIES and
+    # classify_trial_biomarkers.
+    # from analytics.sci_sq8 import sq8_biomarker_ta_matrix
+    # sq8_data = sq8_biomarker_ta_matrix(str(db_path))
+    # sq8_tagged = sq8_data.get("meta", {}).get("total_tagged", 0)
+    # sq8_total = sq8_data.get("grand_total", 0)
+    # print(f"  sci_sq8 : {sq8_tagged:,} biomarker-tagged trials, "
+    #       f"{sq8_total:,} category x TA hits")
+    sq8_data = {"available": False, "reason": "biomarker policy not fully implemented"}
+    print("  sci_sq8 : disabled (biomarker policy not fully implemented)")
 
     return {
         "quarterly":       True,
