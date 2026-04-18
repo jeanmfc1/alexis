@@ -40,6 +40,11 @@ COMPONENT_FILES = [
     VIZ_DIR / "ops_sq1_sq.jsx",
     VIZ_DIR / "sci_sq3.jsx",
     VIZ_DIR / "sci_sq8.jsx",
+    # ChiCTR (weekly cadence, cw prefix)
+    VIZ_DIR / "bd_cw1.jsx",
+    VIZ_DIR / "mk_cw1.jsx",
+    VIZ_DIR / "sci_cw1.jsx",
+    VIZ_DIR / "ops_cw1.jsx",
 ]
 
 
@@ -94,15 +99,22 @@ def main():
                        help="Generate only the weekly (tactical) data")
     group.add_argument("--quarterly-only", action="store_true",
                        help="Generate only the quarterly (strategic) data")
+    group.add_argument("--chictr-only", action="store_true",
+                       help="Generate only the ChiCTR data")
+    parser.add_argument("--no-chictr", action="store_true",
+                        help="Skip the ChiCTR pipeline (AACT only)")
     args = parser.parse_args()
 
-    run_weekly    = not args.quarterly_only
-    run_quarterly = not args.weekly_only
+    run_weekly    = not args.quarterly_only and not args.chictr_only
+    run_quarterly = not args.weekly_only    and not args.chictr_only
+    run_chictr    = not args.no_chictr and not args.weekly_only and not args.quarterly_only
 
     print("=" * 60)
-    mode = "Weekly + Quarterly" if (run_weekly and run_quarterly) else (
-        "Weekly Only" if run_weekly else "Quarterly Only"
-    )
+    parts = []
+    if run_weekly:    parts.append("Weekly")
+    if run_quarterly: parts.append("Quarterly")
+    if run_chictr:    parts.append("ChiCTR")
+    mode = " + ".join(parts) if parts else "(nothing selected)"
     print(f"  ALEXIS Dashboard Generator -- {mode}")
     print("=" * 60)
 
@@ -199,6 +211,32 @@ def main():
             "sq9":  {"available": False},
             "sq8":  {"available": False},
             "sq10": {"available": False},
+        })
+
+    # -- ChiCTR pipeline ------------------------------------------------------
+    if run_chictr:
+        print()
+        print("  Building ChiCTR payload ...")
+        from pipelines.generate_chictr_viz import build_chictr_payload
+        try:
+            chictr_payload = build_chictr_payload()
+            payload.update(chictr_payload)
+        except Exception as e:
+            print(f"  WARNING: ChiCTR payload failed: {e}")
+            payload.update({
+                "cw1": {"available": False, "reason": str(e)},
+                "cw2": {"available": False, "reason": str(e)},
+                "cw3": {"available": False, "reason": str(e)},
+                "cw4": {"available": False, "reason": str(e)},
+                "chictr_metadata": {"available": False, "error": str(e)},
+            })
+    else:
+        payload.update({
+            "cw1": {"available": False},
+            "cw2": {"available": False},
+            "cw3": {"available": False},
+            "cw4": {"available": False},
+            "chictr_metadata": {"available": False},
         })
 
     # -- Load and concatenate JSX component files -----------------------------
