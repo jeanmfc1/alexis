@@ -262,6 +262,61 @@
         </div>
       );
     }
+    // ---------------------------------------------------------------------
+    // ChiCTR team view containers (third top-level tab)
+    // ---------------------------------------------------------------------
+
+    function ChictrNote() {
+      return (<div style={{ marginBottom:12, padding:"8px 12px", borderRadius:6, background:"var(--surf2)", border:"1px solid var(--border)", fontFamily:"var(--fm)", fontSize:10, color:"var(--muted)" }}>
+        <span style={{ color:"#E11D48", marginRight:6 }}>i</span>
+        ChiCTR labels come from intl_drug_classifier_v2 and intl_ta_classifier.pkl. No MeSH. Treat as directional.
+      </div>);
+    }
+
+    function ChictrBD({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <ChictrNote />
+        <Card id="bd_cw1" color={color} defaultOpen
+          question="Which Chinese sponsors filed new drug trials this week?"
+          vizType="Sponsor Action Table">
+          <CW1ChinaSponsorTable data={data?.cw1} color={color} />
+        </Card>
+      </div>);
+    }
+
+    function ChictrMarketing({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <ChictrNote />
+        <Card id="mk_cw1" color={color} defaultOpen
+          question="Which therapeutic areas are accelerating in China this week?"
+          vizType="TA Momentum Table">
+          <CW2ChinaTAMomentum data={data?.cw2} color={color} />
+        </Card>
+      </div>);
+    }
+
+    function ChictrScientific({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <ChictrNote />
+        <Card id="sci_cw1" color={color} defaultOpen
+          question="Where is Chinese drug-trial activity concentrating this week?"
+          vizType="TA x Modality Matrix">
+          <CW3ChinaTAModalityMatrix data={data?.cw3} color={color} />
+        </Card>
+      </div>);
+    }
+
+    function ChictrOperations({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <ChictrNote />
+        <Card id="ops_cw1" color={color} defaultOpen
+          question="Is the ChiCTR pipeline healthy? Are classifications trustworthy?"
+          vizType="Pipeline Health">
+          <CW4ChinaPipelineHealth data={data?.cw4} color={color} />
+        </Card>
+      </div>);
+    }
+
 
     // ─────────────────────────────────────────────────────────────────────
     // Quarterly view — all placeholders until quarterly functions are built
@@ -396,6 +451,9 @@
         { key:"quarterly", icon:"📊", tag:"STRATEGIC", tagColor:"#3B82F6",
           label:"Quarterly / Yearly",
           purpose:"Where is the market? How big is it? Where should we invest?" },
+        { key:"chictr",    icon:"🕊", tag:"CHINA",     tagColor:"#E11D48",
+          label:"ChiCTR",
+          purpose:"Chinese trial registry this week (ML-classified)" },
       ];
       return (
         <div style={{ display:"flex", gap:10, marginBottom:22 }}>
@@ -457,12 +515,20 @@
           display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
           <span>
             <span style={{ color:"var(--dim)" }}>SOURCE </span>
-            {view==="weekly" ? "Pulse snapshot + enriched changelog" : "Master DB (active universe)"}
+            {view==="weekly"  ? "Pulse snapshot + enriched changelog"
+             : view==="chictr" ? "ChiCTR snapshot + weekly diff (ML-classified)"
+             : "Master DB (active universe)"}
           </span>
-          {snapshotFile && (
+          {snapshotFile && view!=="chictr" && (
             <span>
               <span style={{ color:"var(--dim)" }}>FILE </span>
               <code style={{ color:"var(--cyan)" }}>{snapshotFile}</code>
+            </span>
+          )}
+          {view==="chictr" && ALEXIS_DATA?.chictr_metadata?.snapshot_file && (
+            <span>
+              <span style={{ color:"var(--dim)" }}>FILE </span>
+              <code style={{ color:"#E11D48" }}>{ALEXIS_DATA.chictr_metadata.snapshot_file}</code>
             </span>
           )}
           {view==="weekly" && ec.available && (
@@ -518,6 +584,12 @@
 
       function renderCards() {
         if (view === "quarterly") return <QuarterlyView team={team} color={color} />;
+        if (view === "chictr") {
+          if (team === "BD")         return <ChictrBD data={ALEXIS_DATA} color={color} />;
+          if (team === "Marketing")  return <ChictrMarketing data={ALEXIS_DATA} color={color} />;
+          if (team === "Scientific") return <ChictrScientific data={ALEXIS_DATA} color={color} />;
+          if (team === "Operations") return <ChictrOperations data={ALEXIS_DATA} color={color} />;
+        }
         if (team === "BD")         return <WeeklyBD data={ALEXIS_DATA} color={color} />;
         if (team === "Marketing")  return <WeeklyMarketing data={ALEXIS_DATA} color={color} />;
         if (team === "Scientific") return <WeeklyScientific data={ALEXIS_DATA} color={color} />;
