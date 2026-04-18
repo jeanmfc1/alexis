@@ -103,7 +103,18 @@ function SQ1ModalityLandscape({ data, color }) {
   // ═══════════════════════════════════════════════════════════════════════
   const Sparkline = ({ history, width = 64, height = 24, showLabels = false, yoyPeriod = null }) => {
     if (!history || history.length < 2) return null;
-    const filtered = showLabels ? history.filter(h => (h.period || "").endsWith("Q4")) : history;
+    // Keep Q4 entries for readable x-axis labels, but ALWAYS include the most recent
+    // period so a mid-year current quarter (e.g. 2026_Q1) is not dropped.
+    const filtered = showLabels
+      ? (() => {
+          const q4 = history.filter(h => (h.period || "").endsWith("Q4"));
+          const last = history[history.length - 1];
+          if (last && (!q4.length || q4[q4.length - 1].period !== last.period)) {
+            q4.push(last);
+          }
+          return q4;
+        })()
+      : history;
     if (filtered.length < 2) return null;
     const counts = filtered.map(h => h.count);
 
