@@ -606,13 +606,16 @@ def build_weekly_payload(snap_path, is_rec, meta, trials, raw,
     bd_wq1_data = wq1_sponsor_action_table(enriched_trials)
     print(f"  bd_wq1  : {len(bd_wq1_data)} INDUSTRY sponsors with new trials this week")
 
-    bd_wq2_data  = wq2_client_alert_cards(enriched_trials, client_list=[])
+    bd_wq2_data  = wq2_client_alert_cards(enriched_trials)
     bd_wq3_data  = wq3_ta_deviation_bars(snap_summary, prior_summaries=[])
 
     mk_wq1_data  = wq4_social_stat_cards(snap_summary, enriched_counts)
     print(f"  mk_wq1  : {len(mk_wq1_data)} stat cards")
 
-    mk_wq2_data  = wq5_modality_index_chart(snap_summary, master_db_summary=master_summary)
+    mk_wq2_data  = wq5_modality_index_chart(snap_summary,
+                                            master_db_summary=master_summary,
+                                            enriched_trials=enriched_trials,
+                                            prior_weeks=prior_weeks)
     mk_wq3_data  = wq6_conference_snapshot(trials, ta_filter="", prior_summaries=[])
 
     sci_wq1_data = wq7_ta_modality_matrix(enriched_trials, master_summary, prior_weeks)
@@ -629,7 +632,7 @@ def build_weekly_payload(snap_path, is_rec, meta, trials, raw,
     else:
         print("  sci_wq1 : no data - enriched file empty or not loaded")
 
-    sci_wq2_data = wq8_classification_gap_report(trials, snap_summary)
+    sci_wq2_data = wq8_classification_gap_report(enriched_trials, snap_summary)
     sci_wq3_data = wq9_mesh_quality_waterfall(snap_summary)
 
     ops_wq1_data = wq10_velocity_dashboard(
