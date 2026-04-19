@@ -138,25 +138,35 @@ def _load_enriched_silent(win_start: str, win_end: str) -> dict | None:
                 trials = data.get("trials", [])
 
                 from collections import defaultdict
-                ta_mod: dict = defaultdict(lambda: defaultdict(int))
+                # Split counts two ways:
+                #   ta_mod / drug_new_total -- strictly "new" (active-only)
+                #   ta_mod_reg / drug_registrations_total -- new + new_inactive
+                #       (retrospective completions), i.e. ALL trials appearing
+                #       for the first time relative to the master DB used.
+                #   The registrations view is what MK_WQ2 baselines must use
+                #   so weeks diffed against a near-current master DB (mostly
+                #   producing new_inactive) remain comparable.
+                ta_mod: dict        = defaultdict(lambda: defaultdict(int))
+                ta_mod_reg: dict    = defaultdict(lambda: defaultdict(int))
+                phase_counts: dict  = defaultdict(int)
+
                 for t in trials:
-                    if t.get("update_type") != "new":
-                        continue
                     if not t.get("is_drug_trial", True):
+                        continue
+                    utype = t.get("update_type")
+                    if utype not in ("new", "new_inactive"):
                         continue
                     ta  = t.get("therapeutic_area") or "Unknown"
                     mod = t.get("modality")         or "Unknown"
-                    ta_mod[ta][mod] += 1
+                    ta_mod_reg[ta][mod] += 1
+                    if utype == "new":
+                        ta_mod[ta][mod] += 1
+                        phase_counts[(t.get("phase") or "NA").upper()] += 1
 
                 drug_new_total = sum(sum(m.values()) for m in ta_mod.values())
-
-                phase_counts: dict = defaultdict(int)
-                for t in trials:
-                    if t.get("update_type") != "new":
-                        continue
-                    if not t.get("is_drug_trial", True):
-                        continue
-                    phase_counts[(t.get("phase") or "NA").upper()] += 1
+                drug_registrations_total = sum(sum(m.values())
+                                               for m in ta_mod_reg.values())
+                drug_inactive_total = drug_registrations_total - drug_new_total
 
                 mod_totals: dict = defaultdict(int)
                 for mods in ta_mod.values():
@@ -164,12 +174,15 @@ def _load_enriched_silent(win_start: str, win_end: str) -> dict | None:
                         mod_totals[mod] += n
 
                 return {
-                    "ta_mod":         {ta: dict(mods) for ta, mods in ta_mod.items()},
-                    "mod_totals":     dict(mod_totals),
-                    "drug_new_total": drug_new_total,
-                    "phase_counts":   dict(phase_counts),
-                    "source":         "enriched",
-                    "filename":       fpath.name,
+                    "ta_mod":                  {ta: dict(mods) for ta, mods in ta_mod.items()},
+                    "ta_mod_registrations":    {ta: dict(mods) for ta, mods in ta_mod_reg.items()},
+                    "mod_totals":              dict(mod_totals),
+                    "drug_new_total":          drug_new_total,
+                    "drug_inactive_total":     drug_inactive_total,
+                    "drug_registrations_total": drug_registrations_total,
+                    "phase_counts":            dict(phase_counts),
+                    "source":                  "enriched",
+                    "filename":                fpath.name,
                 }
             except Exception:
                 return None
@@ -505,7 +518,11 @@ def pick_prior_snapshots(current_path: Path, n: int = 3) -> list:
         if enriched:
             entry = enriched
             entry["window_label"] = window_label
-            print(f"    {window_label}  ({entry['drug_new_total']:,} new drug trials) [enriched]")
+            print(f"    {window_label}  "
+                  f"({entry['drug_new_total']:,} active new + "
+                  f"{entry.get('drug_inactive_total', 0):,} retrospective = "
+                  f"{entry.get('drug_registrations_total', entry['drug_new_total']):,} "
+                  f"registered) [enriched]")
         else:
             try:
                 from collections import defaultdict as _dd
