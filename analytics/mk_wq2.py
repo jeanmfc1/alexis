@@ -37,9 +37,14 @@ TOP_N           = 12
 
 
 def _new_drug(enriched_trials):
+    """Registrations this window: active-new + retrospective completions.
+    Symmetry with the baseline (which uses ta_mod_registrations) is the
+    whole point -- otherwise baselines dwarf the current-week numerator
+    when prior enriched files were generated with the categorizer split."""
     return [
         t for t in enriched_trials
-        if t.get("update_type") == "new" and t.get("is_drug_trial")
+        if t.get("update_type") in ("new", "new_inactive")
+        and t.get("is_drug_trial")
     ]
 
 
@@ -129,7 +134,10 @@ def wq5_modality_index_chart(snap_summary: dict | None = None,
             if pw.get("source") != "enriched":
                 priors_skipped_summary += 1
                 continue
-            pw_ta_mod = pw.get("ta_mod") or {}
+            # Use the REGISTRATIONS view (new + new_inactive) if the enriched
+            # file was produced with the new categorizer split; fall back to
+            # ta_mod (active-only) for older files that never split.
+            pw_ta_mod = pw.get("ta_mod_registrations") or pw.get("ta_mod") or {}
             mod_sum = Counter(); ta_sum = Counter()
             for ta, mods in pw_ta_mod.items():
                 ta_sum[ta] += sum(mods.values())
