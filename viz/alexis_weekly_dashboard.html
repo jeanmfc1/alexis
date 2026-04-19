@@ -192,9 +192,11 @@
             <WQ1ActionTable data={data?.wq1} color={color} />
           </Card>
 
-          <Placeholder id="bd_wq2" color={color}
+          <Card id="bd_wq2" color={color}
             question="Are any of our existing clients filing new trials we should know about?"
-            vizType="Client Alert Cards" />
+            vizType="Client Alert Cards">
+            <WQ2ClientAlerts data={data?.wq2} color={color} />
+          </Card>
 
           <Placeholder id="bd_wq3" color={color}
             question="What's the competitive landscape signal this week?"
@@ -212,9 +214,11 @@
             <WQ4StatCards data={data?.wq4} color={color} />
           </Card>
 
-          <Placeholder id="mk_wq2" color={color}
+          <Card id="mk_wq2" color={color}
             question="Are there trending modalities or TAs we should write about?"
-            vizType="Over/Under Index Chart" />
+            vizType="Over/Under Index (diverging bars)">
+            <WQ5ModalityIndex data={data?.wq5} color={color} />
+          </Card>
 
           <Placeholder id="mk_wq3" color={color}
             question="Which conference-relevant TAs had notable activity this week?"
@@ -232,9 +236,11 @@
             <WQ7BubbleMatrix data={data?.wq7} color={color} />
           </Card>
 
-          <Placeholder id="sci_wq2" color={color}
-            question="How many trials landed in base_only this week, and why?"
-            vizType="Classification Gap Report (table + word cloud)" />
+          <Card id="sci_wq2" color={color}
+            question="Which status changes happened this week — especially why did trials stop?"
+            vizType="Why-Stopped Donut + Categorised Event Table">
+            <WQ8StatusSpotlight data={data?.wq8} color={color} />
+          </Card>
 
           <Placeholder id="sci_wq3" color={color}
             question="What's the MeSH coverage quality for this week's trials?"
@@ -383,6 +389,24 @@
                 <Card key={c.id} id={c.id} color={color} defaultOpen
                   question={c.question} vizType={c.vizType}>
                   <SQ8BiomarkerMatrix data={ALEXIS_DATA.sq8} color={color} />
+                </Card>
+              );
+            }
+            // BD sq3: TA trajectory
+            if (c.id === "sq3" && ALEXIS_DATA.sq3?.available) {
+              return (
+                <Card key={c.id} id={c.id} color={color} defaultOpen
+                  question={c.question} vizType={c.vizType}>
+                  <SQ3TATrajectory data={ALEXIS_DATA.sq3} color={color} />
+                </Card>
+              );
+            }
+            // OPS sq12: phase transition pipeline
+            if (c.id === "sq12" && ALEXIS_DATA.sq12?.available) {
+              return (
+                <Card key={c.id} id={c.id} color={color} defaultOpen
+                  question={c.question} vizType={c.vizType}>
+                  <SQ12TransitionPipeline data={ALEXIS_DATA.sq12} color={color} />
                 </Card>
               );
             }
