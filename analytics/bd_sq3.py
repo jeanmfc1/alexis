@@ -9,17 +9,17 @@ Business question:
 Source:
     all master_DB_*.json files in storage/snapshots/clinical_trials_v2/active_universe
 
-For every master DB found:
-    Count drug trials by therapeutic_area (skip Unassigned + Non-disease)
-Build a time-series per TA + compute YoY delta, total growth rate,
-top modalities / sponsors within the TA in the current period.
-
-Returns:
-    dict shape consumed by viz/bd_sq3.jsx
+Sidecar cache:
+    Each master DB gets a bd_sq3_cache_YYYY_QN.json written next to it
+    (in the active_universe directory).  On subsequent runs, the cache
+    is used when its mtime is >= the master DB mtime.  This makes the
+    walk effectively free except for the most recently updated
+    quarter.  Keeps peak RAM to a single master-DB parse.
 """
 
 from __future__ import annotations
 import json
+import os
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -40,29 +40,40 @@ def _sort_period(p: str) -> tuple[int, int]:
 
 def _yoy_period(p: str) -> str | None:
     m = re.match(r"(\d{4})_Q(\d)", p)
-    if not m:
-        return None
-    return f"{int(m.group(1)) - 1}_Q{m.group(2)}"
+    return f"{int(m.group(1)) - 1}_Q{m.group(2)}" if m else None
 
 
-def _load_period_ta_counts(db_path: Path) -> dict:
-    """Return {ta: {"count": int, "modalities": Counter, "sponsors": Counter}}."""
+def _compute_one_period(db_path: Path) -> dict:
+    """Return {ta: {count, modalities(top5), sponsors(top5), phases(full)}}
+    for a single master DB, backed by a sidecar cache next to the file."""
+    cache_name = db_path.name.replace("master_DB_", "bd_sq3_cache_")
+    cache_path = db_path.parent / cache_name
+
+    if cache_path.exists():
+        if os.path.getmtime(str(cache_path)) >= os.path.getmtime(str(db_path)):
+            try:
+                return json.loads(cache_path.read_text(encoding="utf-8"))
+            except Exception:
+                pass  # fall through to recompute
+
+    # Full parse path (expensive, ~500MB-1GB peak for a 40k-trial file)
     try:
         with db_path.open("r", encoding="utf-8", errors="replace") as f:
             data = json.load(f)
     except Exception:
         return {}
-    out: dict = defaultdict(lambda: {"count": 0,
-                                     "modalities": Counter(),
-                                     "sponsors":   Counter(),
-                                     "phases":     Counter()})
+
+    buckets: dict = defaultdict(lambda: {"count": 0,
+                                         "modalities": Counter(),
+                                         "sponsors":   Counter(),
+                                         "phases":     Counter()})
     for t in data.get("trials", []):
         if not t.get("is_drug_trial"):
             continue
         ta = t.get("therapeutic_area") or "Unassigned"
         if ta in EXCLUDE_TAS:
             continue
-        b = out[ta]
+        b = buckets[ta]
         b["count"] += 1
         if t.get("modality"):
             b["modalities"][t["modality"]] += 1
@@ -72,11 +83,30 @@ def _load_period_ta_counts(db_path: Path) -> dict:
         ph = (t.get("phase") or "").upper()
         if ph:
             b["phases"][ph] += 1
-    return dict(out)
+
+    # Drop raw trials ref so the dict we keep is small
+    del data
+
+    out: dict = {}
+    for ta, b in buckets.items():
+        out[ta] = {
+            "count":      b["count"],
+            "modalities": dict(b["modalities"].most_common(5)),
+            "sponsors":   dict(b["sponsors"].most_common(5)),
+            "phases":     dict(b["phases"].most_common()),
+        }
+
+    try:
+        cache_path.write_text(
+            json.dumps(out, ensure_ascii=False), encoding="utf-8"
+        )
+    except Exception:
+        pass
+
+    return out
 
 
 def _growth_rate(series: list[int]) -> tuple[float | None, str]:
-    """Return (growth_pct, trend) from the first non-zero to the last value."""
     non_zero = [v for v in series if v > 0]
     if len(non_zero) < 2:
         return None, "stable"
@@ -84,12 +114,9 @@ def _growth_rate(series: list[int]) -> tuple[float | None, str]:
     if first == 0:
         return None, "growing" if last > 0 else "stable"
     growth = (last - first) / first * 100
-    if growth > 10:
-        trend = "growing"
-    elif growth < -10:
-        trend = "declining"
-    else:
-        trend = "stable"
+    if growth > 10:    trend = "growing"
+    elif growth < -10: trend = "declining"
+    else:              trend = "stable"
     return round(growth, 1), trend
 
 
@@ -102,15 +129,17 @@ def sq3_ta_trajectory(master_db_dir: str) -> dict:
 
     periods = []
     per_period_counts: dict = {}
+    # Iterate one file at a time; the cache path makes this cheap after the
+    # first successful build.  The returned dict per period is already tiny
+    # (just counts + top-N rollups), so we can keep them all resident.
     for f in files:
         p = _period_from_filename(f.name)
         periods.append(p)
-        per_period_counts[p] = _load_period_ta_counts(f)
+        per_period_counts[p] = _compute_one_period(f)
 
     current_period = periods[-1]
-    current = per_period_counts[current_period]
+    current = per_period_counts.get(current_period, {})
 
-    # All TAs seen anywhere
     all_tas: set = set()
     for snap in per_period_counts.values():
         all_tas.update(snap.keys())
@@ -126,24 +155,22 @@ def sq3_ta_trajectory(master_db_dir: str) -> dict:
                      .get(ta, {}).get("count", 0) if yoy_p else 0)
         cur_count = series[-1]
         yoy_delta = cur_count - yoy_count
-        yoy_pct = (
-            round((yoy_delta / yoy_count) * 100, 1)
-            if yoy_count > 0 else None
-        )
+        yoy_pct = (round((yoy_delta / yoy_count) * 100, 1)
+                   if yoy_count > 0 else None)
 
         cur = current.get(ta, {})
         top_modalities = [{"name": m, "count": n}
-                          for m, n in (cur.get("modalities") or Counter()).most_common(5)]
+                          for m, n in (cur.get("modalities") or {}).items()]
         top_sponsors   = [{"name": s, "count": n}
-                          for s, n in (cur.get("sponsors") or Counter()).most_common(5)]
-        phase_mix = dict((cur.get("phases") or Counter()).most_common())
+                          for s, n in (cur.get("sponsors") or {}).items()]
+        phase_mix = dict(cur.get("phases") or {})
 
         tas_rows.append({
             "name":               ta,
             "history":            [{"period": p, "count": v}
                                    for p, v in zip(periods, series)],
             "current_count":      cur_count,
-            "peak_count":         max(series),
+            "peak_count":         max(series) if series else 0,
             "total_growth_pct":   growth,
             "trend":              trend,
             "yoy_delta":          yoy_delta,
@@ -154,34 +181,36 @@ def sq3_ta_trajectory(master_db_dir: str) -> dict:
         })
 
     tas_rows.sort(key=lambda r: r["current_count"], reverse=True)
-    top_tas = tas_rows[:TOP_N_TAS]
-    other_ta = [r for r in tas_rows[TOP_N_TAS:]]
+    top_tas  = tas_rows[:TOP_N_TAS]
+    other_ta = tas_rows[TOP_N_TAS:]
 
-    # Movers: growth ranking (require current >= 5 to avoid noise)
     qualified = [r for r in tas_rows
-                 if r["current_count"] >= 5 and r["total_growth_pct"] is not None]
-    growing = sorted(qualified,
-                     key=lambda r: r["total_growth_pct"], reverse=True)[:5]
+                 if r["current_count"] >= 5
+                 and r["total_growth_pct"] is not None]
+    growing   = sorted(qualified,
+                       key=lambda r: r["total_growth_pct"], reverse=True)[:5]
     declining = sorted(qualified,
                        key=lambda r: r["total_growth_pct"])[:5]
 
-    # Grand totals per period (for normalised area)
-    period_totals = {p: sum(per_period_counts[p].get(ta, {}).get("count", 0)
-                            for ta in all_tas) for p in periods}
+    period_totals = {
+        p: sum(per_period_counts[p].get(ta, {}).get("count", 0)
+               for ta in all_tas)
+        for p in periods
+    }
 
     return {
-        "available":          True,
-        "periods":            periods,
-        "current_period":     current_period,
-        "tas":                top_tas,
-        "other_count":        sum(r["current_count"] for r in other_ta),
-        "other_ta_count":     len(other_ta),
-        "period_totals":      period_totals,
-        "movers_growing":     growing,
-        "movers_declining":   declining,
+        "available":        True,
+        "periods":          periods,
+        "current_period":   current_period,
+        "tas":              top_tas,
+        "other_count":      sum(r["current_count"] for r in other_ta),
+        "other_ta_count":   len(other_ta),
+        "period_totals":    period_totals,
+        "movers_growing":   growing,
+        "movers_declining": declining,
         "meta": {
-            "periods_loaded":  len(periods),
-            "unique_tas":      len(all_tas),
-            "excluded_tas":    sorted(EXCLUDE_TAS),
+            "periods_loaded": len(periods),
+            "unique_tas":     len(all_tas),
+            "excluded_tas":   sorted(EXCLUDE_TAS),
         },
     }
