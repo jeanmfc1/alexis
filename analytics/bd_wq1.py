@@ -8,13 +8,16 @@ Business question:
 
 Source:
     enriched file trials[]
-    Requires update_type == "new" and sponsor_class == "INDUSTRY".
-    The snapshot alone cannot answer this — it contains ALL updated trials
-    (new + existing). Only the enriched file carries update_type.
+    Requires update_type == "new" (retrospective completions already
+    excluded upstream as update_type == "new_inactive").  Accepts ALL
+    sponsor classes (INDUSTRY, NIH, ACADEMIC, OTHER, UNKNOWN); the UI
+    surfaces an INDUSTRY-only badge count so BD can focus if needed.
 
 Returns:
-    list of sponsor dicts, sorted by priority_score descending.
-    Each entry is one row in the Action Table card.
+    dict: { rows, counts, meta }
+        rows:   list of sponsor dicts sorted by priority desc
+        counts: { total, industry, nih, academic, other }
+        meta:   { industry_trial_count, total_trial_count }
 
 Output fields per sponsor:
     sponsor_name    str   — display name
@@ -49,17 +52,16 @@ def wq1_sponsor_action_table(enriched_trials: list) -> list:
     Returns:
         list of sponsor row dicts, sorted by priority_score descending
     """
-    # 1. Filter: new registrations, INDUSTRY, drug trials only
-    industry_drug = [
+    # 1. Filter: new registrations, drug trials only (all sponsor classes)
+    new_drug = [
         t for t in enriched_trials
         if t.get("update_type") == "new"
-        and (t.get("sponsor_class") or "").upper() == "INDUSTRY"
         and t.get("is_drug_trial", True)   # enriched is drug_only; guard kept
     ]
 
     # 2. Group by sponsor_name
     by_sponsor: dict[str, list] = defaultdict(list)
-    for t in industry_drug:
+    for t in new_drug:
         name = t.get("sponsor_name") or "Unknown Sponsor"
         by_sponsor[name].append(t)
 
@@ -124,8 +126,15 @@ def wq1_sponsor_action_table(enriched_trials: list) -> list:
                 "first_posted_date": t.get("first_posted_date"),
             })
 
+        # Sponsor class (most common across this sponsor's new trials)
+        cls_counts: dict[str, int] = defaultdict(int)
+        for t in sponsor_trials:
+            cls_counts[(t.get("sponsor_class") or "UNKNOWN").upper()] += 1
+        sponsor_class = max(cls_counts, key=cls_counts.__getitem__)
+
         rows.append({
             "sponsor_name":    sponsor_name,
+            "sponsor_class":   sponsor_class,
             "new_trial_count": len(sponsor_trials),
             "modalities":      modalities,
             "top_phase":       top_phase,
@@ -136,4 +145,22 @@ def wq1_sponsor_action_table(enriched_trials: list) -> list:
 
     # 4. Sort by priority_score descending (highest urgency first)
     rows.sort(key=lambda r: r["priority_score"], reverse=True)
-    return rows
+
+    # 5. Aggregate counts (sponsor-level + trial-level) for the UI header
+    sponsor_class_counts: dict[str, int] = defaultdict(int)
+    trial_class_counts:   dict[str, int] = defaultdict(int)
+    for r in rows:
+        sponsor_class_counts[r["sponsor_class"]] += 1
+        trial_class_counts[r["sponsor_class"]]   += r["new_trial_count"]
+
+    return {
+        "rows":   rows,
+        "counts": {
+            "sponsors":         len(rows),
+            "trials":           sum(r["new_trial_count"] for r in rows),
+            "by_sponsor_class": dict(sponsor_class_counts),
+            "by_trial_class":   dict(trial_class_counts),
+            "industry_sponsors": sponsor_class_counts.get("INDUSTRY", 0),
+            "industry_trials":   trial_class_counts.get("INDUSTRY", 0),
+        },
+    }
