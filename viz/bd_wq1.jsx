@@ -32,19 +32,24 @@ function WQ1ActionTable({ data, color }) {
   const [sortDir, setSortDir]     = useState(-1);  // -1 desc, +1 asc
   const [subSort, setSubSort]     = useState({});  // { sponsorName: {col,dir} }
 
+  // Accept both new (dict) and legacy (array) payloads
+  const raw    = Array.isArray(data) ? { rows: data, counts: {} } : (data || {});
+  const counts = raw.counts || {};
+
   const rows = useMemo(() => {
-    if (!data?.length) return [];
-    return [...data].sort((a, b) => {
+    const base = raw.rows || [];
+    if (!base.length) return [];
+    return [...base].sort((a, b) => {
       const av = a[sortCol] ?? 0;
       const bv = b[sortCol] ?? 0;
       if (typeof av === "string") return sortDir * av.localeCompare(bv);
       return sortDir * (av - bv);
     });
-  }, [data, sortCol, sortDir]);
+  }, [raw.rows, sortCol, sortDir]);
 
-  if (!data?.length) return (
+  if (!rows.length) return (
     <div style={{ fontFamily:"var(--fm)", fontSize:12, color:"var(--muted)", padding:"20px 0" }}>
-      No INDUSTRY drug trial new registrations found in this window.<br />
+      No new drug trial registrations found in this window.<br />
       <span style={{ color:"var(--dim)", fontSize:11 }}>
         Verify that the enriched file was loaded and matches this snapshot window.
       </span>
@@ -71,15 +76,23 @@ function WQ1ActionTable({ data, color }) {
     );
   };
 
-  const totalNew = rows.reduce((s, r) => s + r.new_trial_count, 0);
+  const totalNew = counts.trials
+    ?? rows.reduce((s, r) => s + r.new_trial_count, 0);
+  const indSponsors = counts.industry_sponsors ?? 0;
+  const indTrials   = counts.industry_trials   ?? 0;
 
   return (
     <div>
       {/* Summary line + export */}
-      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14, flexWrap:"wrap" }}>
         <MonoLabel style={{ marginBottom:0 }}>
           {rows.length} sponsors · {totalNew} new trials this window
         </MonoLabel>
+        <span style={{ fontFamily:"var(--fm)", fontSize:10, padding:"2px 8px",
+          borderRadius:10, color:"#F59E0B", background:"rgba(245,158,11,0.10)",
+          border:"1px solid rgba(245,158,11,0.30)", letterSpacing:"0.08em" }}>
+          INDUSTRY · {indSponsors} sponsors / {indTrials} trials
+        </span>
         <div style={{ flex:1 }} />
         <button onClick={() => exportCSV(rows)}
           style={{ fontFamily:"var(--fm)", fontSize:10, padding:"4px 12px",
@@ -145,10 +158,30 @@ function WQ1ActionTable({ data, color }) {
                       borderTop:"1px solid var(--border)" }}>
 
                     <td style={{ padding:"10px 12px", fontFamily:"var(--fm)",
-                      fontSize:12, color:"var(--text)",
-                      maxWidth:260, overflow:"hidden",
-                      textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                      {row.sponsor_name}
+                      fontSize:12, color:"var(--text)", maxWidth:300 }}>
+                      <div style={{ display:"flex", alignItems:"center",
+                        gap:6, minWidth:0 }}>
+                        <span style={{ overflow:"hidden", textOverflow:"ellipsis",
+                          whiteSpace:"nowrap", flex:1 }}>
+                          {row.sponsor_name}
+                        </span>
+                        {(() => {
+                          const sc = (row.sponsor_class || "UNKNOWN").toUpperCase();
+                          const hue = sc === "INDUSTRY" ? "#F59E0B"
+                                    : sc === "NIH"      ? "#22C55E"
+                                    : sc === "OTHER"    ? "#A78BFA"
+                                    : "#64748B";
+                          return (
+                            <span style={{ fontFamily:"var(--fm)", fontSize:9,
+                              letterSpacing:"0.10em", padding:"1px 6px",
+                              borderRadius:6, color:hue, background:hue+"18",
+                              border:`1px solid ${hue}30`,
+                              whiteSpace:"nowrap", flexShrink:0 }}>
+                              {sc}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </td>
 
                     <td style={{ padding:"10px 12px", textAlign:"right",
