@@ -118,14 +118,18 @@ def wq5_modality_index_chart(snap_summary: dict | None = None,
         if len(mod_samples[mod]) < 5: mod_samples[mod].append(sample)
         if len(ta_samples[ta])  < 5: ta_samples[ta].append(sample)
 
-    # Baseline from prior_weeks (week_ix -> counters)
+    # Baseline from prior_weeks. Only ENRICHED entries have genuine weekly
+    # new-trial counts; snapshot_summary entries carry CUMULATIVE counts and
+    # would make every index look cold. Filter them out.
     mod_baseline = defaultdict(list); ta_baseline = defaultdict(list)
     priors_used = 0
+    priors_skipped_summary = 0
     if prior_weeks:
         for pw in prior_weeks:
+            if pw.get("source") != "enriched":
+                priors_skipped_summary += 1
+                continue
             pw_ta_mod = pw.get("ta_mod") or {}
-            pw_total  = pw.get("drug_new_total") or 0
-            # Derive per-mod and per-ta totals from the nested dict
             mod_sum = Counter(); ta_sum = Counter()
             for ta, mods in pw_ta_mod.items():
                 ta_sum[ta] += sum(mods.values())
@@ -134,6 +138,18 @@ def wq5_modality_index_chart(snap_summary: dict | None = None,
             for m, n in mod_sum.items(): mod_baseline[m].append(n)
             for ta, n in ta_sum.items(): ta_baseline[ta].append(n)
             priors_used += 1
+
+    if priors_used == 0:
+        return {
+            "available": False,
+            "reason": (
+                f"Need >=1 prior week with an enriched changelog file "
+                f"to compute a weekly baseline. Skipped "
+                f"{priors_skipped_summary} snapshot-summary priors "
+                f"(cumulative counts, not weekly). Run "
+                f"analytics/run_update_categorizer.py on past weeks first."
+            ),
+        }
 
     # All labels
     all_mods = set(mod_this) | set(mod_baseline)
@@ -155,7 +171,8 @@ def wq5_modality_index_chart(snap_summary: dict | None = None,
         "modalities":      mods_rows[:TOP_N],
         "tas":             tas_rows[:TOP_N],
         "meta": {
-            "prior_weeks_used": priors_used,
+            "prior_weeks_used":      priors_used,
+            "priors_skipped_summary": priors_skipped_summary,
             "thresholds": {
                 "hot":    HOT_THRESHOLD,
                 "rising": RISING_MIN,
