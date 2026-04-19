@@ -197,15 +197,35 @@ def build_quarterly_payload(db_path, meta) -> dict:
     sq8_data = {"available": False, "reason": "biomarker policy not fully implemented"}
     print("  sci_sq8 : disabled (biomarker policy not fully implemented)")
 
+    # sq3 (BD / TA trajectory)
+    from analytics.bd_sq3 import sq3_ta_trajectory
+    sq3_data = sq3_ta_trajectory(str(MASTER_DB_DIR))
+    if sq3_data.get("available"):
+        print(f"  bd_sq3  : {len(sq3_data.get('tas', []))} top TAs over "
+              f"{sq3_data.get('meta', {}).get('periods_loaded', 0)} periods")
+    else:
+        print(f"  bd_sq3  : no data ({sq3_data.get('reason')})")
+
+    # sq12 (Ops / phase transition pipeline)
+    from analytics.ops_sq12 import sq12_transition_pipeline
+    sq12_data = sq12_transition_pipeline(str(db_path))
+    if sq12_data.get("available"):
+        n_flows = len(sq12_data.get("transitions", []))
+        cov = sq12_data.get("meta", {}).get("completion_coverage_pct", 0)
+        print(f"  ops_sq12: {n_flows} flows forecast, "
+              f"{cov}% active trials have completion dates")
+
     return {
         "quarterly":       True,
         "metadata":        meta,
         "snapshot_file":   db_path.name,
         "sq2":             sq2_data,
+        "sq3":             sq3_data,
         "sq4":             sq4_data,
         "sq8":             sq8_data,
         "sq9":             sq9_data,
         "sq10":            sq10_data,
+        "sq12":            sq12_data,
     }
 
 def main():
