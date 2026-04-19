@@ -32,12 +32,17 @@ MASTER_DB_DIR = ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "active_
 
 COMPONENT_FILES = [
     VIZ_DIR / "bd_wq1.jsx",
+    VIZ_DIR / "bd_wq2.jsx",
     VIZ_DIR / "mk_wq1.jsx",
+    VIZ_DIR / "mk_wq2.jsx",
     VIZ_DIR / "sci_wq1.jsx",
+    VIZ_DIR / "sci_wq2.jsx",
     VIZ_DIR / "ops_wq1.jsx",
     VIZ_DIR / "bd_sq2.jsx",
+    VIZ_DIR / "bd_sq3.jsx",
     VIZ_DIR / "mk_sq1_sq.jsx",
     VIZ_DIR / "ops_sq1_sq.jsx",
+    VIZ_DIR / "ops_sq12.jsx",
     VIZ_DIR / "sci_sq3.jsx",
     VIZ_DIR / "sci_sq8.jsx",
     # ChiCTR (weekly cadence, cw prefix)
