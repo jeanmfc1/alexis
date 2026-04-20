@@ -39,18 +39,52 @@ from typing import Dict, List
 
 
 # ------------------------------------------------------------------
-# Bucket rules -- ordered; first match wins
+# Bucket rules -- ordered; first match wins.
+# Each pattern is NEGATION-AWARE: a 25-char window before the match is
+# checked for negators ("no", "not", "without", ...) and if any of
+# those is present the match is skipped.  That fixes the classic
+# false-positive where "no safety concerns" was labelled 'safety'.
+#
+# Tightening notes:
+#   - 'safety' requires a companion noun (concern/issue/signal/...) or
+#     explicit adverse-event wording, no longer bare 'safety'.
+#   - 'efficacy' drops bare 'efficacy', requires companion noun.
+#   - 'business' drops bare 'business', keeps strategic/portfolio/...
+#   - 'enrollment' drops bare 'slow' and 'feasibility', requires
+#     concrete phrases.
+#   - 'logistics' drops bare 'site'/'investigator'/'facility'.
+#   - 'funding' drops bare 'resource'.
+# Order: safety > efficacy > covid > business > regulatory > funding
+#        > enrollment > logistics.  COVID + business moved up because
+# they are highly specific when mentioned.
 # ------------------------------------------------------------------
 BUCKET_RULES = [
-    ("safety",     re.compile(r"adverse|toxicity|safety|serious.*event|death|risk.?benefit", re.I)),
-    ("efficacy",   re.compile(r"futility|efficacy|interim.*analysis|did\s+not\s+meet|primary.*endpoint|lack\s+of\s+response", re.I)),
-    ("enrollment", re.compile(r"enroll|enrol|accrual|recruit|slow|insufficient.*patient|feasibility", re.I)),
-    ("funding",    re.compile(r"funding|budget|financial|resource|grant", re.I)),
-    ("business",   re.compile(r"strategic|business|portfolio|pipeline|prioriti[sz]|sponsor.*decision|company.*decision", re.I)),
-    ("regulatory", re.compile(r"fda|ema|regulator|clinical.?hold|authority", re.I)),
+    ("safety",     re.compile(
+        r"adverse\s+event|toxicit|safety\s+(concern|issue|signal|finding|event|risk|problem|profile)|"
+        r"serious\s+adverse|death\s+(of|in|during|related)|risk.?benefit", re.I)),
+    ("efficacy",   re.compile(
+        r"futility|lack\s+of\s+efficacy|interim\s+analysis|did\s+not\s+meet|"
+        r"primary\s+endpoint|lack\s+of\s+response|efficacy\s+(concern|signal|issue|fail|not)", re.I)),
     ("covid",      re.compile(r"covid|pandemic|sars.?cov", re.I)),
-    ("logistics",  re.compile(r"site|investigator|manufactur|drug\s+supply|facility", re.I)),
+    ("business",   re.compile(
+        r"strategic|portfolio|pipeline|prioriti[sz]|sponsor.*decision|"
+        r"company.*decision|corporate.*(reason|decision|strateg)|business\s+(decision|reason|purpose)", re.I)),
+    ("regulatory", re.compile(r"\bfda\b|\bema\b|regulator|clinical.?hold|(health\s+)?authority", re.I)),
+    ("funding",    re.compile(r"funding|budget|financial\s+(constraint|reason|decision|issue|difficulty)|grant\s+(end|not|loss)", re.I)),
+    ("enrollment", re.compile(
+        r"\benrol(l|lment|ling)|accrual|insufficient\s+(patient|subject|enrol)|"
+        r"slow\s+enrol|(unable|failed)\s+(to\s+)?enrol|feasibility\s+(issue|concern)", re.I)),
+    ("logistics",  re.compile(
+        r"site\s+(closure|closed|unable|issue)|investigator\s+(left|unable|issue)|"
+        r"manufactur|drug\s+supply|facility\s+(closure|issue)", re.I)),
 ]
+
+# Negation detector: looks for these patterns in a short pre-match window
+NEGATION_RE = re.compile(
+    r"\b(no|not|without|nil|absence\s+of|free\s+from|neither|nor|none)\b",
+    re.I,
+)
+NEG_WINDOW = 25  # chars before the match to inspect
 
 ACTIVE_STATUSES = {
     "RECRUITING", "NOT_YET_RECRUITING", "ENROLLING_BY_INVITATION",
@@ -60,11 +94,26 @@ TERMINAL_STATUSES = {"COMPLETED", "TERMINATED", "WITHDRAWN", "SUSPENDED"}
 STOP_STATUSES     = {"TERMINATED", "WITHDRAWN", "SUSPENDED"}
 
 
+def _match_unnegated(pat: re.Pattern, text: str) -> bool:
+    """True if pat matches text AT LEAST ONCE without a nearby negator.
+    'Nearby' = within NEG_WINDOW chars to the left of the match start."""
+    for m in pat.finditer(text):
+        window = text[max(0, m.start() - NEG_WINDOW): m.start()]
+        if not NEGATION_RE.search(window):
+            return True
+    return False
+
+
 def _bucket_why_stopped(text: str) -> str:
+    """Classify a why_stopped string into a severity bucket.
+
+    Negation-aware: "no safety concerns" will NOT match the safety rule,
+    so the classifier continues down the list and may still find a
+    legitimate reason (e.g. 'strategic' for business)."""
     if not text or not text.strip():
         return "unstated"
     for name, pat in BUCKET_RULES:
-        if pat.search(text):
+        if _match_unnegated(pat, text):
             return name
     return "other"
 
@@ -197,7 +246,10 @@ def wq8_classification_gap_report(enriched_trials: List[Dict],
                 ),
             })
 
-    # Sort why_stopped with severity priority so the UI can trust the order
+    # Sort why_stopped with severity priority so the UI can trust the order.
+    # bucket_priority is derived from BUCKET_RULES order above; safety/efficacy
+    # surface first, then covid / business / regulatory / funding / enrollment
+    # / logistics.
     bucket_priority = {name: i for i, (name, _) in enumerate(BUCKET_RULES)}
     bucket_priority.update({"other": 90, "unstated": 99})
     late_phase = {"PHASE3": 0, "PHASE2/PHASE3": 1, "PHASE2": 2, "PHASE1/PHASE2": 3,
