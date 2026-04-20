@@ -10,9 +10,19 @@
 function CW2ChinaTAMomentum({ data, color }) {
   if (!data || data.available === false) {
     return (
-      <div style={{ padding:"24px 16px", fontFamily:"var(--fm)",
-        fontSize:12, color:"var(--muted)", textAlign:"center" }}>
-        No ChiCTR momentum data yet. Run pipelines/run_diff_chictr.py.
+      <div style={{ padding:"28px 24px", fontFamily:"var(--fm)",
+        fontSize:12, color:"var(--muted)", textAlign:"left",
+        maxWidth:640, margin:"0 auto", lineHeight:1.5 }}>
+        <div style={{ color:"#F59E0B", fontWeight:600, fontSize:11,
+          letterSpacing:"0.14em", marginBottom:8 }}>
+          BASELINE UNAVAILABLE
+        </div>
+        {data?.reason || "No ChiCTR momentum data yet. Run pipelines/run_diff_chictr.py."}
+        {data?.pair_windows_skipped ? (
+          <div style={{ marginTop:10, fontSize:11, color:"var(--dim)" }}>
+            Skipped {data.pair_windows_skipped} snapshot-pair window(s).
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -207,9 +217,12 @@ function CW2ChinaTAMomentum({ data, color }) {
         </div>
         <div style={{ marginTop:8, fontFamily:"var(--fm)", fontSize:9,
           color:"var(--dim)", letterSpacing:"0.06em" }}>
-          Baseline = mean weekly additions computed from{" "}
-          {data.pair_windows || 0} consecutive prior-snapshot deltas.
+          Baseline = weekly-normalised mean of{" "}
+          {data.pair_windows || 0} valid consecutive prior-snapshot delta(s).
           Snapshots used: {data.snapshots_used}.
+          {data.pair_windows_skipped ? (
+            <> · Skipped {data.pair_windows_skipped} pair(s) as likely backfill (spaced &lt; 3 days or &gt; 500 drug-trials/day).</>
+          ) : null}
         </div>
       </div>
     </div>
