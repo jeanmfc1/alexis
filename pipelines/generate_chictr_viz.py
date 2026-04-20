@@ -49,13 +49,49 @@ def _load_enriched_trials(enriched_path: Path | None,
             for t in fallback_trials]
 
 
-def _load_prior_snapshots(current_path: Path, n: int = 4) -> list[dict]:
-    all_files = sorted(
-        CHICTR_SNAP_DIR.glob("*_chictr_v1.json"),
-        key=lambda p: p.name, reverse=True,
-    )
-    priors = [f for f in all_files if f != current_path][:n]
-    return [_load_snapshot(p) for p in priors]
+def _load_prior_snapshots(current_path: Path, n: int = 8) -> list[dict]:
+    """
+    Load up to n prior ChiCTR snapshots for baseline computation.
+
+    Strategy: candidate = every *_chictr_v1*.json file (both real and
+    synthetic). Exclude the current file. Dedupe by `as_of` date,
+    preferring synthetic snapshots over real ones on the same date
+    because synthetic snapshots use consistent corpus completeness +
+    classifier version across the timeline (backfilled via
+    pipelines/backfill_chictr_snapshots.py).
+    """
+    if not CHICTR_SNAP_DIR.exists():
+        return []
+    # Collect both real and synthetic files, excluding the current
+    candidates = [
+        f for f in CHICTR_SNAP_DIR.glob("*_chictr_v1*.json")
+        if f != current_path
+    ]
+
+    # Group by as_of date (inferred from filename prefix YYYY-MM-DD)
+    import re
+    by_date: dict[str, list[Path]] = {}
+    for f in candidates:
+        m = re.match(r"(\d{4}-\d{2}-\d{2})_chictr_v1", f.name)
+        if not m:
+            continue
+        by_date.setdefault(m.group(1), []).append(f)
+
+    # For each date, prefer the synthetic variant if present
+    picked: list[Path] = []
+    for d, files in by_date.items():
+        synth = [f for f in files if "_synth" in f.name]
+        picked.append(synth[0] if synth else files[0])
+
+    # Sort newest-first by date, keep up to n
+    picked.sort(key=lambda p: p.name, reverse=True)
+    picked = picked[:n]
+
+    loaded = [_load_snapshot(p) for p in picked]
+    synth_n = sum(1 for p in picked if "_synth" in p.name)
+    real_n  = len(picked) - synth_n
+    print(f"    (using {synth_n} synthetic + {real_n} real prior snapshot(s))")
+    return loaded
 
 
 def build_chictr_payload() -> dict:
