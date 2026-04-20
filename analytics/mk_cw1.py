@@ -67,9 +67,25 @@ def cw2_china_ta_momentum(enriched_trials, prior_snapshots):
         )
         top_mod_by_ta[ta] = mod_counts.most_common(1)[0][0] if mod_counts else None
 
-    # 2. Baseline via consecutive-pair deltas (sorted oldest-first)
+    # 2. Baseline via consecutive-pair deltas, normalised to weekly rate.
+    #    Filters out "backfill" pairs (very short spacing with improbably
+    #    large deltas; usually the scraper catching up on historical data
+    #    rather than genuine registrations).
+    from datetime import datetime as _dt
+
+    MIN_DAYS_BETWEEN     = 3          # pairs closer than this are likely backfill
+    MAX_DRUG_PER_DAY     = 500        # cap for realistic daily drug-trial adds
+    SCALE_TO_WEEKLY_DAYS = 7.0
+
+    def _parse_as_of(s):
+        try:
+            return _dt.fromisoformat(str(s)[:10]).date()
+        except Exception:
+            return None
+
     baseline_per_ta = defaultdict(list)
     pair_windows = 0
+    pair_windows_skipped = 0
     if prior_snapshots:
         snaps_asc = sorted(
             prior_snapshots,
@@ -77,17 +93,39 @@ def cw2_china_ta_momentum(enriched_trials, prior_snapshots):
         )
         if len(snaps_asc) >= 2:
             for older, newer in zip(snaps_asc, snaps_asc[1:]):
+                old_as_of = _parse_as_of(
+                    (older.get("metadata", {}) or {}).get("as_of"))
+                new_as_of = _parse_as_of(
+                    (newer.get("metadata", {}) or {}).get("as_of"))
+                if not (old_as_of and new_as_of):
+                    pair_windows_skipped += 1
+                    continue
+                days = (new_as_of - old_as_of).days
+                if days < MIN_DAYS_BETWEEN:
+                    pair_windows_skipped += 1
+                    continue
+
                 older_ids = {
                     t.get("nct_id") for t in older.get("trials", [])
                     if t.get("is_drug_trial") and t.get("nct_id")
                 }
+                added = [
+                    t for t in newer.get("trials", [])
+                    if t.get("is_drug_trial")
+                    and t.get("nct_id") not in older_ids
+                ]
+                # Skip pairs whose per-day rate is implausible -- usually
+                # scrape backfill, not real registrations.
+                if days > 0 and (len(added) / days) > MAX_DRUG_PER_DAY:
+                    pair_windows_skipped += 1
+                    continue
+
+                scale = SCALE_TO_WEEKLY_DAYS / max(days, 1)
                 by_ta = Counter(
-                    (t.get("therapeutic_area") or "Unassigned")
-                    for t in newer.get("trials", [])
-                    if t.get("is_drug_trial") and t.get("nct_id") not in older_ids
+                    (t.get("therapeutic_area") or "Unassigned") for t in added
                 )
                 for ta, n in by_ta.items():
-                    baseline_per_ta[ta].append(n)
+                    baseline_per_ta[ta].append(n * scale)
                 pair_windows += 1
         else:
             only = snaps_asc[0]
@@ -97,6 +135,25 @@ def cw2_china_ta_momentum(enriched_trials, prior_snapshots):
             )
             for ta, n in by_ta_total.items():
                 baseline_per_ta[ta].append(n / 52.0)
+
+    # If no valid baseline pair survived filtering, signal honestly.
+    no_valid_baseline = (pair_windows == 0) and not baseline_per_ta
+    if no_valid_baseline and prior_snapshots:
+        return {
+            "available": False,
+            "reason": (
+                "No valid baseline could be computed from ChiCTR prior "
+                "snapshots. All "
+                f"{pair_windows_skipped} consecutive-pair windows were "
+                "either spaced less than 3 days apart or their per-day "
+                "delta exceeded the MAX_DRUG_PER_DAY cap (usually scrape "
+                "backfill, not genuine registrations). Schedule weekly "
+                "ChiCTR snapshots -- see pipelines/run_chictr_scrape.py -- "
+                "so at least two snapshots sit 7+ days apart before the "
+                "next diff."
+            ),
+            "pair_windows_skipped": pair_windows_skipped,
+        }
 
     # 3. Build item rows
     all_tas = set(this_counts) | set(baseline_per_ta)
@@ -170,8 +227,9 @@ def cw2_china_ta_momentum(enriched_trials, prior_snapshots):
         "cards":          cards,
         "total_new":      total_new,
         "total_baseline": total_baseline,
-        "snapshots_used": len(prior_snapshots),
-        "pair_windows":   pair_windows,
+        "snapshots_used":      len(prior_snapshots),
+        "pair_windows":        pair_windows,
+        "pair_windows_skipped": pair_windows_skipped,
         "thresholds": {
             "accelerating_ratio": ACCELERATING_RATIO,
             "accelerating_min":   ACCELERATING_MIN,
