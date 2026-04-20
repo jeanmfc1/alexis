@@ -304,13 +304,17 @@ function WQ8StatusSpotlight({ data, color }) {
                             whiteSpace:"nowrap" }} title={e.sponsor || ""}>
                             {e.sponsor || "-"}
                           </td>
-                          <td style={{ padding:"6px 10px" }}>
+                          <td style={{ padding:"6px 10px" }}
+                            title={"Auto-classified via keyword match (negation-aware). Click the row for the full why_stopped text. Bucket: " + (WQ8_BUCKET_LABEL[e.bucket] || e.bucket)}>
                             <span style={{ display:"inline-block", width:8,
                               height:8, borderRadius:"50%", background:hue,
                               marginRight:6, verticalAlign:"middle" }}/>
                             <span style={{ color:hue, fontSize:11 }}>
                               {WQ8_BUCKET_LABEL[e.bucket] || e.bucket}
                             </span>
+                            <span style={{ marginLeft:4, fontFamily:"var(--fm)",
+                              fontSize:9, color:"var(--dim)",
+                              letterSpacing:"0.04em" }}>auto</span>
                           </td>
                           <td style={{ padding:"6px 10px", color:"var(--text)",
                             fontSize:11, maxWidth:320, overflow:"hidden",
