@@ -131,13 +131,22 @@ function WQ2ClientAlerts({ data, color }) {
                       {a.match_confidence} match
                     </span>
                   </div>
-                  {a.client_name_raw && a.client_name_raw !== a.client_name && (
+                  {a.client_name_raw && (
                     <div style={{ fontFamily:"var(--fm)", fontSize:10,
                       color:"var(--muted)", marginTop:3 }}
                       title="Raw MDM entry (exact string from storage/List of MDM or Sponsor Codes.xlsx)">
                       MDM entry: <span style={{ color:"var(--text)" }}>
                         {a.client_name_raw}
                       </span>
+                      {!a.client_country && (
+                        <span style={{ marginLeft:6, fontSize:9,
+                          padding:"1px 5px", borderRadius:4,
+                          color:"var(--cyan)",
+                          background:"rgba(0,207,255,0.10)",
+                          border:"1px solid rgba(0,207,255,0.30)" }}>
+                          global parent
+                        </span>
+                      )}
                     </div>
                   )}
                   {a.mdm && (
