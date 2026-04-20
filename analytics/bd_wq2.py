@@ -170,13 +170,24 @@ def _best_match(sponsor_name: str, idx: dict) -> dict | None:
 
     entries = idx["entries"]
 
+    def _pick(candidate_indices):
+        """Prefer the parent (global) entry -- no country code -- over
+        country subsidiaries when multiple candidates share the same
+        normalised name.  Parent entries tend to carry an alphanumeric
+        MDM ID (e.g. HNCSP81605) while subsidiaries carry numeric ones."""
+        if not candidate_indices:
+            return None
+        parents = [i for i in candidate_indices
+                   if not entries[i].get("country")]
+        return entries[(parents or candidate_indices)[0]]
+
     # Tier 1: exact
     if nm in idx["norm_idx"]:
-        return {"entry": entries[idx["norm_idx"][nm][0]],
+        return {"entry": _pick(idx["norm_idx"][nm]),
                 "tier": "exact", "conf": "high"}
     # Tier 2: loose
     if lo and lo in idx["loose_idx"]:
-        return {"entry": entries[idx["loose_idx"][lo][0]],
+        return {"entry": _pick(idx["loose_idx"][lo]),
                 "tier": "loose", "conf": "high"}
     # Tier 3/4: token Jaccard
     if not toks:
