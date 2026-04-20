@@ -98,8 +98,10 @@ def _load_client_index() -> dict | None:
     if CACHE_PATH.exists():
         try:
             cached = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
-            if cached.get("mtime") == mtime:
-                # Re-hydrate sig_toks as sets
+            # Invalidate old caches missing the "raw" field (pre-v2 schema)
+            has_raw = bool(cached.get("entries")
+                           and "raw" in cached["entries"][0])
+            if cached.get("mtime") == mtime and has_raw:
                 for e in cached["entries"]:
                     e["sig_toks"] = set(e["sig_toks"])
                 return cached
@@ -127,6 +129,7 @@ def _load_client_index() -> dict | None:
         toks = _sig_toks(clean)
         mdm  = row.get("MDMID__c")
         entry = {
+            "raw":      raw,
             "clean":    clean,
             "country":  cc,
             "mdm":      str(mdm) if mdm and str(mdm) != "nan" else None,
@@ -313,6 +316,7 @@ def wq2_client_alert_cards(enriched_trials: list,
 
         alerts.append({
             "client_name":      client_name,
+            "client_name_raw":  entry.get("raw"),
             "client_country":   entry.get("country"),
             "mdm":              entry.get("mdm"),
             "match_tier":       tier,
