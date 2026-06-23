@@ -16,7 +16,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 
-from app.jobs import catalog
+from app.jobs import catalog, providers
 from app.jobs.runner import RUNNER
 
 router = APIRouter()
@@ -38,6 +38,17 @@ def list_jobs() -> dict:
     return {"runs": RUNNER.list_runs()}
 
 
+@router.get("/api/jobs/options/{provider}")
+def job_options(provider: str) -> dict:
+    """Resolve a param 'select' provider to a list of {value,label} options."""
+    try:
+        return {"options": providers.resolve(provider)}
+    except Exception as exc:  # noqa: BLE001
+        _log.exception("[err] options(%s) failed: %s", provider, exc)
+        raise HTTPException(status_code=500,
+                            detail=f"options error: {type(exc).__name__}")
+
+
 @router.post("/api/jobs")
 def start_job(payload: dict) -> dict:
     if not isinstance(payload, dict):
@@ -45,8 +56,11 @@ def start_job(payload: dict) -> dict:
     job_id = payload.get("job_id")
     if not job_id or not isinstance(job_id, str):
         raise HTTPException(status_code=400, detail="job_id is required")
+    params = payload.get("params") or {}
+    if not isinstance(params, dict):
+        raise HTTPException(status_code=400, detail="params must be an object")
     try:
-        return RUNNER.start(job_id)
+        return RUNNER.start(job_id, params)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:  # noqa: BLE001

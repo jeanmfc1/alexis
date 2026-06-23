@@ -24,8 +24,13 @@ def _exit_code(exc: SystemExit) -> int:
     return 1  # a string/other -> treat as failure
 
 
-def run_pipeline(job_id: str) -> int:
-    """Run a catalog pipeline in this process. Returns its exit code."""
+def run_pipeline(job_id: str, extra_args: list[str] | None = None) -> int:
+    """Run a catalog pipeline in this process. Returns its exit code.
+
+    ``extra_args`` are the parameter flags the parent appended after
+    ``--run-pipeline <id>`` (e.g. ``--aact-dir ...``); they are forwarded to the
+    pipeline's argv so a frozen build honours GUI form values.
+    """
     # In a windowed frozen build sys.stdout/err are None; reattach the handles
     # the parent runner gave us (fd 1/2 -> the per-run log file).
     try:
@@ -39,7 +44,7 @@ def run_pipeline(job_id: str) -> int:
         print(f"[err] unknown pipeline: {job_id}")
         return 2
 
-    tail = entry.get("argv", [])
+    tail = list(entry.get("argv", [])) + list(extra_args or [])
     try:
         if entry.get("module"):
             sys.argv = [entry["module"], *tail]

@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
             print("[err] --run-pipeline requires a job id")
             return 2
         from app.jobs.dispatch import run_pipeline
-        return run_pipeline(raw[1])
+        return run_pipeline(raw[1], extra_args=raw[2:])
 
     from app.main import run
     args = _parse_args(raw)
