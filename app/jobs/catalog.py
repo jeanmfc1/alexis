@@ -63,6 +63,22 @@ CATALOG: list[dict] = [
         "module": "pipelines.weekly_pulse_clinical_v2", "argv": [],
     },
     {
+        "id": "pull_window",
+        "label": "Pull a custom date range",
+        "description": "Fetch + classify a chosen window from ClinicalTrials.gov. Use EITHER "
+                       "'Last N days' OR a From/To date range. Leave all blank for last 7 days.",
+        "category": "us", "ready": True, "long_running": True, "produces": "window snapshot",
+        "module": "pipelines.pulse_window_v1", "argv": [],
+        "params": [
+            {"name": "days", "label": "Last N days (e.g. 7)", "type": "int",
+             "flag": "--days", "required": False},
+            {"name": "date_from", "label": "From date (YYYY-MM-DD)", "type": "text",
+             "flag": "--from", "required": False},
+            {"name": "date_to", "label": "To date (YYYY-MM-DD, blank = today)", "type": "text",
+             "flag": "--to", "required": False},
+        ],
+    },
+    {
         "id": "enrich_weekly",
         "label": "Compute weekly changes",
         "description": "Diff each weekly snapshot against the right master DB to mark genuinely-new trials.",

@@ -205,9 +205,38 @@ def prompt_window() -> tuple[date, date]:
     return updated_from, updated_to
 
 
+def _resolve_window(args) -> tuple[date, date]:
+    """Pick the window from CLI flags; fall back to prompt only on a real TTY."""
+    import sys
+    today = date.today()
+    if args.days is not None:
+        if args.days < 1:
+            raise SystemExit("[err] --days must be >= 1")
+        return today - timedelta(days=args.days), today
+    if args.date_from:
+        start = date.fromisoformat(args.date_from)
+        end = date.fromisoformat(args.date_to) if args.date_to else today
+        return start, end
+    # No flags: prompt if interactive, else default to last 7 days (GUI/job).
+    if sys.stdin and sys.stdin.isatty():
+        return prompt_window()
+    print("[info] no window specified; defaulting to last 7 days")
+    return today - timedelta(days=7), today
+
+
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="Pulse a date window from ClinicalTrials.gov.")
+    ap.add_argument("--days", type=int, default=None,
+                    help="Last N days ending today (overrides --from/--to).")
+    ap.add_argument("--from", dest="date_from", default=None,
+                    help="Start date YYYY-MM-DD (inclusive).")
+    ap.add_argument("--to", dest="date_to", default=None,
+                    help="End date YYYY-MM-DD (inclusive; default today).")
+    args = ap.parse_args()
+
     as_of = date.today()
-    updated_from, updated_to = prompt_window()
+    updated_from, updated_to = _resolve_window(args)
 
     if updated_from > updated_to:
         raise ValueError(f"Start date ({updated_from}) must be before end date ({updated_to})")
@@ -361,9 +390,10 @@ def main():
         print(f"  {k:25} | {v}")
 
     # ---- Save ----
+    from core.paths import snapshots_dir
     label = f"{updated_from}_{updated_to}"
     snapshot_path = _versioned_save(
-        base_dir="storage/snapshots/clinical_trials_v2",
+        base_dir=str(snapshots_dir()),
         basis_folder="last_update",
         label=label,
         metadata=metadata,
