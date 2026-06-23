@@ -64,10 +64,17 @@ COMPONENT_PLACEHOLDER = "/* __COMPONENTS_PLACEHOLDER__ */"
 
 # JSX component files injected into the template in this order.
 # Add new question files here as they are implemented.
+# Must include every weekly component the template's section renderers
+# reference, or the whole React tree throws (e.g. WeeklyBD renders both
+# WQ1 and WQ2 -> bd_wq2 must be present). Mirrors the wq-subset that
+# generate_dashboard.py injects for the unified build.
 COMPONENT_FILES = [
     VIZ_DIR / "bd_wq1.jsx",
+    VIZ_DIR / "bd_wq2.jsx",
     VIZ_DIR / "mk_wq1.jsx",
+    VIZ_DIR / "mk_wq2.jsx",
     VIZ_DIR / "sci_wq1.jsx",
+    VIZ_DIR / "sci_wq2.jsx",
     VIZ_DIR / "ops_wq1.jsx",
 ]
 

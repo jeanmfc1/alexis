@@ -1,23 +1,24 @@
 """Declarative catalog of runnable background jobs.
 
-Each entry describes a pipeline the GUI can launch as a subprocess. The argv
-is built lazily (``sys.executable`` resolved at call time) so it is correct
-whether launched from a source checkout or, later, a frozen build.
+Each entry names either a ``module`` (run like ``python -m <module>``) or a
+``script`` (a path under the app root), plus the ``argv`` tail. The runner
+turns this into a real command:
 
-NOTE (frozen builds): in a PyInstaller one-folder exe ``sys.executable`` is
-ALEXIS.exe and ``python -m pipelines.x`` will not work. Phase 3 packaging adds
-a CLI dispatch (e.g. ``ALEXIS.exe --run-pipeline <id>``); the catalog here is
-the single place that mapping needs to change.
+* Source checkout -> [sys.executable, "-m", module, *argv]
+                  or [sys.executable, script, *argv]
+* Frozen exe      -> [sys.executable, "--run-pipeline", job_id]
+  (``sys.executable`` is ALEXIS.exe; ``-m`` does not work in a one-file/one-dir
+  freeze, so the exe re-launches itself and app.__main__ dispatches via runpy.)
 """
 
 from __future__ import annotations
 
 import sys
 
+from core.paths import is_frozen
 
-# Each entry: id, label, description, category, long_running, ready, produces,
-# and `args` = the argv tail appended after sys.executable. cwd is app_root()
-# (set by the runner), so module/script paths resolve from the repo root.
+
+# module XOR script. argv = the tail appended after the module/script.
 _CATALOG: list[dict] = [
     {
         "id": "generate_weekly",
@@ -28,7 +29,9 @@ _CATALOG: list[dict] = [
         "long_running": True,
         "ready": True,
         "produces": "alexis_weekly_dashboard_live.html",
-        "args": ["-m", "pipelines.generate_weekly_viz", "--auto", "--no-open"],
+        "module": "pipelines.generate_weekly_viz",
+        "script": None,
+        "argv": ["--auto", "--no-open"],
     },
     {
         "id": "self_test",
@@ -39,7 +42,9 @@ _CATALOG: list[dict] = [
         "long_running": False,
         "ready": True,
         "produces": None,
-        "args": ["tools/verify_portability.py"],
+        "module": None,
+        "script": "tools/verify_portability.py",
+        "argv": [],
     },
     {
         "id": "smoke_classifier",
@@ -50,7 +55,9 @@ _CATALOG: list[dict] = [
         "long_running": True,
         "ready": True,
         "produces": None,
-        "args": ["tools/verify_portability.py", "--full"],
+        "module": None,
+        "script": "tools/verify_portability.py",
+        "argv": ["--full"],
     },
     {
         "id": "classify_chictr",
@@ -61,7 +68,9 @@ _CATALOG: list[dict] = [
         "long_running": True,
         "ready": True,
         "produces": "ChiCTR snapshot",
-        "args": ["-m", "pipelines.classify_chictr_to_snapshot"],
+        "module": "pipelines.classify_chictr_to_snapshot",
+        "script": None,
+        "argv": [],
     },
     {
         "id": "classify_anzctr",
@@ -72,28 +81,38 @@ _CATALOG: list[dict] = [
         "long_running": True,
         "ready": True,
         "produces": "ANZCTR snapshot",
-        "args": ["-m", "pipelines.classify_anzctr_to_snapshot"],
+        "module": "pipelines.classify_anzctr_to_snapshot",
+        "script": None,
+        "argv": [],
     },
 ]
 
 _BY_ID = {e["id"]: e for e in _CATALOG}
 
-# Public (JSON-ready) keys to expose to the API/UI.
 _PUBLIC_KEYS = ("id", "label", "description", "category",
                 "long_running", "ready", "produces")
 
 
 def get_catalog() -> list[dict]:
-    """Return the catalog as JSON-ready dicts (no argv internals)."""
+    """Return the catalog as JSON-ready dicts (no run internals)."""
     return [{k: e[k] for k in _PUBLIC_KEYS} for e in _CATALOG]
 
 
 def get_entry(job_id: str) -> dict | None:
-    """Return the full catalog entry (including args) or None."""
     return _BY_ID.get(job_id)
 
 
 def build_argv(job_id: str) -> list[str]:
-    """Build the full argv for a job. Raises KeyError if job_id is unknown."""
+    """Build the launch argv for a job. Raises KeyError if job_id is unknown.
+
+    In a frozen build, re-launch the exe with ``--run-pipeline <id>`` so
+    app.__main__ can dispatch it via runpy (``-m`` is unavailable when frozen).
+    """
     entry = _BY_ID[job_id]
-    return [sys.executable, *entry["args"]]
+    if is_frozen():
+        return [sys.executable, "--run-pipeline", job_id]
+    if entry.get("module"):
+        return [sys.executable, "-m", entry["module"], *entry.get("argv", [])]
+    if entry.get("script"):
+        return [sys.executable, entry["script"], *entry.get("argv", [])]
+    raise ValueError(f"catalog entry {job_id} has neither module nor script")
