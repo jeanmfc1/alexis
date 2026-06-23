@@ -38,12 +38,20 @@ The left sidebar has four sections:
 - **Classifier** — paste a single trial (title + at least one intervention) and
   get its modality, therapeutic area, and drug-trial flag instantly. Use
   **Load example** to try it with a known trial (e.g. Enhertu → ADC, oncology).
-- **Jobs** — run the pipelines in the background and watch their logs live:
-  - *Generate weekly dashboard* rebuilds the weekly view from your newest data.
-  - *Classify ChiCTR / ANZCTR → snapshot* runs the international classifiers.
-  - *Self-tests* confirm everything is wired correctly on your machine.
-  - Each run streams to the console; click **Cancel** to stop one early. When a
-    dashboard job finishes, the Dashboards list refreshes automatically.
+- **Pipelines** — run every data pipeline from the app, no command line:
+  - **One-click refresh chains** at the top run a whole sequence in order:
+    *Refresh weekly US data* (pull → compute changes → rebuild dashboard),
+    *Refresh China (ChiCTR)*, *Refresh Australia (ANZCTR)*.
+  - Individual steps are grouped by source (US / China / Australia / Dashboards
+    / Maintenance). Pipelines that need a choice show a **Configure & run** form
+    with dropdowns (e.g. which AACT folder to build from, which two snapshots to
+    compare) — the newest is pre-selected, so usually you just hit Run.
+  - Every run streams to the live console; click **Cancel** to stop one (a chain
+    stops after the current step). When a dashboard finishes, the Dashboards
+    list refreshes automatically.
+  - The only things still done outside the app are **downloading** the source
+    data (AACT monthly zip, ANZCTR Excel) and a one-time `playwright install`
+    if you want to scrape fresh ChiCTR data — see below.
 - **Settings** — your data folder, plus where config and logs live.
 
 If the top-left status dot goes red ("offline"), the app's internal service
