@@ -38,14 +38,50 @@ _SERVER_POLL_INTERVAL_S = 0.05
 _SERVER_SHUTDOWN_TIMEOUT_S = 5.0
 
 
+def ensure_streams() -> None:
+    """Guarantee usable sys.stdout/sys.stderr.
+
+    A windowed PyInstaller build sets both to None, which would crash any
+    print()/logging. Reattach the inherited OS handles (fd 1/2) when present
+    -- this is what lets a --run-pipeline child write to the log file its
+    parent handed it -- and fall back to logs/app.log otherwise.
+    """
+    import io
+    import os
+    for name, fd in (("stdout", 1), ("stderr", 2)):
+        if getattr(sys, name, None) is not None:
+            continue
+        stream = None
+        try:
+            stream = os.fdopen(fd, "w", encoding="utf-8", buffering=1)
+        except (OSError, ValueError):
+            try:
+                from core.paths import logs_dir, ensure_dir
+                ensure_dir(logs_dir())
+                stream = open(logs_dir() / "app.log", "a",
+                              encoding="utf-8", buffering=1)
+            except Exception:  # noqa: BLE001
+                stream = io.StringIO()
+        setattr(sys, name, stream)
+
+
 def _configure_logging() -> None:
     """Configure root logging exactly once, on first call to run()."""
     global _LOGGING_CONFIGURED
     if _LOGGING_CONFIGURED:
         return
+    ensure_streams()
+    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stderr)]
+    try:
+        from core.paths import logs_dir, ensure_dir
+        ensure_dir(logs_dir())
+        handlers.append(logging.FileHandler(logs_dir() / "app.log", encoding="utf-8"))
+    except Exception:  # noqa: BLE001 -- logging must never crash startup
+        pass
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        handlers=handlers,
     )
     _LOGGING_CONFIGURED = True
 

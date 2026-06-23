@@ -164,12 +164,17 @@ def logs_dir() -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Bundled, read-only assets (under app_root — ship with the app)
+# MeSH reference data (~120 MB) lives in the user's data folder, not bundled,
+# so the packaged app stays small. In a source checkout data_root()==repo, so
+# this resolves to repo/storage/mesh exactly as before.
 # ---------------------------------------------------------------------------
 def mesh_dir() -> Path:
-    return app_root() / "storage" / "mesh"
+    return storage_dir() / "mesh"
 
 
+# ---------------------------------------------------------------------------
+# Bundled, read-only assets (under app_root — ship inside the exe)
+# ---------------------------------------------------------------------------
 def models_dir() -> Path:
     return app_root() / "classifiers"
 

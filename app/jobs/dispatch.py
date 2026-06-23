@@ -26,6 +26,14 @@ def _exit_code(exc: SystemExit) -> int:
 
 def run_pipeline(job_id: str) -> int:
     """Run a catalog pipeline in this process. Returns its exit code."""
+    # In a windowed frozen build sys.stdout/err are None; reattach the handles
+    # the parent runner gave us (fd 1/2 -> the per-run log file).
+    try:
+        from app.main import ensure_streams
+        ensure_streams()
+    except Exception:  # noqa: BLE001
+        pass
+
     entry = catalog.get_entry(job_id)
     if entry is None:
         print(f"[err] unknown pipeline: {job_id}")

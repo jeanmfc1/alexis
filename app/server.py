@@ -112,24 +112,23 @@ def create_app() -> FastAPI:
     app.include_router(jobs_router.router)
 
     # ----- Static mounts -----
+    # Order matters: the API routers (added above) and /dashboards are matched
+    # first; the root mount is the catch-all and MUST be last.
     web = _web_dir()
-    if web.is_dir():
-        app.mount("/static", StaticFiles(directory=str(web)), name="static")
-    else:
-        _log.warning("[warn] web dir missing: %s", web)
-
     viz = viz_dir()
+
     if viz.is_dir():
         app.mount("/dashboards", StaticFiles(directory=str(viz)), name="dashboards")
     else:
         _log.warning("[warn] viz dir missing: %s", viz)
 
-    # ----- Root: serve the control-panel shell -----
-    @app.get("/")
-    def root() -> FileResponse:
-        index = web / "index.html"
-        if not index.is_file():
-            raise HTTPException(status_code=500, detail="index.html missing")
-        return FileResponse(str(index), media_type="text/html")
+    if web.is_dir():
+        # Keep /static for backward-compat, and serve the shell at root so
+        # index.html's RELATIVE asset paths (app.css/app.js) resolve too -- which
+        # is what lets the file render correctly when opened directly as well.
+        app.mount("/static", StaticFiles(directory=str(web)), name="static")
+        app.mount("/", StaticFiles(directory=str(web), html=True), name="root")
+    else:
+        _log.warning("[warn] web dir missing: %s", web)
 
     return app

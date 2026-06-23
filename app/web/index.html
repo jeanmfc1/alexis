@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ALEXIS - Control Panel</title>
-  <!-- Vendored fonts (served from the /dashboards mount = viz/vendor) so the
-       app shell renders identically offline. -->
+  <!-- Relative paths so the shell renders correctly whether served by the app
+       OR opened directly as a file. Fonts are served from the /dashboards mount
+       when running; they fall back to system fonts if the file is opened bare. -->
   <link rel="stylesheet" href="/dashboards/vendor/fonts.css" />
-  <link rel="stylesheet" href="/static/app.css" />
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
 
@@ -342,6 +343,6 @@
   <!-- Toast container -->
   <div id="toasts" class="toasts" aria-live="polite"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
