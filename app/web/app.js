@@ -169,9 +169,9 @@
   // Tabs
   // -------------------------------------------------------------------
   function setActiveTab(name) {
-    $$(".tab").forEach((btn) => {
+    $$(".nav-item").forEach((btn) => {
       const on = btn.dataset.tab === name;
-      btn.classList.toggle("tab-active", on);
+      btn.classList.toggle("nav-item-active", on);
       btn.setAttribute("aria-selected", on ? "true" : "false");
     });
     $$(".panel").forEach((p) => {
@@ -182,10 +182,17 @@
     if (name === "dashboards") loadDashboards();
     if (name === "settings")   loadSettings();
     if (name === "jobs")     { loadJobCatalog(); loadJobRuns(); }
+    try { history.replaceState(null, "", "#" + name); } catch (_e) { /* ignore */ }
+  }
+
+  const VALID_TABS = ["dashboards", "classifier", "jobs", "settings"];
+  function initialTab() {
+    const h = (location.hash || "").replace(/^#/, "");
+    return VALID_TABS.indexOf(h) !== -1 ? h : "dashboards";
   }
 
   function bindTabs() {
-    $$(".tab").forEach((btn) => {
+    $$(".nav-item").forEach((btn) => {
       btn.addEventListener("click", () => setActiveTab(btn.dataset.tab));
     });
   }
@@ -809,12 +816,12 @@
     bindJobs();
     bindSettings();
 
-    // First paint
+    // First paint: honor the tab in the URL hash (so a reload keeps your place).
+    const startTab = initialTab();
     loadHealth().then(() => {
-      loadDashboards();
-      // Settings is lazy-loaded when its tab is selected, but warm the kv
-      // panel so a quick tab-switch shows real values rather than "--".
-      loadSettings();
+      setActiveTab(startTab);
+      // Warm settings so a quick tab-switch shows real values rather than "--".
+      if (startTab !== "settings") loadSettings();
     });
 
     // Periodic health probe
