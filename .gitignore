@@ -35,6 +35,7 @@ env/
 # Claude Code agent worktrees (never commit these)
 # ---------------------------
 .claude/worktrees/
+.claude/launch.json
 
 # ---------------------------
 # Data files (large, regenerable)
