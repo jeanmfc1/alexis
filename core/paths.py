@@ -49,10 +49,27 @@ def app_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def _config_dir() -> Path:
+    """Folder where ``alexis_config.json`` lives.
+
+    Frozen  -> ``%LOCALAPPDATA%\\ALEXIS`` (user-writable; the .exe may live
+               under ``C:\\Program Files`` which is read-only without admin).
+    Source  -> the repo root.
+    """
+    if is_frozen():
+        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
+        return Path(base) / APP_NAME if base else Path.home() / APP_NAME
+    return app_root()
+
+
 def _config_path() -> Path:
-    """Where ``alexis_config.json`` lives (next to the exe when frozen)."""
-    base = Path(sys.executable).resolve().parent if is_frozen() else app_root()
-    return base / _CONFIG_FILENAME
+    """Path to ``alexis_config.json`` (private; prefer :func:`config_path`)."""
+    return _config_dir() / _CONFIG_FILENAME
+
+
+def config_path() -> Path:
+    """Public accessor for the alexis_config.json path."""
+    return _config_path()
 
 
 def _configured_data_dir() -> Path | None:
@@ -92,9 +109,14 @@ def data_root() -> Path:
 
 
 def set_data_dir(path: str | os.PathLike) -> Path:
-    """Persist the user-selected data directory to ``alexis_config.json``."""
+    """Persist the user-selected data directory to ``alexis_config.json``.
+
+    Ensures the config directory exists before writing (matters on a fresh
+    frozen install where ``%LOCALAPPDATA%\\ALEXIS`` may not yet exist).
+    """
     p = Path(path).expanduser()
     cfg = _config_path()
+    cfg.parent.mkdir(parents=True, exist_ok=True)
     payload: dict = {}
     if cfg.exists():
         try:

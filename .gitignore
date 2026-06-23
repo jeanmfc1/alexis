@@ -12,6 +12,12 @@ __pycache__/
 .pytest_cache/
 
 # ---------------------------
+# Desktop app runtime output
+# ---------------------------
+logs/
+alexis_config.json
+
+# ---------------------------
 # Security zone identifier (Windows)
 # ---------------------------
 *:Zone.Identifier

@@ -57,9 +57,7 @@ MESH_PREFIX_TO_SUBMODALITY: list[tuple[str, str]] = [
 # DISK CACHE — built by warm_cache(), inherited by forked workers
 # ═══════════════════════════════════════════════════════════════════════════
 
-_MESH_DIR = Path("storage/mesh")
-
-# mesh_id → [tree_numbers]  (both D-prefix and C-prefix)
+# mesh_id -> [tree_numbers]  (both D-prefix and C-prefix)
 _cache: dict[str, list[str]] = {}
 _warmed: bool = False
 
@@ -69,17 +67,22 @@ def warm_cache() -> None:
     Build flat {mesh_id: [tree_numbers]} from disk files.
     Call once in parent process before forking workers.
     Exact same logic as the ipython test:
-      1. D-prefix: descriptors → tree_numbers directly
-      2. C-prefix: supplementary → mapped_to (strip *) → D tree_numbers
+      1. D-prefix: descriptors -> tree_numbers directly
+      2. C-prefix: supplementary -> mapped_to (strip *) -> D tree_numbers
     """
     global _cache, _warmed
     if _warmed:
         return
     _warmed = True
 
-    desc_path = _MESH_DIR / "mesh_descriptors.json"
+    # Resolve at call time via core.paths so it works regardless of CWD
+    # and inside a frozen (PyInstaller) bundle.
+    from core.paths import mesh_dir
+    mdir = mesh_dir()
+
+    desc_path = mdir / "mesh_descriptors.json"
     if not desc_path.exists():
-        print(f"    ⚠ {desc_path} not found — using API only")
+        print(f"    [warn] {desc_path} not found - using API only")
         return
 
     desc = json.loads(desc_path.read_text(encoding="utf-8"))
@@ -88,7 +91,7 @@ def warm_cache() -> None:
         if tn:
             _cache[did] = tn
 
-    supp_path = _MESH_DIR / "mesh_supplementary.json"
+    supp_path = mdir / "mesh_supplementary.json"
     if supp_path.exists():
         supp = json.loads(supp_path.read_text(encoding="utf-8"))
         for cid, entry in supp.items():
@@ -103,7 +106,7 @@ def warm_cache() -> None:
         del supp
 
     del desc
-    print(f"    MeSH cache: {len(_cache):,} entries (disk)")
+    print(f"    [info] MeSH cache: {len(_cache):,} entries (disk)")
 
 
 def mesh_tree_to_submodality(mesh_id: str | None) -> ModalityResult:
