@@ -21,8 +21,14 @@ __pycache__/
 # Virtual environments
 # ---------------------------
 .venv/
+.venv-win/
 venv/
 env/
+
+# ---------------------------
+# Claude Code agent worktrees (never commit these)
+# ---------------------------
+.claude/worktrees/
 
 # ---------------------------
 # Data files (large, regenerable)
