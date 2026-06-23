@@ -66,10 +66,11 @@ from analytics.summary_v2 import (
     non_disease_study_category_summary,
 )
 
-# Configuration
-DOWNLOADS_DIR = Path("/mnt/c/Users/jeamm/Downloads")
-EXTRACT_DIR = Path.home() / "projects" / "ALEXIS" / "storage" / "snapshots" / "clinical_trials_v2" / "aact"
-OUTPUT_BASE_DIR = Path("storage/snapshots/clinical_trials_v2")
+# Configuration  (portable via core.paths — were hardcoded /mnt/c, ~/projects, CWD-relative)
+from core.paths import downloads_dir, snapshots_dir
+DOWNLOADS_DIR = downloads_dir()                 # drop folder watched for AACT export zips
+EXTRACT_DIR = snapshots_dir() / "aact"
+OUTPUT_BASE_DIR = snapshots_dir()
 
 # Required tables (only extract these)
 REQUIRED_TABLES = {

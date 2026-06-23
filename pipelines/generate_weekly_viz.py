@@ -39,17 +39,23 @@ from pathlib import Path
 
 # ── Path setup ─────────────────────────────────────────────────────────────
 # Add ALEXIS project root to sys.path so analytics.* imports resolve.
-ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+# Data locations come from core.paths so the generator honours the user's
+# configured data folder (data_root) and works in a frozen build. Viz assets
+# (template + jsx components) are bundled, read-only (app_root).
+from core.paths import snapshots_dir, changelogs_dir, viz_dir as _viz_dir
 
 SNAPSHOT_DIRS = [
-    ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "reclassified",
-    ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "last_update",
+    snapshots_dir() / "reclassified",
+    snapshots_dir() / "last_update",
 ]
-CHANGELOG_DIR  = ROOT / "storage" / "changelogs"
-MASTER_DB_DIR  = ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "active_universe"
+CHANGELOG_DIR  = changelogs_dir()
+MASTER_DB_DIR  = snapshots_dir() / "active_universe"
 
-VIZ_DIR   = ROOT / "viz"
+VIZ_DIR   = _viz_dir()
 TEMPLATE  = VIZ_DIR / "alexis_weekly_dashboard.html"
 OUTPUT    = VIZ_DIR / "alexis_weekly_dashboard_live.html"
 
@@ -58,10 +64,17 @@ COMPONENT_PLACEHOLDER = "/* __COMPONENTS_PLACEHOLDER__ */"
 
 # JSX component files injected into the template in this order.
 # Add new question files here as they are implemented.
+# Must include every weekly component the template's section renderers
+# reference, or the whole React tree throws (e.g. WeeklyBD renders both
+# WQ1 and WQ2 -> bd_wq2 must be present). Mirrors the wq-subset that
+# generate_dashboard.py injects for the unified build.
 COMPONENT_FILES = [
     VIZ_DIR / "bd_wq1.jsx",
+    VIZ_DIR / "bd_wq2.jsx",
     VIZ_DIR / "mk_wq1.jsx",
+    VIZ_DIR / "mk_wq2.jsx",
     VIZ_DIR / "sci_wq1.jsx",
+    VIZ_DIR / "sci_wq2.jsx",
     VIZ_DIR / "ops_wq1.jsx",
 ]
 
@@ -242,7 +255,10 @@ def pick_snapshot() -> tuple[Path, bool]:
     labels = []
     for f in all_files:
         tag   = "RECLASSIFIED" if _is_reclassified(f) else "RAW"
-        short = str(f.relative_to(ROOT))
+        try:
+            short = str(f.relative_to(ROOT))
+        except ValueError:
+            short = str(f)
         labels.append(f"{f.name}  [{tag}]  ({short})")
 
     idx    = _prompt_choice("Pick a snapshot", labels, default=0)
@@ -696,9 +712,253 @@ def build_weekly_payload(snap_path, is_rec, meta, trials, raw,
         "wq10": ops_wq1_data, "wq11": ops_wq2_data,  "wq12": ops_wq3_data,
     }
 
+# ── Non-interactive auto-selection (for the desktop app / background jobs) ──
+# Mirrors the pick_* helpers but never calls input(); always takes the newest
+# matching file. ASCII-only prints so it is safe under a Windows subprocess
+# pipe (no console). Used by `--auto` and by app/jobs.
+
+def _latest_snapshot() -> tuple[Path | None, bool]:
+    all_files: list[Path] = []
+    for d in SNAPSHOT_DIRS:
+        if d.exists():
+            all_files += list(d.glob("*.json"))
+    if not all_files:
+        return None, False
+    all_files.sort(key=_sort_key, reverse=True)
+    chosen = all_files[0]
+    return chosen, _is_reclassified(chosen)
+
+
+def _auto_match_changelog(win_start: str, win_end: str) -> dict | None:
+    if not CHANGELOG_DIR.exists():
+        return None
+    for fpath in sorted(CHANGELOG_DIR.glob("changelog_*.json"), key=_sort_key, reverse=True):
+        m = re.search(r'changelog_(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})', fpath.name)
+        if m and (m.group(1) == win_start or m.group(2) == win_end):
+            try:
+                return json.load(fpath.open(encoding="utf-8", errors="replace"))
+            except Exception:
+                return None
+    return None
+
+
+def _auto_match_enriched(win_start: str, win_end: str) -> list:
+    if not CHANGELOG_DIR.exists():
+        return []
+    for fpath in sorted(CHANGELOG_DIR.glob("enriched_*.json"), key=_sort_key, reverse=True):
+        f_start, f_end = _extract_window_dates(fpath.name)
+        if f_start == win_start or f_end == win_end:
+            try:
+                data = json.load(fpath.open(encoding="utf-8", errors="replace"))
+                return data.get("trials", [])
+            except Exception:
+                return []
+    return []
+
+
+def _latest_master_db() -> tuple[dict, str]:
+    if not MASTER_DB_DIR.exists():
+        return {}, ""
+    candidates = sorted(MASTER_DB_DIR.glob("master_DB*.json"), key=_sort_key, reverse=True)
+    if not candidates:
+        return {}, ""
+    chosen = candidates[0]
+    try:
+        data = json.load(chosen.open(encoding="utf-8", errors="replace"))
+        return data.get("summary", {}), chosen.name
+    except Exception:
+        return {}, chosen.name
+
+
+def _auto_prior_snapshots(current_path: Path, n: int = 3) -> list:
+    all_files: list[Path] = []
+    for d in SNAPSHOT_DIRS:
+        if d.exists():
+            all_files += list(d.glob("*.json"))
+    all_files = [f for f in all_files if f.resolve() != current_path.resolve()]
+    all_files.sort(key=_sort_key, reverse=True)
+    chosen_files = all_files[:max(n, 0)]
+
+    results = []
+    for f in reversed(chosen_files):  # oldest first
+        ws, we = _extract_window_dates(f.name)
+        window_label = f"{ws} -> {we}" if ws else f.stem
+        enriched = _load_enriched_silent(ws, we) if (ws or we) else None
+
+        if enriched:
+            entry = enriched
+            entry["window_label"] = window_label
+        else:
+            try:
+                from collections import defaultdict as _dd
+                raw     = json.load(f.open(encoding="utf-8", errors="replace"))
+                summary = raw.get("summary", {})
+                ta_mod  = summary.get("ta_modality_counts_true_drugs", {})
+                dtc     = summary.get("drug_trial_counts", {})
+                total   = dtc.get("drug_trials", 0)
+                _mt: dict = _dd(int)
+                for _mods in ta_mod.values():
+                    for _mod, _n in _mods.items():
+                        _mt[_mod] += _n
+                entry = {
+                    "ta_mod":         ta_mod,
+                    "mod_totals":     dict(_mt),
+                    "drug_new_total": total,
+                    "phase_counts":   {},
+                    "source":         "snapshot_summary",
+                    "filename":       f.name,
+                    "window_label":   window_label,
+                }
+            except Exception:
+                continue
+
+        entry["ta_totals"] = {
+            ta: sum(mods.values())
+            for ta, mods in (entry.get("ta_mod") or {}).items()
+        }
+        if ws or we:
+            entry.update(_load_changelog_counts_silent(ws, we))
+        results.append(entry)
+
+    return results
+
+
+def build_viz_data_auto() -> tuple[dict, Path]:
+    """Non-interactive payload build: auto-select the newest inputs.
+
+    Returns ``(payload, snapshot_path)``. Raises ``FileNotFoundError`` if no
+    snapshot is available.
+    """
+    snap_path, is_rec = _latest_snapshot()
+    if snap_path is None:
+        raise FileNotFoundError(
+            "No snapshot files found under: "
+            + ", ".join(str(d) for d in SNAPSHOT_DIRS)
+        )
+
+    print(f"  [info] snapshot   : {snap_path.name}")
+    with snap_path.open("r", encoding="utf-8", errors="replace") as f:
+        raw = json.load(f)
+    meta   = raw.get("metadata", {})
+    trials = raw.get("trials", [])
+    win_start = meta.get("window_start", "")
+    win_end   = meta.get("window_end", meta.get("as_of", ""))
+
+    cl_raw  = _auto_match_changelog(win_start, win_end)
+    cl_data = extract_changelog(cl_raw)
+    enriched_trials = _auto_match_enriched(win_start, win_end)
+    master_summary, master_db_fn = _latest_master_db()
+    prior_weeks = _auto_prior_snapshots(snap_path, n=3)
+
+    print(f"  [info] changelog  : {'matched' if cl_raw else 'none'}")
+    print(f"  [info] enriched   : {len(enriched_trials):,} trials")
+    print(f"  [info] master DB  : {master_db_fn or 'none'}")
+    print(f"  [info] prior weeks: {len(prior_weeks)}")
+
+    payload = build_weekly_payload(
+        snap_path, is_rec, meta, trials, raw,
+        cl_data, enriched_trials, master_summary, master_db_fn,
+        prior_weeks,
+    )
+    return payload, snap_path
+
+
+def assemble_html(payload: dict,
+                  output_path: Path | None = None,
+                  component_files: list | None = None,
+                  template_path: Path | None = None) -> Path:
+    """Inject ``payload`` + JSX components into the template; write live HTML.
+
+    Returns the output path. Shared by interactive ``main()`` and ``--auto``.
+    """
+    template_path   = Path(template_path) if template_path else TEMPLATE
+    component_files = component_files if component_files is not None else COMPONENT_FILES
+    output_path     = Path(output_path) if output_path else OUTPUT
+
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template not found: {template_path}")
+
+    missing = [f for f in component_files if not Path(f).exists()]
+    for f in missing:
+        print(f"  [warn] missing JSX component: {f}")
+
+    components_js = "\n\n".join(
+        Path(f).read_text(encoding="utf-8")
+        for f in component_files
+        if Path(f).exists()
+    )
+    template  = template_path.read_text(encoding="utf-8")
+    data_json = json.dumps(payload, separators=(",", ":"), default=str)
+
+    html = template.replace(COMPONENT_PLACEHOLDER, components_js, 1)
+    html = html.replace(DATA_PLACEHOLDER, data_json, 1)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html, encoding="utf-8")
+    return output_path
+
+
+def run_auto(no_open: bool = True) -> int:
+    """Entry point for `--auto` and background jobs. Returns a process code."""
+    print("[info] ALEXIS weekly viz - auto mode")
+    if not TEMPLATE.exists():
+        print(f"[err] Template not found at: {TEMPLATE}")
+        return 1
+    try:
+        payload, _snap = build_viz_data_auto()
+    except FileNotFoundError as e:
+        print(f"[err] {e}")
+        return 1
+    out = assemble_html(payload)
+    print(f"[ok] wrote {out}")
+    if not no_open:
+        _try_open(out)
+    return 0
+
+
+def _try_open(output_path: Path) -> None:
+    """Best-effort open in the default browser (cross-platform)."""
+    try:
+        import platform
+        system = platform.system()
+        if system == "Linux" and "microsoft" in platform.uname().release.lower():
+            win_path = subprocess.check_output(
+                ["wslpath", "-w", str(output_path)], text=True
+            ).strip()
+            subprocess.Popen(["cmd.exe", "/c", "start", "", win_path],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif system == "Darwin":
+            subprocess.Popen(["open", str(output_path)],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif system == "Windows":
+            import os
+            os.startfile(str(output_path))  # type: ignore[attr-defined]
+        elif system == "Linux":
+            subprocess.Popen(["xdg-open", str(output_path)],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        print(f"  [info] open manually: {output_path}")
+
+
 # ── Main ────────────────────────────────────────────────────────────────────
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(
+        description="ALEXIS weekly viz generator (interactive by default)."
+    )
+    ap.add_argument("--auto", action="store_true",
+                    help="Non-interactive: auto-pick the newest inputs.")
+    ap.add_argument("--no-open", action="store_true",
+                    help="Do not auto-open the generated HTML in a browser.")
+    args = ap.parse_args()
+
+    if args.auto:
+        raise SystemExit(run_auto(no_open=args.no_open))
+
+    _interactive_main()
+
+
+def _interactive_main():
     print("═" * 60)
     print("  ALEXIS Weekly Viz Generator — Interactive Mode")
     print("═" * 60)
@@ -742,70 +1002,14 @@ def main():
         prior_weeks,
     )
 
-    # ── 3. Load and concatenate JSX component files ────────────────────────
-    missing = [f for f in COMPONENT_FILES if not f.exists()]
-    if missing:
-        print("\n  WARNING: missing JSX component files:")
-        for f in missing:
-            print(f"    {f}")
+    # ── 3-4. Assemble + write live HTML (shared with --auto) ───────────────
+    out = assemble_html(payload)
 
-    components_js = "\n\n".join(
-        f.read_text(encoding="utf-8")
-        for f in COMPONENT_FILES
-        if f.exists()
-    )
+    print("\n" + "=" * 60)
+    print(f"  Output : {out}")
+    print("=" * 60)
 
-    # ── 4. Inject into template and write live HTML ────────────────────────
-    template  = TEMPLATE.read_text(encoding="utf-8")
-    data_json = json.dumps(payload, separators=(",", ":"), default=str)
-
-    html = template.replace(COMPONENT_PLACEHOLDER, components_js, 1)
-    html = html.replace(DATA_PLACEHOLDER, data_json, 1)
-    OUTPUT.write_text(html, encoding="utf-8")
-
-    print("\n" + "═" * 60)
-    print(f"  Output : {OUTPUT}")
-    print("═" * 60)
-
-    # ── Auto-open ──────────────────────────────────────────────────────────
-    opened = False
-    try:
-        import platform
-        system = platform.system()
-
-        if system == "Linux" and "microsoft" in platform.uname().release.lower():
-            win_path = subprocess.check_output(
-                ["wslpath", "-w", str(OUTPUT)], text=True
-            ).strip()
-            subprocess.Popen(
-                ["cmd.exe", "/c", "start", "", win_path],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            print("  Browser: opening via cmd.exe (WSL)")
-            opened = True
-
-        elif system == "Darwin":
-            subprocess.Popen(
-                ["open", str(OUTPUT)],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            print("  Browser: opening via open (Mac)")
-            opened = True
-
-        elif system == "Linux":
-            subprocess.Popen(
-                ["xdg-open", str(OUTPUT)],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-            print("  Browser: opening via xdg-open (Linux)")
-            opened = True
-
-    except Exception:
-        pass
-
-    if not opened:
-        print(f"  Browser: could not auto-open. Open manually:")
-        print(f"           {OUTPUT}")
+    _try_open(out)
 
 
 if __name__ == "__main__":

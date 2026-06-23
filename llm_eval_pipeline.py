@@ -3,7 +3,8 @@ import json, sys, time, gc
 from pathlib import Path
 import pandas as pd
 
-BASE = Path(r"//wsl.localhost/Ubuntu/home/jeanmfc/projects/ALEXIS")
+from core.paths import data_root
+BASE = data_root()  # was a hardcoded //wsl.localhost/... UNC path
 SNAPSHOT = BASE / "storage" / "snapshots" / "clinical_trials_v2" / "active_universe"
 RAW = SNAPSHOT / "raw 01-01-26"
 MASTER_DB = SNAPSHOT / "master_DB_2025_Q4.json"

@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ALEXIS — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Vendored locally so the dashboard renders fully offline (see viz/vendor/). -->
+  <link href="vendor/fonts.css" rel="stylesheet" />
+  <script src="vendor/react.production.min.js"></script>
+  <script src="vendor/react-dom.production.min.js"></script>
+  <script src="vendor/prop-types.min.js"></script>
+  <script src="vendor/recharts.min.js"></script>
+  <script src="vendor/babel.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -50,7 +50,10 @@
     const ALEXIS_DATA = /* __ALEXIS_DATA_PLACEHOLDER__ */;
   </script>
 
-  <script type="text/babel">
+  <!-- Custom type so Babel does NOT auto-transform this (its default uses the
+       automatic JSX runtime, which emits an unresolvable import). The bootstrap
+       at the end of <body> compiles it with runtime:'classic'. -->
+  <script type="text/alexis-jsx" id="alexis-app-src">
     const { useState, useMemo } = React;
 
     // ─────────────────────────────────────────────────────────────────────
@@ -323,6 +326,56 @@
       </div>);
     }
 
+    // ---------------------------------------------------------------------
+    // ANZCTR team view containers (fourth top-level tab)
+    // ---------------------------------------------------------------------
+
+    function AnzctrNote() {
+      return (<div style={{ marginBottom:12, padding:"8px 12px", borderRadius:6, background:"var(--surf2)", border:"1px solid var(--border)", fontFamily:"var(--fm)", fontSize:10, color:"var(--muted)" }}>
+        <span style={{ color:"#16A34A", marginRight:6 }}>i</span>
+        ANZCTR labels from intl_drug_classifier_v2 + intl_ta_classifier.pkl. No MeSH. Monthly cadence — new = since last snapshot diff.
+      </div>);
+    }
+    function AnzctrBD({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <AnzctrNote />
+        <Card id="bd_aw1" color={color} defaultOpen
+          question="Which foreign-sponsored Phase 0/I drug trials are actively recruiting in Australia?"
+          vizType="Foreign FIH Table">
+          <AW1ForeignSponsorFIH data={data?.aw1} color={color} />
+        </Card>
+      </div>);
+    }
+    function AnzctrMarketing({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <AnzctrNote />
+        <Card id="mk_aw1" color={color} defaultOpen
+          question="Which therapeutic areas are accelerating in Australia this month?"
+          vizType="TA Momentum (Monthly)">
+          <AW2AnzctrTAMomentum data={data?.aw2} color={color} />
+        </Card>
+      </div>);
+    }
+    function AnzctrScientific({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <AnzctrNote />
+        <Card id="sci_aw1" color={color} defaultOpen
+          question="Where is Australian drug-trial activity concentrating this period?"
+          vizType="TA x Modality Matrix">
+          <AW3AnzctrTAModalityMatrix data={data?.aw3} color={color} />
+        </Card>
+      </div>);
+    }
+    function AnzctrOperations({ data, color }) {
+      return (<div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <AnzctrNote />
+        <Card id="ops_aw1" color={color} defaultOpen
+          question="Is the ANZCTR pipeline healthy? Are classifications trustworthy?"
+          vizType="Pipeline Health">
+          <AW4AnzctrPipelineHealth data={data?.aw4} color={color} />
+        </Card>
+      </div>);
+    }
 
     // ─────────────────────────────────────────────────────────────────────
     // Quarterly view — all placeholders until quarterly functions are built
@@ -478,6 +531,9 @@
         { key:"chictr",    icon:"🕊", tag:"CHINA",     tagColor:"#E11D48",
           label:"ChiCTR",
           purpose:"Chinese trial registry this week (ML-classified)" },
+        { key:"anzctr",    icon:"🦘", tag:"AUSTRALIA", tagColor:"#16A34A",
+          label:"ANZCTR",
+          purpose:"Australian & NZ trial registry — foreign-sponsored FIH focus (ML-classified)" },
       ];
       return (
         <div style={{ display:"flex", gap:10, marginBottom:22 }}>
@@ -541,9 +597,10 @@
             <span style={{ color:"var(--dim)" }}>SOURCE </span>
             {view==="weekly"  ? "Pulse snapshot + enriched changelog"
              : view==="chictr" ? "ChiCTR snapshot + weekly diff (ML-classified)"
+             : view==="anzctr" ? "ANZCTR snapshot + monthly diff (ML-classified)"
              : "Master DB (active universe)"}
           </span>
-          {snapshotFile && view!=="chictr" && (
+          {snapshotFile && view!=="chictr" && view!=="anzctr" && (
             <span>
               <span style={{ color:"var(--dim)" }}>FILE </span>
               <code style={{ color:"var(--cyan)" }}>{snapshotFile}</code>
@@ -553,6 +610,12 @@
             <span>
               <span style={{ color:"var(--dim)" }}>FILE </span>
               <code style={{ color:"#E11D48" }}>{ALEXIS_DATA.chictr_metadata.snapshot_file}</code>
+            </span>
+          )}
+          {view==="anzctr" && ALEXIS_DATA?.anzctr_metadata?.snapshot_file && (
+            <span>
+              <span style={{ color:"var(--dim)" }}>FILE </span>
+              <code style={{ color:"#16A34A" }}>{ALEXIS_DATA.anzctr_metadata.snapshot_file}</code>
             </span>
           )}
           {view==="weekly" && ec.available && (
@@ -614,6 +677,12 @@
           if (team === "Scientific") return <ChictrScientific data={ALEXIS_DATA} color={color} />;
           if (team === "Operations") return <ChictrOperations data={ALEXIS_DATA} color={color} />;
         }
+        if (view === "anzctr") {
+          if (team === "BD")         return <AnzctrBD data={ALEXIS_DATA} color={color} />;
+          if (team === "Marketing")  return <AnzctrMarketing data={ALEXIS_DATA} color={color} />;
+          if (team === "Scientific") return <AnzctrScientific data={ALEXIS_DATA} color={color} />;
+          if (team === "Operations") return <AnzctrOperations data={ALEXIS_DATA} color={color} />;
+        }
         if (team === "BD")         return <WeeklyBD data={ALEXIS_DATA} color={color} />;
         if (team === "Marketing")  return <WeeklyMarketing data={ALEXIS_DATA} color={color} />;
         if (team === "Scientific") return <WeeklyScientific data={ALEXIS_DATA} color={color} />;
@@ -670,6 +739,31 @@
     }
 
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+
+  <!-- Bootstrap: compile the app with the CLASSIC JSX runtime (React.createElement,
+       no module imports) and execute it. Runs after babel.min.js (loaded in head). -->
+  <script>
+    (function () {
+      var src = document.getElementById("alexis-app-src");
+      if (!src) return;
+      try {
+        var out = Babel.transform(src.textContent, {
+          presets: [["react", { runtime: "classic" }]]
+        }).code;
+        var s = document.createElement("script");
+        s.textContent = out;
+        document.body.appendChild(s);
+      } catch (e) {
+        var root = document.getElementById("root");
+        if (root) {
+          root.innerHTML =
+            '<div style="padding:32px;font-family:monospace;color:#EF4444">' +
+            'Dashboard failed to compile: ' + String(e) + '</div>';
+        }
+        if (window.console) console.error(e);
+      }
+    })();
   </script>
 </body>
 </html>

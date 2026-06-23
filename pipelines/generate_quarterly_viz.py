@@ -25,12 +25,15 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Path setup ─────────────────────────────────────────────────────────────
-ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-MASTER_DB_DIR = ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "active_universe"
+from core.paths import snapshots_dir, viz_dir as _viz_dir
 
-VIZ_DIR   = ROOT / "viz"
+MASTER_DB_DIR = snapshots_dir() / "active_universe"
+
+VIZ_DIR   = _viz_dir()
 TEMPLATE  = VIZ_DIR / "alexis_weekly_dashboard.html"
 OUTPUT    = VIZ_DIR / "alexis_quarterly_dashboard_live.html"
 
@@ -38,11 +41,15 @@ DATA_PLACEHOLDER      = "/* __ALEXIS_DATA_PLACEHOLDER__ */"
 COMPONENT_PLACEHOLDER = "/* __COMPONENTS_PLACEHOLDER__ */"
 
 # JSX component files — include ALL (weekly + quarterly) so both tabs work.
+# The weekly set must be complete or WeeklyBD throws (it renders WQ2 too).
 COMPONENT_FILES = [
     # Weekly components (so the weekly tab renders if user switches to it)
     VIZ_DIR / "bd_wq1.jsx",
+    VIZ_DIR / "bd_wq2.jsx",
     VIZ_DIR / "mk_wq1.jsx",
+    VIZ_DIR / "mk_wq2.jsx",
     VIZ_DIR / "sci_wq1.jsx",
+    VIZ_DIR / "sci_wq2.jsx",
     VIZ_DIR / "ops_wq1.jsx",
     # Quarterly components
     VIZ_DIR / "bd_sq2.jsx",
@@ -50,6 +57,14 @@ COMPONENT_FILES = [
     VIZ_DIR / "ops_sq1_sq.jsx",
     VIZ_DIR / "sci_sq3.jsx",
 ]
+
+
+def _newest_master() -> tuple[Path, dict]:
+    """Newest master_DB_*.json + light metadata (no full 1 GB load)."""
+    cands = sorted(MASTER_DB_DIR.glob("master_DB*.json"), key=_sort_key, reverse=True)
+    if not cands:
+        raise FileNotFoundError(f"No master_DB*.json in {MASTER_DB_DIR}")
+    return cands[0], {"filename": cands[0].name}
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────

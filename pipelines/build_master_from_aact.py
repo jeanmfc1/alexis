@@ -923,23 +923,46 @@ def _apply_source_fields(trial) -> None:
 
 
 def main():
+    import argparse
     import gc
 
-    # ═══════════════════════════════════════════════════════════════
-    # FIXED SETTINGS
-    # ═══════════════════════════════════════════════════════════════
+    ap = argparse.ArgumentParser(description="Build a master DB from an AACT export.")
+    ap.add_argument("--aact-dir", default=None,
+                    help="Path to the extracted AACT folder (skips the prompt).")
+    ap.add_argument("--out", default=None,
+                    help="Output filename or path (skips the prompt). A bare name "
+                         "is written into the active_universe folder.")
+    ap.add_argument("--fresh", action="store_true",
+                    help="Ignore checkpoints and start over.")
+    ap.add_argument("--batch-size", type=int, default=1000)
+    ap.add_argument("--workers", type=int, default=None)
+    args = ap.parse_args()
 
-    UNIVERSE_DIR  = Path("storage/snapshots/clinical_trials_v2/active_universe")
-    FRESH_START   = False    # True = ignore checkpoints, start over
-    BATCH_SIZE    = 1000     # process this many trials at a time
-    NUM_WORKERS   = None     # None = auto-detect (cpu_count - 1)
+    from core.paths import snapshots_dir
+    UNIVERSE_DIR  = snapshots_dir() / "active_universe"
+    FRESH_START   = args.fresh
+    BATCH_SIZE    = args.batch_size
+    NUM_WORKERS   = args.workers
 
-    # ═══════════════════════════════════════════════════════════════
-    # INTERACTIVE SELECTION
-    # ═══════════════════════════════════════════════════════════════
+    # ── Source + output (flags skip the prompts; absent flags fall back) ──
+    if args.aact_dir:
+        aact_dir = Path(args.aact_dir)
+        if not aact_dir.is_dir():
+            print(f"[err] AACT folder is not a directory: {aact_dir}")
+            sys.exit(1)
+    else:
+        aact_dir = _prompt_aact_dir(UNIVERSE_DIR)
 
-    aact_dir    = _prompt_aact_dir(UNIVERSE_DIR)
-    output_path = _prompt_output_path(UNIVERSE_DIR)
+    if args.out:
+        out = Path(args.out)
+        if out.parent == Path("."):
+            out = UNIVERSE_DIR / out.name
+        if out.suffix != ".json":
+            out = out.with_suffix(".json")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        output_path = out
+    else:
+        output_path = _prompt_output_path(UNIVERSE_DIR)
 
     W = 60
 

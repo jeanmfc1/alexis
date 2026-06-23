@@ -48,7 +48,10 @@ from analytics.summary_v2 import (
 from storage.snapshots_io_v2 import SnapshotMetadataV2, save_trial_snapshot_v2
 from config.settings import CLINICALTRIALS_PAGE_SIZE
 
-RAW_STORAGE_DIR = Path("/home/jeanmfc/projects/ALEXIS/storage/raw/ctgov/weekly")
+from core.paths import raw_weekly_dir
+# Portable raw-pulls dir (was a hardcoded /home/jeanmfc/... absolute path).
+# Computed at import — side-effect free (no mkdir / existence check).
+RAW_STORAGE_DIR = raw_weekly_dir()
 
 
 def _versioned_save(base_dir: str, basis_folder: str, metadata, trials, summary) -> Path:

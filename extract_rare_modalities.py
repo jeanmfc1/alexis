@@ -68,8 +68,9 @@ print(f'\n\nFinal unique: {len(seen):,}')
 df = pd.DataFrame(seen.values())
 print(df['modality'].value_counts().to_string())
 
-# Save to Windows — dedup and merge will happen on Windows
-out = Path('/mnt/c/ALEXIS_eval/rare_modalities_raw.parquet')
+# Save under the configured data dir (was a hardcoded /mnt/c/ALEXIS_eval path)
+from core.paths import data_root, ensure_dir
+out = ensure_dir(data_root() / 'eval') / 'rare_modalities_raw.parquet'
 df.to_parquet(out, index=False)
 print(f'\nSaved {len(df):,} records → {out}')
 print('Now run the merge on Windows PowerShell.')

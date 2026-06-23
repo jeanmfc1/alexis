@@ -52,7 +52,7 @@ class MeshLookup:
         supp_file = self.mesh_dir / "mesh_supplementary.json"
         
         if not term_file.exists():
-            print(f"⚠ MeSH lookup not initialized. Run: python build_mesh_lookup.py")
+            print(f"[!] MeSH lookup not initialized. Run: python build_mesh_lookup.py")
             print(f"  Expected file: {term_file}")
             return
         
@@ -68,7 +68,7 @@ class MeshLookup:
         with open(supp_file, 'r') as f:
             self.supplementary = json.load(f)
         
-        print(f"✓ Loaded MeSH lookup: {len(self.term_to_id):,} terms")
+        print(f"[ok] Loaded MeSH lookup: {len(self.term_to_id):,} terms")
     
     def is_loaded(self) -> bool:
         """Check if MeSH lookup tables are loaded."""
