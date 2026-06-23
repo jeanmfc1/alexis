@@ -609,42 +609,136 @@
     return d.toLocaleTimeString();
   }
 
+  // Category display order + friendly section titles.
+  const JOB_SECTIONS = [
+    ["chain",       "One-click refresh"],
+    ["us",          "US trials (ClinicalTrials.gov)"],
+    ["chictr",      "China (ChiCTR)"],
+    ["anzctr",      "Australia (ANZCTR)"],
+    ["dashboard",   "Dashboards"],
+    ["maintenance", "Maintenance"],
+    ["diagnostic",  "Diagnostics"],
+  ];
+
   async function loadJobCatalog() {
     const host = $("#jobs-catalog");
     host.innerHTML = "";
-    host.appendChild(el("div", { class: "dash-loading" }, "Loading jobs..."));
+    host.appendChild(el("div", { class: "dash-loading" }, "Loading pipelines..."));
     try {
       const data = await api("/api/jobs/catalog");
       host.innerHTML = "";
       const jobs = (data && data.jobs) || [];
       if (jobs.length === 0) {
-        host.appendChild(el("div", { class: "jobs-runs-empty" }, "No jobs registered."));
+        host.appendChild(el("div", { class: "jobs-runs-empty" }, "No pipelines registered."));
         return;
       }
-      for (const j of jobs) host.appendChild(buildJobCard(j));
+      const byCat = {};
+      for (const j of jobs) (byCat[j.category] = byCat[j.category] || []).push(j);
+      for (const [cat, title] of JOB_SECTIONS) {
+        const items = byCat[cat];
+        if (!items || !items.length) continue;
+        host.appendChild(el("div", { class: "jobs-section-title" }, title));
+        const grid = el("div", { class: cat === "chain" ? "jobs-chain-grid" : "jobs-catalog-grid" });
+        for (const j of items) grid.appendChild(buildJobCard(j));
+        host.appendChild(grid);
+      }
     } catch (e) {
       host.innerHTML = "";
-      host.appendChild(el("div", { class: "jobs-runs-empty" }, "Failed to load jobs: " + (e.message || e)));
+      host.appendChild(el("div", { class: "jobs-runs-empty" }, "Failed to load pipelines: " + (e.message || e)));
     }
   }
 
   function buildJobCard(j) {
-    const catCls = "job-cat job-cat-" + (j.category || "diagnostic");
-    return el("div", { class: "job-card" },
-      el("div", { class: "job-card-head" },
-        el("div", { class: "job-card-title" }, j.label || j.id),
-        j.long_running ? el("span", { class: "job-longhint" }, "long-running") : null
-      ),
-      el("div", { class: "job-card-desc" }, j.description || ""),
-      el("div", { class: "job-card-foot" },
-        el("span", { class: catCls }, String(j.category || "").toUpperCase()),
-        el("button", {
-          class: "btn btn-primary btn-sm",
-          disabled: !j.ready,
-          onclick: () => startJob(j.id),
-        }, j.ready ? "Run" : "Not ready")
-      )
-    );
+    const isChain = !!j.is_chain;
+    const hasParams = Array.isArray(j.params) && j.params.length > 0;
+    const card = el("div", { class: "job-card" + (isChain ? " job-card-chain" : "") });
+
+    card.appendChild(el("div", { class: "job-card-head" },
+      el("div", { class: "job-card-title" }, j.label || j.id),
+      j.long_running ? el("span", { class: "job-longhint" }, "long-running") : null
+    ));
+    card.appendChild(el("div", { class: "job-card-desc" }, j.description || ""));
+
+    const runBtn = el("button", {
+      class: isChain ? "btn btn-primary" : "btn btn-primary btn-sm",
+      disabled: !j.ready,
+      onclick: () => hasParams ? toggleParamForm(card, j) : startJob(j.id),
+    }, j.ready ? (isChain ? "Run" : (hasParams ? "Configure & run" : "Run")) : "Not ready");
+
+    card.appendChild(el("div", { class: "job-card-foot" },
+      isChain
+        ? el("span", { class: "job-cat job-cat-chain" }, "CHAIN")
+        : el("span", { class: "job-cat job-cat-" + (j.category || "diagnostic") },
+             String(j.category || "").toUpperCase()),
+      runBtn
+    ));
+    return card;
+  }
+
+  // -- Parameter form (inline, expands under a job card) --------------------
+  async function toggleParamForm(card, job) {
+    const existing = card.querySelector(".param-form");
+    if (existing) { existing.remove(); return; }
+
+    const form = el("div", { class: "param-form" });
+    form.appendChild(el("div", { class: "param-form-loading" }, "Loading options..."));
+    card.appendChild(form);
+
+    // Build inputs (fetch options for any 'select' provider).
+    const inputs = {};
+    const rows = [];
+    for (const p of job.params) {
+      let control;
+      if (p.type === "select") {
+        let opts = [];
+        try { opts = (await api("/api/jobs/options/" + encodeURIComponent(p.provider))).options || []; }
+        catch (_e) { opts = []; }
+        const sel = el("select", { class: "select" });
+        if (!p.required) sel.appendChild(el("option", { value: "" }, "-- none --"));
+        opts.forEach((o, i) => {
+          const opt = el("option", { value: o.value }, o.label);
+          sel.appendChild(opt);
+        });
+        const di = typeof p.default_index === "number" ? p.default_index : 0;
+        if (opts.length) sel.selectedIndex = (p.required ? di : di + 1);
+        if (!opts.length) { sel.appendChild(el("option", { value: "" }, "(none found)")); sel.disabled = true; }
+        control = sel;
+      } else if (p.type === "bool") {
+        control = el("input", { type: "checkbox" });
+        if (p.default) control.checked = true;
+      } else if (p.type === "int") {
+        control = el("input", { type: "number", class: "input", placeholder: p.label, value: p.default != null ? String(p.default) : "" });
+      } else {
+        control = el("input", { type: "text", class: "input", placeholder: p.label, value: p.default != null ? String(p.default) : "" });
+      }
+      inputs[p.name] = { control, spec: p };
+      rows.push(el("label", { class: "param-field" },
+        el("span", { class: "param-label" }, p.label + (p.required ? " *" : "")),
+        control
+      ));
+    }
+
+    const msg = el("div", { class: "param-msg" });
+    const submit = el("button", { class: "btn btn-primary btn-sm", onclick: async () => {
+      const params = {};
+      for (const [name, { control, spec }] of Object.entries(inputs)) {
+        let v = spec.type === "bool" ? control.checked : control.value;
+        if (spec.required && (v === "" || v == null)) {
+          msg.className = "param-msg param-msg-err";
+          msg.textContent = spec.label + " is required.";
+          return;
+        }
+        params[name] = v;
+      }
+      form.remove();
+      startJob(job.id, params);
+    } }, "Run");
+    const cancel = el("button", { class: "btn btn-secondary btn-sm", onclick: () => form.remove() }, "Cancel");
+
+    form.innerHTML = "";
+    rows.forEach((r) => form.appendChild(r));
+    form.appendChild(msg);
+    form.appendChild(el("div", { class: "param-actions" }, cancel, submit));
   }
 
   async function loadJobRuns() {
@@ -764,9 +858,11 @@
     };
   }
 
-  async function startJob(jobId) {
+  async function startJob(jobId, params) {
     try {
-      const run = await api("/api/jobs", { method: "POST", body: { job_id: jobId } });
+      const body = { job_id: jobId };
+      if (params) body.params = params;
+      const run = await api("/api/jobs", { method: "POST", body: body });
       setActiveTab("jobs");
       showToast("Started: " + (run.label || jobId), "info");
       openRunConsole(run);
