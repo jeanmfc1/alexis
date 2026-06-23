@@ -264,7 +264,6 @@ MESH_TRAVERSAL_EXCLUSIONS = {
 # MeSH descriptor cache — loaded once on first use
 # ---------------------------------------------------------------------
 
-_MESH_DESC_PATH = Path("storage/mesh/mesh_descriptors.json")
 _mesh_desc: dict = {}
 _ta_prefixes: list = []  # [(tree_number_prefix, ta_name), ...] sorted longest-first
 
@@ -274,9 +273,14 @@ def _load_mesh() -> None:
     global _mesh_desc, _ta_prefixes
     if _mesh_desc:
         return
-    if not _MESH_DESC_PATH.exists():
+    # Resolve at call time via core.paths so it works regardless of CWD and
+    # inside a frozen (PyInstaller) bundle. Imported lazily to avoid any
+    # import-time coupling for callers that never touch MeSH.
+    from core.paths import mesh_dir
+    desc_path = mesh_dir() / "mesh_descriptors.json"
+    if not desc_path.exists():
         return  # graceful degradation — falls back to ID-only matching
-    _mesh_desc = json.loads(_MESH_DESC_PATH.read_text(encoding="utf-8"))
+    _mesh_desc = json.loads(desc_path.read_text(encoding="utf-8"))
     prefixes = []
     for ta, roots in TA_MESH_ROOTS.items():
         for r in roots:

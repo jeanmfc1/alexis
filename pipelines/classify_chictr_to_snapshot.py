@@ -466,12 +466,13 @@ def load_input(path: Path) -> pd.DataFrame:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    from core.paths import storage_dir, models_dir, snapshots_dir
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input",    default="storage/chictr_details_checkpoint.jsonl")
-    parser.add_argument("--model",    default="classifiers/intl_drug_classifier_v2.pkl")
-    parser.add_argument("--out-dir",  default="storage/snapshots/clinical_trials_v2/chictr")
+    parser.add_argument("--input",    default=str(storage_dir() / "chictr_details_checkpoint.jsonl"))
+    parser.add_argument("--model",    default=str(models_dir() / "intl_drug_classifier_v2.pkl"))
+    parser.add_argument("--out-dir",  default=str(snapshots_dir() / "chictr"))
     parser.add_argument("--min-conf", type=float, default=0.7)
-    parser.add_argument("--ta-model",  default="classifiers/intl_ta_classifier.pkl",
+    parser.add_argument("--ta-model",  default=str(models_dir() / "intl_ta_classifier.pkl"),
                         help="Path to intl_ta_classifier.pkl")
     args = parser.parse_args()
 
