@@ -29,10 +29,25 @@ def R(*parts):
     return os.path.join(ROOT, *parts)
 
 # --- hidden imports -------------------------------------------------------
+def _no_tests(mods):
+    """Drop test submodules -- collecting sklearn/scipy/pandas .tests pulls in
+    thousands of modules, making Analysis take 10-15 min and bloating the exe.
+    The runtime code never imports them."""
+    out = []
+    for m in mods:
+        parts = m.split(".")
+        if "tests" in parts or "conftest" in parts:
+            continue
+        if parts[-1].startswith("test_") or parts[-1] == "tests":
+            continue
+        out.append(m)
+    return out
+
+
 hiddenimports = []
-# Heavy 3rd-party packages with dynamic submodules.
+# Heavy 3rd-party packages with dynamic submodules (tests excluded).
 for pkg in ("sklearn", "scipy", "pandas"):
-    hiddenimports += collect_submodules(pkg)
+    hiddenimports += _no_tests(collect_submodules(pkg))
 # Our own packages are imported dynamically (lazy imports + runpy dispatch),
 # so PyInstaller's static scan misses them -- collect explicitly.
 for pkg in ("app", "core", "analytics", "pipelines", "classifiers",
