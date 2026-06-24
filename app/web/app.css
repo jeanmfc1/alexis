@@ -500,6 +500,60 @@ button { font-family: var(--fb); cursor: pointer; color: inherit; }
 .param-msg { font-size: 11.5px; font-family: var(--fm); min-height: 1em; }
 .param-msg-err { color: #FCA5A5; }
 .param-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.param-hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* Folder input: text field + Browse button on one row */
+.folder-input { display: flex; gap: 8px; align-items: stretch; }
+.folder-input .input { flex: 1; min-width: 0; }
+.folder-input .btn { flex-shrink: 0; }
+
+/* "NEEDS" note on job cards */
+.job-needs {
+  display: flex; gap: 8px; align-items: flex-start;
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.22);
+  border-radius: 8px;
+  font-size: 12px; line-height: 1.5; color: #D9C28C;
+}
+.job-needs-tag {
+  font-family: var(--fm); font-size: 8.5px; font-weight: 600;
+  letter-spacing: 0.12em; color: var(--amber);
+  background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.30);
+  border-radius: 4px; padding: 2px 6px; flex-shrink: 0; margin-top: 1px;
+}
+
+/* Pipelines intro explainer */
+.pipelines-intro {
+  margin-bottom: 18px;
+  padding: 13px 16px;
+  background: linear-gradient(180deg, rgba(0,207,255,0.05), var(--surf));
+  border: 1px solid rgba(0,207,255,0.18);
+  border-radius: 10px;
+  font-size: 12.5px; line-height: 1.6; color: var(--text);
+}
+.pipelines-intro strong { color: var(--cyan); }
+.pipelines-intro .mono { font-family: var(--fm); font-size: 11px; color: var(--cyan); }
+
+/* First-run "set your data folder" banner */
+.setup-banner {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 0;
+  padding: 12px 36px;
+  background: linear-gradient(90deg, rgba(245,158,11,0.14), rgba(245,158,11,0.05));
+  border-bottom: 1px solid rgba(245,158,11,0.35);
+  position: sticky; top: 0; z-index: 50;
+}
+.setup-banner-hidden { display: none; }
+.setup-banner-icon {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--amber); color: #1a1206; font-weight: 700; font-family: var(--fh);
+}
+.setup-banner-text { flex: 1; font-size: 12.5px; line-height: 1.5; color: #EAD8B0; }
+.setup-banner-text strong { color: #FCD34D; }
+.setup-banner-text .mono { font-family: var(--fm); font-size: 11px; }
 
 .jobs-runs { display: flex; flex-direction: column; gap: 6px; }
 .jobs-runs-empty { color: var(--muted); font-size: 12.5px; padding: 6px 2px; }

@@ -18,6 +18,17 @@
     <span id="banner-text">Connection lost - retrying...</span>
   </div>
 
+  <!-- First-run / no-data-folder banner (shown when the data folder is unset/empty) -->
+  <div id="setup-banner" class="setup-banner setup-banner-hidden" role="status">
+    <span class="setup-banner-icon">!</span>
+    <div class="setup-banner-text">
+      <strong>No data folder set.</strong>
+      ALEXIS can't find your trial data, so dashboards and pipelines will be empty.
+      Point it at your ALEXIS data folder (the one containing <span class="mono">storage/</span>).
+    </div>
+    <button id="setup-banner-btn" class="btn btn-primary btn-sm">Set data folder</button>
+  </div>
+
   <div class="app">
 
     <!-- Sidebar -->
@@ -228,6 +239,15 @@
         <!-- Left column: catalog + run history -->
         <div class="jobs-col">
           <div class="jobs-section-title">Available jobs</div>
+          <div class="pipelines-intro">
+            <strong>How this works:</strong> first set your data folder in
+            <span class="mono">Settings</span>. Then use a one-click
+            <span class="mono">Refresh</span> chain, or run individual steps:
+            download data &rarr; classify &rarr; compute changes &rarr; rebuild dashboard.
+            Each card lists what it <span class="mono">NEEDS</span>. Trend charts
+            need several weeks of pulls before they fill in.
+          </div>
+
           <div id="jobs-catalog" class="jobs-catalog">
             <div class="dash-loading">Loading jobs...</div>
           </div>
@@ -309,8 +329,11 @@
           <div id="data-change-form" class="change-form change-form-hidden">
             <label class="field">
               <span class="field-label">New data folder path</span>
-              <input id="data-change-input" type="text" class="input mono" placeholder="C:\path\to\ALEXIS_data" />
-              <span class="hint">Must contain a <code>storage/</code> subfolder.</span>
+              <div class="folder-input">
+                <input id="data-change-input" type="text" class="input mono" placeholder="Browse, or paste a path like \\wsl.localhost\Ubuntu\home\you\ALEXIS" />
+                <button id="data-change-browse" class="btn btn-secondary btn-sm" type="button">Browse...</button>
+              </div>
+              <span class="hint">Pick the folder that contains a <code>storage/</code> subfolder (your ALEXIS project folder).</span>
             </label>
             <div class="form-actions">
               <button id="data-change-validate" class="btn btn-secondary btn-sm">Check</button>

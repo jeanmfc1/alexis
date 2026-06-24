@@ -31,6 +31,9 @@ CATALOG: list[dict] = [
         "label": "Refresh weekly US data",
         "description": "Pull this week's ClinicalTrials.gov trials, compute what changed, "
                        "and rebuild the weekly dashboard.",
+        "needs": "A data folder set (Settings) and a master DB. Trend/momentum charts "
+                 "use a rolling average over the last ~3 weeks, so the first few runs "
+                 "will show partial trends until you've pulled several weeks.",
         "category": "chain",
         "ready": True, "long_running": True, "produces": "alexis_weekly_dashboard_live.html",
         "steps": ["pull_weekly", "enrich_weekly", "generate_weekly"],
@@ -88,14 +91,19 @@ CATALOG: list[dict] = [
     {
         "id": "build_master",
         "label": "Build master database (from AACT)",
-        "description": "Build the full master DB from a downloaded AACT export folder. "
-                       "Run occasionally (e.g. quarterly).",
+        "description": "Build the full master DB from a downloaded AACT export folder "
+                       "(the unzipped ClinicalTrials.gov monthly archive containing "
+                       "studies.txt). Run occasionally (e.g. quarterly).",
+        "needs": "A downloaded + unzipped AACT export folder. Pick it with Browse "
+                 "below (or type its path). This is heavy: ~200k trials, can take "
+                 "30-60+ minutes.",
         "category": "us", "ready": True, "long_running": True, "produces": "master_DB_*.json",
         "module": "pipelines.build_master_from_aact",
         "argv": [],
         "params": [
-            {"name": "aact_dir", "label": "AACT export folder", "type": "select",
-             "flag": "--aact-dir", "provider": "aact_folders", "required": True},
+            {"name": "aact_dir", "label": "AACT export folder", "type": "folder",
+             "flag": "--aact-dir", "provider": "aact_folders", "required": True,
+             "hint": "Browse to the unzipped AACT folder (the one containing studies.txt)."},
             {"name": "out", "label": "Output name", "type": "text",
              "flag": "--out", "required": False, "default": "master_DB.json"},
             {"name": "fresh", "label": "Ignore checkpoints (start fresh)", "type": "bool",
@@ -193,6 +201,9 @@ CATALOG: list[dict] = [
         "id": "generate_weekly",
         "label": "Generate weekly dashboard",
         "description": "Rebuild the weekly dashboard from the newest snapshot/enriched/master.",
+        "needs": "At least one weekly snapshot (run a pull first). Trend charts need "
+                 "~3 weeks of snapshots; a master DB fills the modality/TA baselines. "
+                 "With no data it will report success but the dashboard will be empty.",
         "category": "dashboard", "ready": True, "long_running": True,
         "produces": "alexis_weekly_dashboard_live.html",
         "module": "pipelines.generate_weekly_viz", "argv": ["--auto", "--no-open"],
@@ -201,6 +212,9 @@ CATALOG: list[dict] = [
         "id": "generate_full",
         "label": "Generate full dashboard (all tabs)",
         "description": "Rebuild the unified dashboard: weekly + quarterly + ChiCTR + ANZCTR tabs.",
+        "needs": "A data folder with the relevant snapshots: weekly pulls + a master DB "
+                 "for the weekly/quarterly tabs, ChiCTR/ANZCTR snapshots for those tabs. "
+                 "Tabs with no data render empty rather than failing.",
         "category": "dashboard", "ready": True, "long_running": True,
         "produces": "alexis_dashboard_live.html",
         "module": "pipelines.generate_dashboard", "argv": ["--auto", "--no-open"],
@@ -254,6 +268,8 @@ def get_catalog() -> list[dict]:
     out = []
     for e in CATALOG:
         d = {k: e.get(k) for k in _PUBLIC_KEYS}
+        if e.get("needs"):
+            d["needs"] = e["needs"]
         if e.get("params"):
             d["params"] = e["params"]
         if e.get("steps"):

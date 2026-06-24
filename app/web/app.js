@@ -547,6 +547,8 @@
       msg.textContent = "Saved.";
       showChangeForm(false);
       showToast("Data folder updated", "ok");
+      checkDataFolder();   // hide the setup banner if now valid
+      loadDashboards();    // the dashboards list depends on the data folder
       // Refresh panel from canonical response
       $("#kv-data-dir").textContent = s.data_dir || "--";
       $("#kv-app-root").textContent = s.app_root || "--";
@@ -568,11 +570,29 @@
     }
   }
 
+  // Show/hide the first-run "no data folder" banner based on settings validity.
+  async function checkDataFolder() {
+    const banner = $("#setup-banner");
+    if (!banner) return;
+    try {
+      const s = await api("/api/settings");
+      banner.classList.toggle("setup-banner-hidden", !!s.is_valid);
+    } catch (_e) {
+      banner.classList.add("setup-banner-hidden");
+    }
+  }
+
   function bindSettings() {
     $("#settings-refresh").addEventListener("click", loadSettings);
     $("#data-change-btn").addEventListener("click", () => showChangeForm(true));
     $("#data-change-cancel").addEventListener("click", () => showChangeForm(false));
     $("#data-change-save").addEventListener("click", saveDataDir);
+    $("#data-change-browse").addEventListener("click",
+      () => browseFolder($("#data-change-input"), $("#data-change-msg")));
+    $("#setup-banner-btn").addEventListener("click", () => {
+      setActiveTab("settings");
+      showChangeForm(true);
+    });
     $("#data-change-validate").addEventListener("click", () => {
       const val = $("#data-change-input").value;
       const msg = $("#data-change-msg");
@@ -658,6 +678,12 @@
       j.long_running ? el("span", { class: "job-longhint" }, "long-running") : null
     ));
     card.appendChild(el("div", { class: "job-card-desc" }, j.description || ""));
+    if (j.needs) {
+      card.appendChild(el("div", { class: "job-needs" },
+        el("span", { class: "job-needs-tag" }, "NEEDS"),
+        el("span", null, j.needs)
+      ));
+    }
 
     const runBtn = el("button", {
       class: isChain ? "btn btn-primary" : "btn btn-primary btn-sm",
@@ -675,6 +701,21 @@
     return card;
   }
 
+  // Open the native folder picker (desktop window only) and fill `targetInput`.
+  async function browseFolder(targetInput, msgEl) {
+    try {
+      const r = await api("/api/browse_folder", { method: "POST" });
+      if (r && r.available === false) {
+        if (msgEl) { msgEl.className = "param-msg"; msgEl.textContent =
+          "The folder picker only works in the desktop app window. Type or paste the path instead."; }
+        return;
+      }
+      if (r && r.path) { targetInput.value = r.path; if (msgEl) msgEl.textContent = ""; }
+    } catch (e) {
+      if (msgEl) { msgEl.className = "param-msg param-msg-err"; msgEl.textContent = "Browse failed: " + (e.message || e); }
+    }
+  }
+
   // -- Parameter form (inline, expands under a job card) --------------------
   async function toggleParamForm(card, job) {
     const existing = card.querySelector(".param-form");
@@ -688,34 +729,51 @@
     const inputs = {};
     const rows = [];
     for (const p of job.params) {
-      let control;
-      if (p.type === "select") {
+      let control;      // element shown in the row
+      let valueEl;      // element to read the value from (same as control unless wrapped)
+      if (p.type === "folder") {
+        // Text input + Browse button + datalist of discovered folders.
+        let opts = [];
+        try { opts = (await api("/api/jobs/options/" + encodeURIComponent(p.provider))).options || []; }
+        catch (_e) { opts = []; }
+        const inp = el("input", { type: "text", class: "input mono",
+          placeholder: "Browse to a folder, or type/paste its path", list: "dl-" + p.name });
+        if (opts.length) inp.value = opts[0].value;  // default to newest discovered
+        const dl = el("datalist", { id: "dl-" + p.name });
+        opts.forEach((o) => dl.appendChild(el("option", { value: o.value }, o.label)));
+        const browse = el("button", { class: "btn btn-secondary btn-sm", type: "button",
+          onclick: () => browseFolder(inp, msg) }, "Browse...");
+        control = el("div", { class: "folder-input" }, inp, browse, dl);
+        valueEl = inp;
+      } else if (p.type === "select") {
         let opts = [];
         try { opts = (await api("/api/jobs/options/" + encodeURIComponent(p.provider))).options || []; }
         catch (_e) { opts = []; }
         const sel = el("select", { class: "select" });
         if (!p.required) sel.appendChild(el("option", { value: "" }, "-- none --"));
-        opts.forEach((o, i) => {
-          const opt = el("option", { value: o.value }, o.label);
-          sel.appendChild(opt);
-        });
+        opts.forEach((o) => sel.appendChild(el("option", { value: o.value }, o.label)));
         const di = typeof p.default_index === "number" ? p.default_index : 0;
         if (opts.length) sel.selectedIndex = (p.required ? di : di + 1);
         if (!opts.length) { sel.appendChild(el("option", { value: "" }, "(none found)")); sel.disabled = true; }
-        control = sel;
+        control = sel; valueEl = sel;
       } else if (p.type === "bool") {
         control = el("input", { type: "checkbox" });
         if (p.default) control.checked = true;
+        valueEl = control;
       } else if (p.type === "int") {
         control = el("input", { type: "number", class: "input", placeholder: p.label, value: p.default != null ? String(p.default) : "" });
+        valueEl = control;
       } else {
         control = el("input", { type: "text", class: "input", placeholder: p.label, value: p.default != null ? String(p.default) : "" });
+        valueEl = control;
       }
-      inputs[p.name] = { control, spec: p };
-      rows.push(el("label", { class: "param-field" },
+      inputs[p.name] = { control: valueEl, spec: p };
+      const field = el("label", { class: "param-field" },
         el("span", { class: "param-label" }, p.label + (p.required ? " *" : "")),
         control
-      ));
+      );
+      if (p.hint) field.appendChild(el("span", { class: "param-hint" }, p.hint));
+      rows.push(field);
     }
 
     const msg = el("div", { class: "param-msg" });
@@ -918,6 +976,8 @@
       setActiveTab(startTab);
       // Warm settings so a quick tab-switch shows real values rather than "--".
       if (startTab !== "settings") loadSettings();
+      // Surface the "set your data folder" banner if data isn't configured.
+      checkDataFolder();
     });
 
     // Periodic health probe

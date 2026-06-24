@@ -157,18 +157,29 @@ def _block_for_keyboard_interrupt(url: str) -> int:
         return 0
 
 
+# Reference to the live pywebview window, so the API can open native dialogs
+# (folder picker). None in headless mode.
+_WINDOW = None
+
+
+def get_window():
+    """Return the live pywebview window (or None in headless mode)."""
+    return _WINDOW
+
+
 def _open_window(url: str) -> int:
     """Open the pywebview window. Blocks until the user closes it.
 
     Returns 0 on clean exit, 1 if pywebview is unavailable.
     """
+    global _WINDOW
     try:
         import webview  # type: ignore
     except ImportError:
         print("[err] pywebview not installed. Run: pip install pywebview")
         return 1
 
-    webview.create_window(
+    _WINDOW = webview.create_window(
         _WINDOW_TITLE,
         url=url,
         width=_WINDOW_WIDTH,
