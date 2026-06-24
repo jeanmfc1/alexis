@@ -275,17 +275,11 @@ def classify_in_chunks(
         print("Nothing to classify — all chunks already done.")
         return trials
 
-    import sys
     from contextlib import nullcontext
-    # Packaged (frozen) app: run single-process. Worker processes in a windowed
-    # PyInstaller exe have sys.stdout/stderr = None + fragile IPC and crash with
-    # error-dialog popups. Single-process is slower but reliable.
-    frozen = getattr(sys, "frozen", False)
-    num_workers = 1 if frozen else max(1, cpu_count() - 1)
+    num_workers = max(1, cpu_count() - 1)  # leave 1 core free
     print(
         f"Classifying {len(remaining)} trials in chunks of {CHUNK_SIZE} "
-        f"(starting at chunk {start_chunk}, {num_workers} worker(s)"
-        f"{', single-process' if frozen else ''})..."
+        f"(starting at chunk {start_chunk}, {num_workers} workers)..."
     )
 
     classified_remaining = []

@@ -113,14 +113,6 @@ def process_trials_parallel(
     if num_workers is None:
         num_workers = get_optimal_worker_count(len(trials))
 
-    # In the packaged (frozen) app, run single-process. OS multiprocessing in a
-    # windowed PyInstaller exe is fragile: workers are separate windowed
-    # processes with sys.stdout/stderr = None and fragile IPC pipes, which
-    # produced worker crashes / error-dialog popups. Single-process is slower
-    # but completely reliable; dev/source runs keep full parallelism.
-    if getattr(sys, "frozen", False):
-        num_workers = 1
-
     logger.info(f"Processing {len(trials)} trials with {num_workers} workers")
     print(f"\nProcessing {len(trials)} trials with {num_workers} parallel workers")
     
