@@ -275,35 +275,43 @@ def classify_in_chunks(
         print("Nothing to classify — all chunks already done.")
         return trials
 
-    num_workers = max(1, cpu_count() - 1)  # Match original: leave 1 core free
+    import sys
+    from contextlib import nullcontext
+    # Packaged (frozen) app: run single-process. Worker processes in a windowed
+    # PyInstaller exe have sys.stdout/stderr = None + fragile IPC and crash with
+    # error-dialog popups. Single-process is slower but reliable.
+    frozen = getattr(sys, "frozen", False)
+    num_workers = 1 if frozen else max(1, cpu_count() - 1)
     print(
         f"Classifying {len(remaining)} trials in chunks of {CHUNK_SIZE} "
-        f"(starting at chunk {start_chunk}, {num_workers} workers)..."
+        f"(starting at chunk {start_chunk}, {num_workers} worker(s)"
+        f"{', single-process' if frozen else ''})..."
     )
 
     classified_remaining = []
     chunk_index = start_chunk
     BATCH_SIZE = 10  # Match original: small batches for smooth progress bar
 
-    # Pre-load MeSH descriptors before forking the pool.
-    # Workers inherit parent memory at fork time — guarantees mesh is loaded
-    # in every worker without re-reading the 13MB file N times.
     from classifiers.therapeutic_area import _load_mesh
     _load_mesh()
-    print(f"  MeSH descriptors pre-loaded for workers.")
+    print(f"  MeSH descriptors pre-loaded.")
 
-    # Keep pool open across all chunks — fork-based, no module reload overhead
-    with Pool(num_workers) as pool:
+    use_pool = num_workers > 1
+    pool_ctx = Pool(num_workers) if use_pool else nullcontext(None)
+    with pool_ctx as pool:
         for i in tqdm(range(0, len(remaining), CHUNK_SIZE), desc="Chunks"):
             chunk = remaining[i : i + CHUNK_SIZE]
 
-            # Split chunk into 10-trial batches, same as original
             batches = [chunk[j : j + BATCH_SIZE] for j in range(0, len(chunk), BATCH_SIZE)]
             worker_args = [(b, classify_single_trial, k, len(batches)) for k, b in enumerate(batches)]
 
             classified_chunk = []
-            for batch_result in pool.imap_unordered(_classify_batch, worker_args, chunksize=1):
-                classified_chunk.extend(batch_result)
+            if pool is None:
+                for wa in worker_args:
+                    classified_chunk.extend(_classify_batch(wa))
+            else:
+                for batch_result in pool.imap_unordered(_classify_batch, worker_args, chunksize=1):
+                    classified_chunk.extend(batch_result)
 
             save_chunk(classified_chunk, chunk_index)
             classified_remaining.extend(classified_chunk)
