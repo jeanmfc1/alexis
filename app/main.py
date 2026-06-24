@@ -49,7 +49,17 @@ def ensure_streams() -> None:
     import io
     import os
     for name, fd in (("stdout", 1), ("stderr", 2)):
-        if getattr(sys, name, None) is not None:
+        existing = getattr(sys, name, None)
+        if existing is not None:
+            # Stream exists (e.g. a redirected pipe in a windowed exe) but may be
+            # cp1252 -- force utf-8 so pipeline output containing unicode (e.g.
+            # "2026-06-22 -> ...", box-drawing chars) does not crash with a
+            # UnicodeEncodeError. PYTHONIOENCODING is not honoured for these
+            # auto-created windowed streams, so reconfigure explicitly.
+            try:
+                existing.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:  # noqa: BLE001 -- not all streams support it
+                pass
             continue
         stream = None
         try:
