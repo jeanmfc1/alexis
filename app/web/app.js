@@ -570,13 +570,33 @@
     }
   }
 
-  // Show/hide the first-run "no data folder" banner based on settings validity.
+  // First-run banner with 3 states: no folder set / folder set but empty / ready.
   async function checkDataFolder() {
     const banner = $("#setup-banner");
+    const text = $("#setup-banner-text");
+    const btn = $("#setup-banner-btn");
     if (!banner) return;
     try {
       const s = await api("/api/settings");
-      banner.classList.toggle("setup-banner-hidden", !!s.is_valid);
+      if (!s.is_valid) {
+        text.innerHTML = "<strong>No data folder set.</strong> Choose where ALEXIS "
+          + "should keep its data. A brand-new empty folder is fine — it will be "
+          + "set up for you automatically.";
+        btn.textContent = "Choose data folder";
+        btn.onclick = () => { setActiveTab("settings"); showChangeForm(true); };
+        banner.classList.remove("setup-banner-hidden");
+      } else if (!s.has_data) {
+        text.innerHTML = "<strong>Your data folder is empty.</strong> Get started in "
+          + "<span class=\"mono\">Pipelines</span> with <span class=\"mono\">Pull this "
+          + "week's US trials</span> — no download needed; it fetches your first week "
+          + "from ClinicalTrials.gov. Then run <span class=\"mono\">Generate weekly "
+          + "dashboard</span>.";
+        btn.textContent = "Go to Pipelines";
+        btn.onclick = () => { setActiveTab("jobs"); };
+        banner.classList.remove("setup-banner-hidden");
+      } else {
+        banner.classList.add("setup-banner-hidden");
+      }
     } catch (_e) {
       banner.classList.add("setup-banner-hidden");
     }
@@ -589,10 +609,8 @@
     $("#data-change-save").addEventListener("click", saveDataDir);
     $("#data-change-browse").addEventListener("click",
       () => browseFolder($("#data-change-input"), $("#data-change-msg")));
-    $("#setup-banner-btn").addEventListener("click", () => {
-      setActiveTab("settings");
-      showChangeForm(true);
-    });
+    // #setup-banner-btn's click handler is set dynamically by checkDataFolder()
+    // because its action depends on the state (choose folder vs go to pipelines).
     $("#data-change-validate").addEventListener("click", () => {
       const val = $("#data-change-input").value;
       const msg = $("#data-change-msg");

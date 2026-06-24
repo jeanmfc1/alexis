@@ -115,6 +115,7 @@ def set_data_dir(path: str | os.PathLike) -> Path:
     frozen install where ``%LOCALAPPDATA%\\ALEXIS`` may not yet exist).
     """
     p = Path(path).expanduser()
+    init_data_dir(p)                 # create the storage/ skeleton if new/empty
     cfg = _config_path()
     cfg.parent.mkdir(parents=True, exist_ok=True)
     payload: dict = {}
@@ -128,10 +129,51 @@ def set_data_dir(path: str | os.PathLike) -> Path:
     return p
 
 
+# Standard subfolders ALEXIS reads/writes under a data root.
+_DATA_SUBDIRS = (
+    "storage/snapshots/clinical_trials_v2/last_update",
+    "storage/snapshots/clinical_trials_v2/reclassified",
+    "storage/snapshots/clinical_trials_v2/chictr",
+    "storage/snapshots/clinical_trials_v2/anzctr",
+    "storage/snapshots/clinical_trials_v2/active_universe",
+    "storage/changelogs",
+    "downloads",
+    "logs",
+)
+
+
+def init_data_dir(path: str | os.PathLike) -> Path:
+    """Create the storage skeleton inside ``path`` so a fresh/empty folder is
+    ready to use. Safe to call repeatedly (mkdir exist_ok). Returns ``path``."""
+    root = Path(path).expanduser()
+    for sub in _DATA_SUBDIRS:
+        (root / sub).mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def data_dir_is_valid(path: str | os.PathLike | None = None) -> bool:
-    """A data dir is usable if it contains a ``storage`` folder."""
+    """A data dir is usable if it's an existing directory we can set up.
+
+    No longer requires a pre-existing ``storage`` folder -- a brand-new empty
+    folder is fine (the app creates the structure). Use
+    :func:`data_dir_has_data` to tell whether it actually contains data yet.
+    """
     root = Path(path).expanduser() if path is not None else data_root()
-    return (root / "storage").is_dir()
+    return root.is_dir()
+
+
+def data_dir_has_data(path: str | os.PathLike | None = None) -> bool:
+    """True if the data dir actually contains trial data (snapshots or a master
+    DB), vs being an empty, freshly-initialised folder."""
+    root = Path(path).expanduser() if path is not None else data_root()
+    snaps = root / "storage" / "snapshots" / "clinical_trials_v2"
+    if not snaps.is_dir():
+        return False
+    for sub in ("last_update", "reclassified", "chictr", "anzctr", "active_universe"):
+        d = snaps / sub
+        if d.is_dir() and any(d.glob("*.json")):
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------

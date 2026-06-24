@@ -29,6 +29,7 @@ def _settings_snapshot() -> dict:
     return {
         "data_dir":         str(data_dir),
         "is_valid":         bool(paths.data_dir_is_valid(data_dir)),
+        "has_data":         bool(paths.data_dir_has_data(data_dir)),
         "is_frozen":        bool(paths.is_frozen()),
         "app_root":         str(paths.app_root()),
         "default_data_dir": str(paths.data_root()),
@@ -78,14 +79,10 @@ def _validate_data_dir(raw: str) -> Path:
             detail="refusing to use a drive root as the data folder",
         )
 
+    # Any existing, writable folder is acceptable -- a brand-new empty folder is
+    # fine; set_data_dir() creates the storage structure inside it.
     if not paths.data_dir_is_valid(resolved):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "selected folder is not a valid ALEXIS data directory "
-                "(must contain a 'storage' subfolder)"
-            ),
-        )
+        raise HTTPException(status_code=400, detail="path is not a usable folder")
     return resolved
 
 

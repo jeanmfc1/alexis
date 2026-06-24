@@ -18,15 +18,12 @@
     <span id="banner-text">Connection lost - retrying...</span>
   </div>
 
-  <!-- First-run / no-data-folder banner (shown when the data folder is unset/empty) -->
+  <!-- First-run banner (text/button set dynamically by checkDataFolder):
+       state 1 = no data folder, state 2 = folder set but empty. -->
   <div id="setup-banner" class="setup-banner setup-banner-hidden" role="status">
     <span class="setup-banner-icon">!</span>
-    <div class="setup-banner-text">
-      <strong>No data folder set.</strong>
-      ALEXIS can't find your trial data, so dashboards and pipelines will be empty.
-      Point it at your ALEXIS data folder (the one containing <span class="mono">storage/</span>).
-    </div>
-    <button id="setup-banner-btn" class="btn btn-primary btn-sm">Set data folder</button>
+    <div class="setup-banner-text" id="setup-banner-text"></div>
+    <button id="setup-banner-btn" class="btn btn-primary btn-sm">Choose data folder</button>
   </div>
 
   <div class="app">
@@ -333,7 +330,7 @@
                 <input id="data-change-input" type="text" class="input mono" placeholder="Browse, or paste a path like \\wsl.localhost\Ubuntu\home\you\ALEXIS" />
                 <button id="data-change-browse" class="btn btn-secondary btn-sm" type="button">Browse...</button>
               </div>
-              <span class="hint">Pick the folder that contains a <code>storage/</code> subfolder (your ALEXIS project folder).</span>
+              <span class="hint">Pick any folder &mdash; a new, empty one is fine. ALEXIS creates a <code>storage/</code> structure inside it. (If you already have an ALEXIS data folder, pick that one.)</span>
             </label>
             <div class="form-actions">
               <button id="data-change-validate" class="btn btn-secondary btn-sm">Check</button>
@@ -350,10 +347,11 @@
             <span class="card-title">Getting started</span>
           </div>
           <ol class="start-list">
-            <li><strong>Point ALEXIS at your data folder</strong> &mdash; pick a directory that contains (or will contain) a <span class="mono">storage/</span> subfolder.</li>
-            <li><strong>Open a dashboard</strong> &mdash; the Dashboards tab lists every generated visualization in your data folder's <span class="mono">viz/</span> directory.</li>
-            <li><strong>Classify a single trial</strong> &mdash; paste a title plus at least one intervention into the Classifier tab to get modality, therapeutic area, and drug-trial status.</li>
-            <li><strong>Run pipelines</strong> &mdash; the Jobs tab regenerates dashboards and classifies registry data in the background, with live logs and a cancel button.</li>
+            <li><strong>Choose a data folder</strong> (above) &mdash; any folder, even a new empty one. ALEXIS sets it up for you. This is where all your pulled data and dashboards are stored.</li>
+            <li><strong>Get your first data</strong> &mdash; in <span class="mono">Pipelines</span>, run <span class="mono">Pull this week's US trials</span>. No download needed; it fetches from ClinicalTrials.gov.</li>
+            <li><strong>Build the dashboard</strong> &mdash; run <span class="mono">Generate weekly dashboard</span>, then open it in the <span class="mono">Dashboards</span> tab.</li>
+            <li><strong>Grow over time</strong> &mdash; pull weekly to fill in trend charts (they use ~3 weeks). For the full historical baseline, download an AACT export and run <span class="mono">Build master database</span>.</li>
+            <li><strong>Try the classifier any time</strong> &mdash; paste a trial into the <span class="mono">Classifier</span> tab for its modality + therapeutic area (works with no data folder).</li>
           </ol>
         </div>
       </div>
