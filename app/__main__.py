@@ -54,4 +54,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    # CRITICAL for the packaged (PyInstaller) build: classification uses
+    # multiprocessing, and on Windows each worker re-launches this exe. Without
+    # freeze_support() the worker would re-run the whole app (spawn storm /
+    # "failed to extract archive" errors). This must be the first thing the
+    # frozen entry point does, before any argument parsing.
+    import multiprocessing
+    multiprocessing.freeze_support()
     raise SystemExit(main())

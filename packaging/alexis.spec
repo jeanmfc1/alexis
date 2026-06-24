@@ -94,7 +94,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,               # set to packaging/alexis.ico once an icon exists
+    icon=R("packaging", "alexis.ico"),   # benzene-ring app icon
 )
 coll = COLLECT(
     exe,

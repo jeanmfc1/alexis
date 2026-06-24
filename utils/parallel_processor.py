@@ -130,16 +130,36 @@ def process_trials_parallel(
         for i, batch in enumerate(trial_batches)
     ]
     
-    # Process in parallel with progress bar
-    classified_trials = []
-    with Pool(num_workers) as pool:
-        # Create progress bar
+    def _sequential() -> List[Any]:
+        out: List[Any] = []
         with tqdm(total=len(trials), desc="Classifying trials", unit="trial") as pbar:
-            # Process batches - workers will pull from the queue as they finish
-            for batch_results in pool.imap_unordered(classify_trial_batch, worker_args, chunksize=1):
-                classified_trials.extend(batch_results)
-                pbar.update(len(batch_results))
-    
-    logger.info(f"Completed parallel processing of {len(classified_trials)} trials")
-    
+            for args in worker_args:
+                res = classify_trial_batch(args)
+                out.extend(res)
+                pbar.update(len(res))
+        return out
+
+    # Prefer multiprocessing for speed, but fall back to single-process if a
+    # Pool can't run (e.g. a packaged/frozen build where worker spawn fails).
+    # This guarantees classification always completes instead of crashing.
+    classified_trials: List[Any] = []
+    if num_workers <= 1:
+        classified_trials = _sequential()
+    else:
+        try:
+            with Pool(num_workers) as pool:
+                with tqdm(total=len(trials), desc="Classifying trials", unit="trial") as pbar:
+                    for batch_results in pool.imap_unordered(
+                        classify_trial_batch, worker_args, chunksize=1
+                    ):
+                        classified_trials.extend(batch_results)
+                        pbar.update(len(batch_results))
+        except Exception as e:  # noqa: BLE001 -- frozen / no-spawn fallback
+            logger.warning(f"parallel processing failed ({e}); using single process")
+            print(f"[warn] parallel processing unavailable ({type(e).__name__}); "
+                  f"falling back to single process")
+            classified_trials = _sequential()
+
+    logger.info(f"Completed processing of {len(classified_trials)} trials")
+
     return classified_trials
