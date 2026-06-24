@@ -29,6 +29,7 @@ def _settings_snapshot() -> dict:
     return {
         "data_dir":         str(data_dir),
         "is_valid":         bool(paths.data_dir_is_valid(data_dir)),
+        "has_data":         bool(paths.data_dir_has_data(data_dir)),
         "is_frozen":        bool(paths.is_frozen()),
         "app_root":         str(paths.app_root()),
         "default_data_dir": str(paths.data_root()),
@@ -78,14 +79,10 @@ def _validate_data_dir(raw: str) -> Path:
             detail="refusing to use a drive root as the data folder",
         )
 
+    # Any existing, writable folder is acceptable -- a brand-new empty folder is
+    # fine; set_data_dir() creates the storage structure inside it.
     if not paths.data_dir_is_valid(resolved):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "selected folder is not a valid ALEXIS data directory "
-                "(must contain a 'storage' subfolder)"
-            ),
-        )
+        raise HTTPException(status_code=400, detail="path is not a usable folder")
     return resolved
 
 
@@ -138,6 +135,32 @@ def set_settings(payload: dict) -> dict:
     snapshot = _settings_snapshot()
     snapshot["ok"] = True
     return snapshot
+
+
+@router.post("/api/browse_folder")
+def browse_folder() -> dict:
+    """Open a native folder picker in the desktop window; return the chosen path.
+
+    Only works when running as the desktop app (a window exists). In headless
+    mode there's no window -> the UI falls back to typing a path.
+    """
+    try:
+        from app.main import get_window
+        import webview  # type: ignore
+    except Exception:  # noqa: BLE001
+        return {"path": None, "available": False}
+    win = get_window()
+    if win is None:
+        return {"path": None, "available": False}
+    try:
+        result = win.create_file_dialog(webview.FOLDER_DIALOG)
+    except Exception as exc:  # noqa: BLE001
+        _log.exception("[err] folder dialog failed: %s", exc)
+        return {"path": None, "available": True, "error": str(exc)}
+    if not result:
+        return {"path": None, "available": True}   # user cancelled
+    path = result[0] if isinstance(result, (list, tuple)) else str(result)
+    return {"path": str(path), "available": True}
 
 
 @router.get("/api/info")

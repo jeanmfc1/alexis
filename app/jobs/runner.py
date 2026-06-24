@@ -35,6 +35,10 @@ class JobRunner:
         env = dict(os.environ)
         env["PYTHONUNBUFFERED"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
+        # UTF-8 mode: forces utf-8 stdio in the child AND in multiprocessing
+        # workers it spawns (they inherit this env), so pipeline output with
+        # unicode (arrows, box chars) never hits a cp1252 encode error.
+        env["PYTHONUTF8"] = "1"
         root = str(app_root())
         prior = env.get("PYTHONPATH", "")
         env["PYTHONPATH"] = root + (os.pathsep + prior if prior else "")
