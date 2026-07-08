@@ -125,6 +125,7 @@ def scrape(headless: bool = True, limit: int = None,
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=headless,
+            channel="msedge",  # drive the system Microsoft Edge (always present -- it's the app's WebView2 host); no browser is bundled
             args=["--no-sandbox", "--disable-blink-features=AutomationControlled"],
         )
         context = browser.new_context(

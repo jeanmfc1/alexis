@@ -181,11 +181,12 @@
     });
     if (name === "dashboards") loadDashboards();
     if (name === "settings")   loadSettings();
+    if (name === "data")       loadDataInventory();
     if (name === "jobs")     { loadJobCatalog(); loadJobRuns(); }
     try { history.replaceState(null, "", "#" + name); } catch (_e) { /* ignore */ }
   }
 
-  const VALID_TABS = ["dashboards", "classifier", "jobs", "settings"];
+  const VALID_TABS = ["dashboards", "classifier", "jobs", "data", "settings"];
   function initialTab() {
     const h = (location.hash || "").replace(/^#/, "");
     return VALID_TABS.indexOf(h) !== -1 ? h : "dashboards";
@@ -213,6 +214,8 @@
         pill.classList.add("health-pill-ok");
         text.textContent = "online";
         banner.classList.add("banner-hidden");
+        const vEl = $("#app-version");
+        if (vEl && data.version) vEl.textContent = "v" + data.version;
         return true;
       }
       throw new Error("health-not-ok");
@@ -587,10 +590,10 @@
         banner.classList.remove("setup-banner-hidden");
       } else if (!s.has_data) {
         text.innerHTML = "<strong>Your data folder is empty.</strong> Get started in "
-          + "<span class=\"mono\">Pipelines</span> with <span class=\"mono\">Pull this "
-          + "week's US trials</span> — no download needed; it fetches your first week "
-          + "from ClinicalTrials.gov. Then run <span class=\"mono\">Generate weekly "
-          + "dashboard</span>.";
+          + "<span class=\"mono\">Pipelines</span> with <span class=\"mono\">Pull last "
+          + "3 weeks (get started)</span> — no download needed; it fetches 3 weekly "
+          + "snapshots from ClinicalTrials.gov so the trend charts have enough history. "
+          + "Then run <span class=\"mono\">Generate weekly dashboard</span>.";
         btn.textContent = "Go to Pipelines";
         btn.onclick = () => { setActiveTab("jobs"); };
         banner.classList.remove("setup-banner-hidden");
@@ -912,6 +915,7 @@
       setConsoleStatus(status);
       closeStream();
       loadJobRuns();
+      checkDataFolder();   // a finished pull may have just created data -> hide the "empty" banner
       if (activeRun) activeRun.status = status;
       // If a generate job succeeded and produced a dashboard, refresh the list.
       if (status === "succeeded" && run.produces && /\.html$/i.test(run.produces)) {
@@ -979,6 +983,127 @@
   }
 
   // -------------------------------------------------------------------
+  // Data tab (inventory + import)
+  // -------------------------------------------------------------------
+  const ROLE_LABEL = {
+    input: "input", generated: "generated", dashboard: "dashboard",
+    required: "required", output: "output",
+  };
+
+  async function loadDataInventory() {
+    const host = $("#data-cats");
+    if (!host) return;
+    host.innerHTML = "";
+    host.appendChild(el("div", { class: "dash-loading" }, "Loading data inventory…"));
+    try {
+      const inv = await api("/api/data/inventory");
+      const rootEl = $("#data-root-path");
+      if (rootEl) rootEl.textContent = inv.data_dir || "—";
+      host.innerHTML = "";
+      (inv.categories || []).forEach((c) => host.appendChild(renderDataCat(c)));
+    } catch (e) {
+      host.innerHTML = "";
+      host.appendChild(el("div", { class: "data-empty" },
+        "Could not load inventory: " + (e.message || e)));
+    }
+  }
+
+  function renderDataCat(c) {
+    const roles = el("div", { class: "data-cat-roles" });
+    (c.roles || []).forEach((r) =>
+      roles.appendChild(el("span", { class: "role-badge role-" + r }, ROLE_LABEL[r] || r)));
+
+    const stats = c.exists
+      ? (c.count + (c.count === 1 ? " file" : " files") + " · " + c.total_size_h)
+      : "folder not created yet";
+
+    const actions = el("div", { class: "data-cat-actions" });
+    if (!c.readonly) {
+      actions.appendChild(el("button",
+        { class: "btn btn-primary btn-sm", onClick: () => addFilesTo(c) }, "Add files…"));
+    }
+    actions.appendChild(el("button",
+      { class: "btn btn-secondary btn-sm", onClick: () => openDataFolder(c.key) }, "Open"));
+
+    const missing = (c.roles || []).indexOf("required") !== -1 && c.count === 0;
+    const card = el("div", { class: "data-cat" + (missing ? " data-cat-missing" : "") },
+      el("div", { class: "data-cat-head" },
+        el("span", { class: "data-cat-title" }, c.label),
+        roles,
+        el("span", { class: "data-cat-stats" }, stats)),
+      el("div", { class: "data-cat-desc" }, c.desc),
+      actions);
+
+    if (c.files && c.files.length) {
+      const list = el("div", { class: "data-files" });
+      c.files.forEach((f) => {
+        list.appendChild(el("div", { class: "data-file" },
+          el("span", { class: "data-file-name" }, f.name),
+          f.latest ? el("span", { class: "data-file-latest" }, "used by dashboards") : null,
+          el("span", { class: "data-file-size" }, f.size_h)));
+      });
+      if (c.count > c.shown) {
+        list.appendChild(el("div", { class: "data-file-more" },
+          "+ " + (c.count - c.shown) + " more…"));
+      }
+      card.appendChild(list);
+    } else if (c.exists) {
+      card.appendChild(el("div", { class: "data-empty" }, "Empty — nothing here yet."));
+    }
+    return card;
+  }
+
+  async function addFilesTo(c) {
+    let chosen = [];
+    try {
+      const res = await api("/api/data/browse_files", { method: "POST", body: {} });
+      if (res && res.available) {
+        chosen = res.paths || [];
+        if (!chosen.length) return;   // cancelled
+      } else {
+        const typed = window.prompt(
+          "Native picker unavailable here. Paste the full path of a file to copy into \"" + c.label + "\":");
+        if (!typed) return;
+        chosen = [typed.trim()];
+      }
+    } catch (e) {
+      showToast("File picker failed: " + (e.message || e), "err");
+      return;
+    }
+    try {
+      const r = await api("/api/data/import",
+        { method: "POST", body: { category: c.key, sources: chosen } });
+      const n = (r.copied || []).length;
+      const errs = (r.errors || []).length;
+      if (n) {
+        showToast(n + (n === 1 ? " file" : " files") + " added to " + c.label
+                  + (errs ? (" (" + errs + " failed)") : ""), errs ? "info" : "ok");
+      } else {
+        showToast("Nothing copied" + (errs ? (" (" + errs + " failed)") : ""), "err");
+      }
+      loadDataInventory();
+      checkDataFolder();   // adding a master/snapshot may clear the empty-folder banner
+    } catch (e) {
+      showToast("Import failed: " + (e.message || e), "err");
+    }
+  }
+
+  async function openDataFolder(key) {
+    try {
+      await api("/api/data/open", { method: "POST", body: key ? { category: key } : {} });
+    } catch (e) {
+      showToast("Could not open folder: " + (e.message || e), "err");
+    }
+  }
+
+  function bindData() {
+    const r = $("#data-inv-refresh");
+    if (r) r.addEventListener("click", loadDataInventory);
+    const o = $("#data-open-folder");
+    if (o) o.addEventListener("click", () => openDataFolder(null));
+  }
+
+  // -------------------------------------------------------------------
   // Boot
   // -------------------------------------------------------------------
   function boot() {
@@ -987,6 +1112,7 @@
     bindClassifier();
     bindJobs();
     bindSettings();
+    bindData();
 
     // First paint: honor the tab in the URL hash (so a reload keeps your place).
     const startTab = initialTab();

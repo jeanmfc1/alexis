@@ -665,12 +665,12 @@ def main():
     print("\nTA × Phase:")
     for ta, phases in summary["ta_by_phase"].items():
         for phase, count in phases.items():
-            print(f"  {ta:20} | {str(phase or "None"):10} | {count}")
+            print(f"  {ta:20} | {str(phase or 'None'):10} | {count}")
 
     print("\nModality × Phase:")
     for mod, phases in summary["modality_by_phase"].items():
         for phase, count in phases.items():
-            print(f"  {mod:20} | {str(phase or "None"):10} | {count}")
+            print(f"  {mod:20} | {str(phase or 'None'):10} | {count}")
 
     print("\nTA × Sponsor class:")
     for ta, sponsors in summary["ta_by_sponsor_class"].items():
@@ -679,7 +679,7 @@ def main():
 
     print("\nMulti-TA rate by phase:")
     for phase, rate in summary["multi_ta_rate_by_phase"].items():
-        print(f"  {str(phase or "None"):10} | {rate:.2%}")
+        print(f"  {str(phase or 'None'):10} | {rate:.2%}")
 
     print("\nNon-disease study categories:")
     for k, v in sorted(summary["non_disease_study_categories"].items()):

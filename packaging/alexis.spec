@@ -53,6 +53,21 @@ for pkg in ("sklearn", "scipy", "pandas"):
 for pkg in ("app", "core", "analytics", "pipelines", "classifiers",
             "policy", "collectors", "utils", "storage", "config"):
     hiddenimports += collect_submodules(pkg)
+# Playwright (ChiCTR scraping). No PyInstaller hook ships for it, so collect its
+# submodules explicitly. We do NOT bundle a browser: the scraper drives the
+# system Edge via channel="msedge" (Edge is always present -- it's the app's
+# WebView2 host), so only the playwright package + its node driver are needed.
+for pkg in ("playwright", "playwright_stealth"):
+    hiddenimports += collect_submodules(pkg)
+# pyarrow (parquet read/write for ANZCTR) + openpyxl (read the ANZCTR .xlsx).
+# pandas imports BOTH lazily via string-based optional-dependency lookups, which
+# PyInstaller's static scan can't follow -- so the package code is otherwise left
+# out (the exe ends up with pyarrow .pyd but no .py, and no openpyxl at all).
+# Forcing them into the graph triggers their contrib hooks, which collect the
+# binaries/data correctly.
+hiddenimports += _no_tests(collect_submodules("pyarrow"))
+hiddenimports += collect_submodules("openpyxl")
+hiddenimports += ["et_xmlfile"]
 # uvicorn / anyio / sse pick their implementations at runtime.
 hiddenimports += [
     "uvicorn.loops.asyncio",
@@ -74,6 +89,10 @@ datas = [
 ]
 datas += collect_data_files("pyarrow")
 datas += collect_data_files("sklearn")
+# Playwright package data: driver/node.exe (the engine) + driver JS, and the
+# playwright_stealth .js evasion scripts. NOT the browser (system Edge is used).
+datas += collect_data_files("playwright")
+datas += collect_data_files("playwright_stealth")
 
 block_cipher = None
 

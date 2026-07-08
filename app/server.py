@@ -26,11 +26,13 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from core.paths import app_root, viz_dir
+from core.version import __version__
 
 from app.api import classify as classify_router
 from app.api import dashboards as dashboards_router
 from app.api import settings as settings_router
 from app.api import jobs as jobs_router
+from app.api import data as data_router
 
 
 _log = logging.getLogger("alexis.server")
@@ -54,7 +56,7 @@ def _web_dir() -> Path:
 def create_app() -> FastAPI:
     app = FastAPI(
         title="ALEXIS",
-        version="0.1.0-mvp",
+        version=__version__,
         docs_url=None,
         redoc_url=None,
         openapi_url=None,
@@ -110,6 +112,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboards_router.router)
     app.include_router(settings_router.router)
     app.include_router(jobs_router.router)
+    app.include_router(data_router.router)
 
     # ----- Static mounts -----
     # Order matters: the API routers (added above) and /dashboards are matched

@@ -24,7 +24,14 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SNAPSHOT_BASE = ROOT / "storage" / "snapshots" / "clinical_trials_v2"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+# Data dirs via core.paths so they resolve to the user's data folder in a frozen
+# build (deriving from __file__ would point inside the read-only bundle).
+from core.paths import snapshots_dir, changelogs_dir
+
+SNAPSHOT_BASE = snapshots_dir()
 
 # -- Strong ADC signals -------------------------------------------------------
 
@@ -134,7 +141,7 @@ def _find_snapshot_files() -> list[Path]:
         files.extend(sorted(rc_dir.glob("reclassified_*.json")))
 
     # Enriched changelogs (used by weekly sci_wq1 / bd_wq1)
-    cl_dir = ROOT / "storage" / "changelogs"
+    cl_dir = changelogs_dir()
     if cl_dir.is_dir():
         files.extend(sorted(cl_dir.glob("enriched_*.json")))
 

@@ -43,10 +43,20 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-ROOT             = Path(__file__).parent.parent
-PULSE_DIR        = ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "last_update"
-MASTER_DIR       = ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "active_universe"
-CHANGELOG_DIR    = ROOT / "storage" / "changelogs"
+# ROOT only makes `analytics.*` / `core.*` importable when this file is run
+# directly (python pipelines/backfill_enriched_weekly.py). It must NOT locate
+# data: in a frozen build __file__ is inside the bundle, so ROOT/"storage" would
+# point at the empty bundled tree. Data lives in the user's data folder, which
+# core.paths resolves (data_root).
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from core.paths import snapshots_dir, changelogs_dir, is_frozen
+
+PULSE_DIR        = snapshots_dir() / "last_update"
+MASTER_DIR       = snapshots_dir() / "active_universe"
+CHANGELOG_DIR    = changelogs_dir()
 
 # Parse dates like 'raw 04-01-26' -> date(2026, 4, 1)
 _AACT_DIR_RE = re.compile(r"raw\s+(\d{2})-(\d{2})-(\d{2,4})")
@@ -136,8 +146,7 @@ def _enriched_current_master(enriched_path: Path) -> str | None:
 def _run_categorizer(master: Path, pulse: Path, enriched_out: Path,
                      changelog_out: Path, drug_only: bool) -> bool:
     """Run analytics/update_categorizer.py as a subprocess (fresh RAM)."""
-    cmd = [
-        sys.executable, "-u", "-m", "analytics.update_categorizer",
+    cat_args = [
         "--master",            str(master),
         "--snapshot",          str(pulse),
         "--output-enriched",   str(enriched_out),
@@ -145,7 +154,14 @@ def _run_categorizer(master: Path, pulse: Path, enriched_out: Path,
         "--quiet",
     ]
     if drug_only:
-        cmd.append("--drug-only")
+        cat_args.append("--drug-only")
+    # Run update_categorizer in a FRESH subprocess (isolates the big master DB's
+    # RAM). In a frozen build sys.executable is ALEXIS.exe, which can't run
+    # `-m module`, so go through the exe's own --run-module dispatch instead.
+    if is_frozen():
+        cmd = [sys.executable, "--run-module", "analytics.update_categorizer", *cat_args]
+    else:
+        cmd = [sys.executable, "-u", "-m", "analytics.update_categorizer", *cat_args]
     env = dict(os.environ, PYTHONPATH=str(ROOT))
     result = subprocess.run(cmd, cwd=str(ROOT), env=env)
     return result.returncode == 0

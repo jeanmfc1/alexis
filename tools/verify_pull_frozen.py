@@ -20,6 +20,10 @@ CRASH = ["Traceback", "UnicodeEncodeError", "charmap", "failed to extract",
          "failed to open archive", "NoneType", "BrokenPipe",
          "ModuleNotFoundError", "[err] pipeline"]
 
+# Markers that utils/parallel_processor.py prints when it abandons the Pool and
+# runs single-process. Their presence means a silent single-core regression.
+SINGLE_PROC = ["falling back to single process", "parallel processing unavailable"]
+
 
 def run(base: str) -> int:
     info = httpx.get(f"{base}/api/info", timeout=15).json()
@@ -53,15 +57,24 @@ def run(base: str) -> int:
     completed = "Classification completed" in log
     saved = "Saved snapshot" in log
     crash = next((c for c in CRASH if c in log), None)
+    # Catch a SILENT single-core fallback: utils/parallel_processor drops to
+    # _sequential() (printing one of these) when num_workers<=1 or the Pool
+    # raises. A frozen build MUST stay multi-core, so the fallback is a failure.
+    single_core = next((p for p in SINGLE_PROC if p in log), None)
 
     print(f"status={status} rc={s.get('returncode')} elapsed={elapsed:.0f}s")
     print(f"parallel_workers={workers}")
     print(f"classification_completed={completed}")
     print(f"snapshot_saved={saved}")
     print(f"crash_marker={crash}")
+    print(f"single_core_fallback={single_core}")
 
+    # Require genuine multiprocessing: the worker line must be present with K>1
+    # AND no single-process fallback marker. (Process-count 2->K+2 is the gold
+    # standard; these log assertions are the cheap automated equivalent.)
     ok = (status == "succeeded" and completed and saved and crash is None
-          and (workers is None or workers >= 1))
+          and single_core is None
+          and workers is not None and workers > 1)
     print("VERDICT=" + ("PASS" if ok else "FAIL"))
     return 0 if ok else 1
 
