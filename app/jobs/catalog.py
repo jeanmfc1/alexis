@@ -82,6 +82,22 @@ CATALOG: list[dict] = [
         ],
     },
     {
+        "id": "pull_recent_weeks",
+        "label": "Pull last 3 weeks (get started)",
+        "description": "Fetch + classify the last few weeks as separate weekly snapshots "
+                       "in one run. Gives the dashboard enough history for its trend charts "
+                       "(they use a ~3-week rolling average). No download needed.",
+        "needs": "Just a data folder. Run this ONCE to bootstrap a new data folder; "
+                 "after that, 'Pull this week's US trials' weekly keeps it current.",
+        "category": "us", "ready": True, "long_running": True, "produces": "weekly snapshots",
+        "module": "pipelines.pulse_window_v1", "argv": [],
+        "params": [
+            {"name": "weeks", "label": "Number of weeks", "type": "int",
+             "flag": "--weeks", "required": False, "default": 3,
+             "hint": "3 is enough for trend charts. Each week becomes its own snapshot."},
+        ],
+    },
+    {
         "id": "enrich_weekly",
         "label": "Compute weekly changes",
         "description": "Diff each weekly snapshot against the right master DB to mark genuinely-new trials.",

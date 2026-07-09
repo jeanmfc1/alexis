@@ -48,6 +48,25 @@ def main(argv: list[str] | None = None) -> int:
         from app.jobs.dispatch import run_pipeline
         return run_pipeline(raw[1], extra_args=raw[2:])
 
+    # Frozen-build module dispatch: some pipelines spawn a FRESH subprocess of a
+    # helper module for RAM isolation (e.g. enrich_weekly -> analytics.update_
+    # categorizer). They can't use `python -m mod` because sys.executable is the
+    # exe, so they call `ALEXIS.exe --run-module <mod> [args]` and we run it here
+    # via runpy -- the same mechanism dispatch.py uses for pipeline modules.
+    if raw and raw[0] == "--run-module":
+        if len(raw) < 2:
+            print("[err] --run-module requires a module name")
+            return 2
+        import runpy
+        mod = raw[1]
+        sys.argv = [mod, *raw[2:]]
+        try:
+            runpy.run_module(mod, run_name="__main__", alter_sys=True)
+            return 0
+        except SystemExit as exc:
+            code = exc.code
+            return code if isinstance(code, int) else (0 if code is None else 1)
+
     from app.main import run
     args = _parse_args(raw)
     return run(dev=args.dev, headless=args.headless, port=args.port)

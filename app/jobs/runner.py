@@ -15,7 +15,7 @@ import sys
 import threading
 from pathlib import Path
 
-from core.paths import app_root, logs_dir, ensure_dir
+from core.paths import app_root, data_root, logs_dir, ensure_dir
 from app.jobs import catalog
 from app.jobs.registry import JobRegistry
 
@@ -44,6 +44,22 @@ class JobRunner:
         env["PYTHONPATH"] = root + (os.pathsep + prior if prior else "")
         return env
 
+    def _run_cwd(self) -> Path:
+        """Working directory for pipeline children.
+
+        Pipelines that use *relative* data paths (e.g. ``Path("storage/...")``)
+        resolve them against this CWD, so it MUST be the user's data folder
+        (data_root) -- that is where the rest of the app reads/writes via
+        core.paths. In a frozen build data_root != app_root (the read-only
+        bundle); using app_root() here is what made pulls/enrich/reclassify
+        mis-locate their files inside ``_internal``. Bundled assets (viz, models,
+        policy, MeSH) load via absolute core.paths and are unaffected by CWD.
+        Falls back to app_root() if data_root does not exist yet (a fresh
+        install before the folder is initialised), since Popen needs a real cwd.
+        """
+        d = data_root()
+        return d if d.is_dir() else app_root()
+
     def _popen(self, argv: list[str], fh) -> subprocess.Popen:
         creationflags = 0
         start_new_session = False
@@ -52,7 +68,7 @@ class JobRunner:
         else:
             start_new_session = True
         return subprocess.Popen(
-            argv, cwd=str(app_root()), env=self._child_env(),
+            argv, cwd=str(self._run_cwd()), env=self._child_env(),
             stdout=fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
             creationflags=creationflags, start_new_session=start_new_session,
         )

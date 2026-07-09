@@ -14,13 +14,11 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from core import paths
+from core.version import __version__ as _VERSION
 
 
 router = APIRouter()
 _log = logging.getLogger("alexis.api.settings")
-
-
-_VERSION = "0.1.0-mvp"
 
 
 def _settings_snapshot() -> dict:

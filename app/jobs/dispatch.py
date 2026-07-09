@@ -24,6 +24,34 @@ def _exit_code(exc: SystemExit) -> int:
     return 1  # a string/other -> treat as failure
 
 
+def _script_to_module(script: str) -> str:
+    """'pipelines/diff_chictr_snapshots.py' -> 'pipelines.diff_chictr_snapshots'."""
+    rel = script.replace("\\", "/").strip("/")
+    if rel.endswith(".py"):
+        rel = rel[:-3]
+    return rel.replace("/", ".")
+
+
+def _run_module(mod: str, tail: list[str]) -> None:
+    sys.argv = [mod, *tail]
+    runpy.run_module(mod, run_name="__main__", alter_sys=True)
+
+
+def _run_script_file(path, tail: list[str]) -> None:
+    """Exec a .py bundled as a *data file* (e.g. tools/verify_portability.py),
+    which has no importable module name.
+
+    Deliberately avoids ``runpy.run_path``: for a path inside the PyInstaller
+    bundle, run_path resolves it through the frozen path hook and then looks for
+    a ``__main__`` submodule there, failing with
+    ``ImportError: can't find '__main__' module in '<path>'``.
+    """
+    src = path.read_text(encoding="utf-8")
+    code = compile(src, str(path), "exec")
+    sys.argv = [str(path), *tail]
+    exec(code, {"__name__": "__main__", "__file__": str(path)})
+
+
 def run_pipeline(job_id: str, extra_args: list[str] | None = None) -> int:
     """Run a catalog pipeline in this process. Returns its exit code.
 
@@ -47,13 +75,24 @@ def run_pipeline(job_id: str, extra_args: list[str] | None = None) -> int:
     tail = list(entry.get("argv", [])) + list(extra_args or [])
     try:
         if entry.get("module"):
-            sys.argv = [entry["module"], *tail]
-            runpy.run_module(entry["module"], run_name="__main__", alter_sys=True)
+            _run_module(entry["module"], tail)
             return 0
         if entry.get("script"):
+            # Two ways a `script:` target ships in the frozen bundle:
+            #  * pipelines/*.py are collected as importable modules into the PYZ
+            #    archive -- there is NO loose .py on disk -- so run them by module
+            #    name (runpy.run_module), exactly like `module:` entries.
+            #  * tools/verify_portability.py is bundled as a real data FILE, with
+            #    no importable module name -- exec that file directly.
+            # The reliable discriminator is whether the loose file exists on disk.
+            # (We avoid runpy.run_path on bundle-internal paths: PyInstaller's
+            # frozen path hook makes it hunt for a non-existent `__main__`
+            # submodule -> "ImportError: can't find '__main__' module".)
             path = app_root() / entry["script"]
-            sys.argv = [str(path), *tail]
-            runpy.run_path(str(path), run_name="__main__")
+            if path.exists():
+                _run_script_file(path, tail)
+            else:
+                _run_module(_script_to_module(entry["script"]), tail)
             return 0
     except SystemExit as exc:
         return _exit_code(exc)

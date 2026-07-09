@@ -75,3 +75,12 @@ storage/*.zip
 storage/*.jsonl
 storage/*.csv
 storage/TrialDetails*/
+
+# Data / generated output that must not be tracked (intl changelogs, caches, xlsx)
+storage/cache/
+storage/anzctr_changelogs/
+storage/chictr_changelogs/
+storage/*.xlsx
+
+# Claude Code personal/local settings (per-machine; keep on disk, out of git)
+.claude/settings.local.json

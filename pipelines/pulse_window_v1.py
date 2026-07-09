@@ -224,26 +224,14 @@ def _resolve_window(args) -> tuple[date, date]:
     return today - timedelta(days=7), today
 
 
-def main():
-    import argparse
-    ap = argparse.ArgumentParser(description="Pulse a date window from ClinicalTrials.gov.")
-    ap.add_argument("--days", type=int, default=None,
-                    help="Last N days ending today (overrides --from/--to).")
-    ap.add_argument("--from", dest="date_from", default=None,
-                    help="Start date YYYY-MM-DD (inclusive).")
-    ap.add_argument("--to", dest="date_to", default=None,
-                    help="End date YYYY-MM-DD (inclusive; default today).")
-    args = ap.parse_args()
-
-    as_of = date.today()
-    updated_from, updated_to = _resolve_window(args)
-
+def _pulse_one(updated_from, updated_to, as_of):
+    """Fetch, classify, and save ONE window's snapshot. Returns the path or None."""
     if updated_from > updated_to:
         raise ValueError(f"Start date ({updated_from}) must be before end date ({updated_to})")
 
     max_studies = 100000
     window_days = (updated_to - updated_from).days
-    print(f"\nWindow: {updated_from} → {updated_to} ({window_days} days)")
+    print(f"\nWindow: {updated_from} -> {updated_to} ({window_days} days)")
 
     # ---- Fetch ----
     raw = fetch_studies_raw(
@@ -401,7 +389,43 @@ def main():
         summary=summary,
     )
     print(f"\nSaved snapshot: {snapshot_path}")
+    return snapshot_path
+
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="Pulse date window(s) from ClinicalTrials.gov.")
+    ap.add_argument("--days", type=int, default=None,
+                    help="Last N days ending today (overrides --from/--to).")
+    ap.add_argument("--from", dest="date_from", default=None,
+                    help="Start date YYYY-MM-DD (inclusive).")
+    ap.add_argument("--to", dest="date_to", default=None,
+                    help="End date YYYY-MM-DD (inclusive; default today).")
+    ap.add_argument("--weeks", type=int, default=None,
+                    help="Pull the last N consecutive 7-day windows, one snapshot "
+                         "each (bootstraps trend charts). Overrides other window args.")
+    args = ap.parse_args()
+    as_of = date.today()
+
+    # Multi-week bootstrap: one snapshot per week so rolling-average trends work.
+    if args.weeks and args.weeks > 0:
+        rc = 0
+        for k in range(args.weeks):
+            end = as_of - timedelta(days=7 * k)
+            start = end - timedelta(days=7)
+            print(f"\n[week {k + 1}/{args.weeks}] {start} -> {end}")
+            try:
+                _pulse_one(start, end, as_of)
+            except Exception as exc:  # noqa: BLE001 -- keep going on per-week failure
+                print(f"[err] week {k + 1} failed: {exc}")
+                rc = 1
+        print(f"\n[ok] pulled {args.weeks} weekly window(s).")
+        return rc
+
+    updated_from, updated_to = _resolve_window(args)
+    _pulse_one(updated_from, updated_to, as_of)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

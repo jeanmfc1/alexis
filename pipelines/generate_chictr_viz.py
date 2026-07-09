@@ -16,11 +16,21 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+# ROOT only puts the repo on sys.path so core.*/analytics.* imports resolve when
+# this file is run directly. Data dirs come from core.paths so they honour the
+# user's data folder (data_root) and work in a frozen build -- deriving them from
+# __file__ would point inside the read-only bundle when packaged. Mirrors the
+# pattern in generate_weekly_viz.py.
+import sys
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-CHICTR_SNAP_DIR  = ROOT / "storage" / "snapshots" / "clinical_trials_v2" / "chictr"
-CHICTR_ENR_DIR   = ROOT / "storage" / "chictr_changelogs"
-CHICTR_CHECKPOINT = ROOT / "storage" / "chictr_details_checkpoint.jsonl"
+from core.paths import snapshots_dir, storage_dir
+
+CHICTR_SNAP_DIR  = snapshots_dir() / "chictr"
+CHICTR_ENR_DIR   = storage_dir() / "chictr_changelogs"
+CHICTR_CHECKPOINT = storage_dir() / "chictr_details_checkpoint.jsonl"
 
 
 def _newest(dir_path: Path, pattern: str) -> Path | None:

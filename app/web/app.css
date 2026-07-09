@@ -49,6 +49,11 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
+/* Body is a vertical stack: the first-run banner (when shown) takes its natural
+   height and the app shell fills the rest. Without this, .app's fixed 100vh +
+   the banner overflow the window and the app's bottom gets clipped. */
+body { display: flex; flex-direction: column; }
+
 h1, h2, h3, h4 { font-family: var(--fh); font-weight: 600; letter-spacing: 0.01em; }
 a { color: var(--cyan); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -87,7 +92,8 @@ button { font-family: var(--fb); cursor: pointer; color: inherit; }
 .app {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
-  height: 100vh;
+  flex: 1 1 auto;     /* fill the height left over after the first-run banner */
+  min-height: 0;      /* let the inner .main scroll instead of growing the page */
   overflow: hidden;
 }
 
@@ -556,6 +562,58 @@ button { font-family: var(--fb); cursor: pointer; color: inherit; }
 .setup-banner-text .mono { font-family: var(--fm); font-size: 11px; }
 
 .jobs-runs { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------------------------------------------------------------------
+   Data tab
+   --------------------------------------------------------------------- */
+.data-head-actions { display: flex; gap: 8px; }
+.data-intro {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 10px 12px; margin-bottom: 14px;
+  background: var(--surf); border: 1px solid var(--border); border-radius: var(--r-ctl);
+  font-size: 12px; color: var(--muted);
+}
+.data-intro .mono { color: var(--text); font-size: 11px; word-break: break-all; }
+.data-legend { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.role-badge {
+  display: inline-block; padding: 1px 7px; border-radius: var(--r-pill);
+  font-family: var(--fm); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  border: 1px solid var(--border2);
+}
+.role-input     { color: var(--cyan);   border-color: rgba(0,207,255,0.40); }
+.role-generated { color: var(--green);  border-color: rgba(34,197,94,0.40); }
+.role-dashboard { color: var(--purple); border-color: rgba(167,139,250,0.40); }
+.role-required  { color: var(--amber);  border-color: rgba(245,158,11,0.55); }
+.role-output    { color: var(--blue);   border-color: rgba(59,130,246,0.40); }
+
+.data-cats { display: flex; flex-direction: column; gap: 12px; }
+.data-cat {
+  background: var(--surf); border: 1px solid var(--border); border-radius: var(--r-card);
+  padding: 14px 16px;
+}
+.data-cat-missing { border-color: rgba(245,158,11,0.30); }
+.data-cat-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.data-cat-title { font-size: 15px; font-weight: 600; color: #EAF4FF; }
+.data-cat-roles { display: flex; gap: 5px; flex-wrap: wrap; }
+.data-cat-stats { margin-left: auto; font-family: var(--fm); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.data-cat-desc { color: var(--muted); font-size: 12px; margin: 6px 0 10px; line-height: 1.5; }
+.data-cat-actions { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+
+.data-files { display: flex; flex-direction: column; border-top: 1px solid var(--hair); margin-top: 6px; }
+.data-file {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 2px; border-bottom: 1px solid var(--hair); font-size: 12px;
+}
+.data-file:last-child { border-bottom: none; }
+.data-file-name { flex: 1; font-family: var(--fm); font-size: 11px; color: var(--text); word-break: break-all; }
+.data-file-size { color: var(--muted); font-family: var(--fm); font-size: 11px; white-space: nowrap; }
+.data-file-latest {
+  font-family: var(--fm); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--purple); border: 1px solid rgba(167,139,250,0.50); border-radius: var(--r-pill);
+  padding: 1px 6px; white-space: nowrap;
+}
+.data-file-more, .data-empty { color: var(--muted); font-size: 12px; padding: 6px 2px; font-style: italic; }
 .jobs-runs-empty { color: var(--muted); font-size: 12.5px; padding: 6px 2px; }
 .run-row {
   display: flex; align-items: center; gap: 10px;
